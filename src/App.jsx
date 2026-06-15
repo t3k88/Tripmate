@@ -1,4 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+function useLocalStorage(key, initial) {
+  const [value, setValue] = useState(() => {
+    try {
+      const saved = localStorage.getItem(key)
+      return saved ? JSON.parse(saved) : initial
+    } catch {
+      return initial
+    }
+  })
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value))
+  }, [key, value])
+  return [value, setValue]
+}
 import AppShell from './components/AppShell'
 import { AppContext } from './context/AppContext'
 import './App.css'
@@ -84,9 +99,9 @@ const initialJournals = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('feed')
-  const [groups, setGroups] = useState(initialGroups)
-  const [places, setPlaces] = useState(initialPlaces)
-  const [journals, setJournals] = useState(initialJournals)
+  const [groups, setGroups] = useLocalStorage('tripmate_groups', initialGroups)
+  const [places, setPlaces] = useLocalStorage('tripmate_places', initialPlaces)
+  const [journals, setJournals] = useLocalStorage('tripmate_journals', initialJournals)
   const [showPlaceModal, setShowPlaceModal] = useState(false)
   const [showGroupModal, setShowGroupModal] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState(null)
