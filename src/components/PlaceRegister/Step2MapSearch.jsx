@@ -35,7 +35,7 @@ export default function Step2MapSearch({ data, onNext }) {
     setResults([])
 
     try {
-      const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}&display=6`)
+      const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}`)
       if (!res.ok) throw new Error('검색 실패')
       const data = await res.json()
       if (data.items?.length > 0) {
