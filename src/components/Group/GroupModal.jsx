@@ -116,12 +116,37 @@ function CreateGroupView({ onClose, onCreated, groups, setGroups }) {
   )
 }
 
+const KAKAO_JS_KEY = '133c1dcabbefac66f726ff7b63a16179'
+
 function ManageGroupView({ group, onClose, groups, setGroups }) {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteMsg, setInviteMsg] = useState('')
   const [tab, setTab] = useState('members')
 
   const currentGroup = groups.find(g => g.id === group.id) || group
+
+  const handleKakaoShare = () => {
+    if (!window.Kakao) return
+    if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_JS_KEY)
+
+    const inviteUrl = `${window.location.origin}/?join=${currentGroup.id.toString(36)}`
+
+    window.Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: `${currentGroup.cover} ${currentGroup.name}`,
+        description: 'TripMate 여행 그룹에 초대됐어요! 함께 장소를 공유해보세요 :)',
+        imageUrl: 'https://tripmate-dun.vercel.app/favicon.svg',
+        link: { mobileWebUrl: inviteUrl, webUrl: inviteUrl },
+      },
+      buttons: [
+        {
+          title: '그룹 참여하기',
+          link: { mobileWebUrl: inviteUrl, webUrl: inviteUrl },
+        },
+      ],
+    })
+  }
 
   const handleInvite = () => {
     if (!inviteEmail.trim()) return
@@ -262,7 +287,33 @@ function ManageGroupView({ group, onClose, groups, setGroups }) {
             <div style={{ textAlign: 'center', marginBottom: 20 }}>
               <div style={{ fontSize: 48, marginBottom: 8 }}>🔗</div>
               <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>친구를 초대해요</p>
-              <p style={{ fontSize: 13, color: 'var(--text-sub)' }}>이메일로 초대 링크를 보낼 수 있어요</p>
+              <p style={{ fontSize: 13, color: 'var(--text-sub)' }}>카카오톡이나 이메일로 초대할 수 있어요</p>
+            </div>
+
+            <button
+              onClick={handleKakaoShare}
+              style={{
+                width: '100%',
+                padding: '13px',
+                background: '#FEE500',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: 14,
+                fontWeight: 700,
+                color: '#3A1D1D',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                marginBottom: 20,
+              }}
+            >
+              💬 카카오톡으로 공유하기
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>또는</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
             </div>
 
             <div className="form-group">
@@ -314,7 +365,7 @@ function ManageGroupView({ group, onClose, groups, setGroups }) {
               <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-sub)', marginBottom: 6 }}>초대 링크</p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <p style={{ fontSize: 12, color: 'var(--text)', flex: 1, wordBreak: 'break-all' }}>
-                  tripmate://join/{currentGroup.id.toString(36)}
+                  {window.location.origin}/?join={currentGroup.id.toString(36)}
                 </p>
                 <button
                   style={{
@@ -327,7 +378,7 @@ function ManageGroupView({ group, onClose, groups, setGroups }) {
                     flexShrink: 0,
                   }}
                   onClick={() => {
-                    navigator.clipboard?.writeText(`tripmate://join/${currentGroup.id.toString(36)}`)
+                    navigator.clipboard?.writeText(`${window.location.origin}/?join=${currentGroup.id.toString(36)}`)
                     setInviteMsg('✓ 링크가 복사됐어요!')
                     setTimeout(() => setInviteMsg(''), 2000)
                   }}
