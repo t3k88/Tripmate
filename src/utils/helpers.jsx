@@ -36,3 +36,14 @@ export function getRegion(address) {
   if (!address) return '기타'
   return address.split(' ')[0] || '기타'
 }
+
+// 주소를 시/도 > 구/시 > 동/읍/면 단계로 분리
+export function getAddressLevels(address) {
+  if (!address) return ['기타']
+  const parts = address.split(' ').filter(Boolean)
+  const levels = []
+  if (parts[0]) levels.push(parts[0])
+  if (parts[1]) levels.push(parts[1])
+  if (parts[2] && /(동|읍|면|리)$/.test(parts[2])) levels.push(parts[2])
+  return levels.length > 0 ? levels : ['기타']
+}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
-import { getCategoryInfo, getRegion } from '../utils/helpers'
+import { CATEGORIES, getCategoryInfo, getAddressLevels } from '../utils/helpers'
 import { useKakaoMaps } from '../hooks/useKakaoMaps'
 
 export default function MapPage() {
@@ -10,16 +10,53 @@ export default function MapPage() {
   const mapInstanceRef = useRef(null)
   const overlaysRef = useRef([])
   const [selectedPlace, setSelectedPlace] = useState(null)
-  const [selectedRegion, setSelectedRegion] = useState('전체')
+  const [category, setCategory] = useState('전체')
+  const [sido, setSido] = useState('전체')
+  const [gu, setGu] = useState('전체')
+  const [dong, setDong] = useState('전체')
 
-  const regions = useMemo(() => {
-    const set = new Set(places.map(p => getRegion(p.address)))
+  const placesWithLevels = useMemo(
+    () => places.map(p => ({ ...p, _levels: getAddressLevels(p.address) })),
+    [places]
+  )
+
+  // 카테고리만 적용한 후보 (지역 옵션 계산용)
+  const byCategory = category === '전체'
+    ? placesWithLevels
+    : placesWithLevels.filter(p => p.category === category)
+
+  const sidoOptions = useMemo(() => {
+    const set = new Set(byCategory.map(p => p._levels[0]))
     return ['전체', ...Array.from(set)]
-  }, [places])
+  }, [byCategory])
 
-  const filteredPlaces = selectedRegion === '전체'
-    ? places
-    : places.filter(p => getRegion(p.address) === selectedRegion)
+  const guOptions = useMemo(() => {
+    if (sido === '전체') return []
+    const set = new Set(
+      byCategory.filter(p => p._levels[0] === sido && p._levels[1]).map(p => p._levels[1])
+    )
+    return set.size > 0 ? ['전체', ...Array.from(set)] : []
+  }, [byCategory, sido])
+
+  const dongOptions = useMemo(() => {
+    if (sido === '전체' || gu === '전체') return []
+    const set = new Set(
+      byCategory.filter(p => p._levels[0] === sido && p._levels[1] === gu && p._levels[2]).map(p => p._levels[2])
+    )
+    return set.size > 0 ? ['전체', ...Array.from(set)] : []
+  }, [byCategory, sido, gu])
+
+  const filteredPlaces = byCategory.filter(p => {
+    if (sido !== '전체' && p._levels[0] !== sido) return false
+    if (gu !== '전체' && p._levels[1] !== gu) return false
+    if (dong !== '전체' && p._levels[2] !== dong) return false
+    return true
+  })
+
+  const handleSido = (v) => { setSido(v); setGu('전체'); setDong('전체'); setSelectedPlace(null) }
+  const handleGu = (v) => { setGu(v); setDong('전체'); setSelectedPlace(null) }
+  const handleDong = (v) => { setDong(v); setSelectedPlace(null) }
+  const handleCategory = (v) => { setCategory(v); setSido('전체'); setGu('전체'); setDong('전체'); setSelectedPlace(null) }
 
   useEffect(() => {
     if (!ready || !mapRef.current) return
@@ -28,7 +65,7 @@ export default function MapPage() {
     mapInstanceRef.current = map
   }, [ready])
 
-  // 지역 변경 시 지도 범위 맞추기
+  // 필터 변경 시 지도 범위 맞추기
   useEffect(() => {
     if (!ready || !mapInstanceRef.current) return
     if (filteredPlaces.length === 0) return
@@ -42,7 +79,7 @@ export default function MapPage() {
       filteredPlaces.forEach(p => bounds.extend(new window.kakao.maps.LatLng(p.lat, p.lng)))
       mapInstanceRef.current.setBounds(bounds)
     }
-  }, [ready, selectedRegion])
+  }, [ready, category, sido, gu, dong])
 
   useEffect(() => {
     if (!ready || !mapInstanceRef.current) return
@@ -87,6 +124,8 @@ export default function MapPage() {
     panTo(place)
   }
 
+  const filterRowsHeight = 44 + (sidoOptions.length > 1 ? 40 : 0) + (guOptions.length > 0 ? 40 : 0) + (dongOptions.length > 0 ? 40 : 0)
+
   return (
     <>
       <div className="header">
@@ -94,35 +133,47 @@ export default function MapPage() {
         <button className="header-action" onClick={() => setShowPlaceModal(true)}>+</button>
       </div>
 
-      {/* 지역 선택 칩 */}
-      {regions.length > 1 && (
-        <div style={{
-          display: 'flex', gap: 8, padding: '10px 16px',
-          overflowX: 'auto', borderBottom: '1px solid var(--border)',
-        }}>
-          {regions.map(region => (
-            <button
-              key={region}
-              onClick={() => { setSelectedRegion(region); setSelectedPlace(null) }}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 20,
-                fontSize: 13,
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                border: selectedRegion === region ? 'none' : '1.5px solid var(--border)',
-                background: selectedRegion === region ? 'var(--primary)' : 'var(--surface)',
-                color: selectedRegion === region ? 'white' : 'var(--text-sub)',
-              }}
-            >
-              {region !== '전체' && '📍 '}{region}
-            </button>
+      {/* 카테고리 필터 */}
+      <FilterRow>
+        <Chip label="전체" active={category === '전체'} onClick={() => handleCategory('전체')} />
+        {CATEGORIES.map(cat => (
+          <Chip
+            key={cat.id}
+            label={`${cat.icon} ${cat.label}`}
+            active={category === cat.id}
+            onClick={() => handleCategory(cat.id)}
+          />
+        ))}
+      </FilterRow>
+
+      {/* 시/도 필터 */}
+      {sidoOptions.length > 1 && (
+        <FilterRow>
+          {sidoOptions.map(opt => (
+            <Chip key={opt} label={opt === '전체' ? '전체' : `📍 ${opt}`} active={sido === opt} onClick={() => handleSido(opt)} />
           ))}
-        </div>
+        </FilterRow>
       )}
 
-      <div style={{ position: 'relative', height: regions.length > 1 ? 'calc(100% - 105px)' : 'calc(100% - 57px)' }}>
+      {/* 구/시 필터 */}
+      {guOptions.length > 0 && (
+        <FilterRow sub>
+          {guOptions.map(opt => (
+            <Chip key={opt} label={opt} active={gu === opt} onClick={() => handleGu(opt)} sub />
+          ))}
+        </FilterRow>
+      )}
+
+      {/* 동/읍/면 필터 */}
+      {dongOptions.length > 0 && (
+        <FilterRow sub>
+          {dongOptions.map(opt => (
+            <Chip key={opt} label={opt} active={dong === opt} onClick={() => handleDong(opt)} sub />
+          ))}
+        </FilterRow>
+      )}
+
+      <div style={{ position: 'relative', height: `calc(100% - 57px - ${filterRowsHeight}px)` }}>
         {/* Map */}
         <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
@@ -229,10 +280,43 @@ export default function MapPage() {
             background: 'white', borderRadius: 12, padding: '10px 16px',
             fontSize: 13, color: 'var(--text-sub)', boxShadow: 'var(--shadow-sm)', whiteSpace: 'nowrap',
           }}>
-            장소를 등록하면 지도에 표시돼요
+            조건에 맞는 장소가 없어요
           </div>
         )}
       </div>
     </>
+  )
+}
+
+function FilterRow({ children, sub }) {
+  return (
+    <div style={{
+      display: 'flex', gap: 6, padding: sub ? '6px 16px' : '8px 16px',
+      overflowX: 'auto', borderBottom: '1px solid var(--border)',
+      background: sub ? 'var(--bg)' : 'var(--surface)',
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function Chip({ label, active, onClick, sub }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: sub ? '5px 12px' : '6px 14px',
+        borderRadius: 20,
+        fontSize: sub ? 12 : 13,
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+        border: active ? 'none' : '1.5px solid var(--border)',
+        background: active ? 'var(--primary)' : 'var(--surface)',
+        color: active ? 'white' : 'var(--text-sub)',
+      }}
+    >
+      {label}
+    </button>
   )
 }
