@@ -119,7 +119,6 @@ function CreateGroupView({ onClose, onCreated, groups, setGroups }) {
 const KAKAO_JS_KEY = '133c1dcabbefac66f726ff7b63a16179'
 
 function ManageGroupView({ group, onClose, groups, setGroups }) {
-  const [inviteEmail, setInviteEmail] = useState('')
   const [inviteMsg, setInviteMsg] = useState('')
   const [tab, setTab] = useState('members')
 
@@ -146,36 +145,6 @@ function ManageGroupView({ group, onClose, groups, setGroups }) {
         },
       ],
     })
-  }
-
-  const handleInvite = () => {
-    if (!inviteEmail.trim()) return
-    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRe.test(inviteEmail)) {
-      setInviteMsg('올바른 이메일 주소를 입력해주세요.')
-      return
-    }
-    if (currentGroup.members.some(m => m.email === inviteEmail)) {
-      setInviteMsg('이미 그룹에 있는 멤버예요.')
-      return
-    }
-
-    const EMOJIS = ['💙', '💚', '💜', '🧡', '❤️', '🤍', '💛']
-    const newMember = {
-      id: Date.now(),
-      name: inviteEmail.split('@')[0],
-      email: inviteEmail,
-      role: 'member',
-      avatar: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
-    }
-
-    setGroups(gs => gs.map(g => g.id === currentGroup.id
-      ? { ...g, members: [...g.members, newMember] }
-      : g
-    ))
-    setInviteEmail('')
-    setInviteMsg(`✓ ${inviteEmail}에 초대를 보냈어요!`)
-    setTimeout(() => setInviteMsg(''), 3000)
   }
 
   const handleRemove = (memberId) => {
@@ -287,7 +256,7 @@ function ManageGroupView({ group, onClose, groups, setGroups }) {
             <div style={{ textAlign: 'center', marginBottom: 20 }}>
               <div style={{ fontSize: 48, marginBottom: 8 }}>🔗</div>
               <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>친구를 초대해요</p>
-              <p style={{ fontSize: 13, color: 'var(--text-sub)' }}>카카오톡이나 이메일로 초대할 수 있어요</p>
+              <p style={{ fontSize: 13, color: 'var(--text-sub)' }}>카카오톡으로 초대 링크를 보낼 수 있어요</p>
             </div>
 
             <button
@@ -309,51 +278,6 @@ function ManageGroupView({ group, onClose, groups, setGroups }) {
             >
               💬 카카오톡으로 공유하기
             </button>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-              <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>또는</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">이메일 주소</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  className="form-input"
-                  style={{ flex: 1 }}
-                  type="email"
-                  placeholder="friend@example.com"
-                  value={inviteEmail}
-                  onChange={e => { setInviteEmail(e.target.value); setInviteMsg('') }}
-                  onKeyDown={e => e.key === 'Enter' && handleInvite()}
-                />
-                <button
-                  onClick={handleInvite}
-                  style={{
-                    padding: '0 16px',
-                    background: 'var(--primary)',
-                    color: 'white',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                  }}
-                >
-                  초대
-                </button>
-              </div>
-              {inviteMsg && (
-                <p style={{
-                  marginTop: 8, fontSize: 13,
-                  color: inviteMsg.startsWith('✓') ? 'var(--success)' : 'var(--danger)',
-                  fontWeight: 600,
-                }}>
-                  {inviteMsg}
-                </p>
-              )}
-            </div>
 
             {/* Invite link */}
             <div style={{
