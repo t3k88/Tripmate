@@ -10,6 +10,16 @@
   box-shadow: var(--shadow-lg), 0 0 0 10px #1A1A1A;
 }
 
+/* 실제 모바일 화면에서는 폰 모형 없이 전체 화면을 채움 */
+@media (max-width: 480px) {
+  .app-shell {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
 .screen {
   flex: 1;
   overflow-y: auto;
