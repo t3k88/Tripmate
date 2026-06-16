@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
-import { getCategoryInfo } from '../utils/helpers'
+import { getCategoryInfo, getRegion } from '../utils/helpers'
 import { useKakaoMaps } from '../hooks/useKakaoMaps'
 
 export default function MapPage() {
@@ -10,6 +10,16 @@ export default function MapPage() {
   const mapInstanceRef = useRef(null)
   const overlaysRef = useRef([])
   const [selectedPlace, setSelectedPlace] = useState(null)
+  const [selectedRegion, setSelectedRegion] = useState('전체')
+
+  const regions = useMemo(() => {
+    const set = new Set(places.map(p => getRegion(p.address)))
+    return ['전체', ...Array.from(set)]
+  }, [places])
+
+  const filteredPlaces = selectedRegion === '전체'
+    ? places
+    : places.filter(p => getRegion(p.address) === selectedRegion)
 
   useEffect(() => {
     if (!ready || !mapRef.current) return
@@ -18,12 +28,28 @@ export default function MapPage() {
     mapInstanceRef.current = map
   }, [ready])
 
+  // 지역 변경 시 지도 범위 맞추기
+  useEffect(() => {
+    if (!ready || !mapInstanceRef.current) return
+    if (filteredPlaces.length === 0) return
+
+    if (filteredPlaces.length === 1) {
+      const p = filteredPlaces[0]
+      mapInstanceRef.current.setCenter(new window.kakao.maps.LatLng(p.lat, p.lng))
+      mapInstanceRef.current.setLevel(5)
+    } else {
+      const bounds = new window.kakao.maps.LatLngBounds()
+      filteredPlaces.forEach(p => bounds.extend(new window.kakao.maps.LatLng(p.lat, p.lng)))
+      mapInstanceRef.current.setBounds(bounds)
+    }
+  }, [ready, selectedRegion])
+
   useEffect(() => {
     if (!ready || !mapInstanceRef.current) return
     overlaysRef.current.forEach(o => o.setMap(null))
     overlaysRef.current = []
 
-    places.forEach(place => {
+    filteredPlaces.forEach(place => {
       const position = new window.kakao.maps.LatLng(place.lat, place.lng)
       const info = getCategoryInfo(place.category)
 
@@ -48,7 +74,7 @@ export default function MapPage() {
       overlay.setMap(mapInstanceRef.current)
       overlaysRef.current.push(overlay)
     })
-  }, [ready, places])
+  }, [ready, filteredPlaces])
 
   const panTo = (place) => {
     if (!mapInstanceRef.current) return
@@ -68,19 +94,47 @@ export default function MapPage() {
         <button className="header-action" onClick={() => setShowPlaceModal(true)}>+</button>
       </div>
 
-      <div style={{ position: 'relative', height: 'calc(100% - 57px)' }}>
+      {/* 지역 선택 칩 */}
+      {regions.length > 1 && (
+        <div style={{
+          display: 'flex', gap: 8, padding: '10px 16px',
+          overflowX: 'auto', borderBottom: '1px solid var(--border)',
+        }}>
+          {regions.map(region => (
+            <button
+              key={region}
+              onClick={() => { setSelectedRegion(region); setSelectedPlace(null) }}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 20,
+                fontSize: 13,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                border: selectedRegion === region ? 'none' : '1.5px solid var(--border)',
+                background: selectedRegion === region ? 'var(--primary)' : 'var(--surface)',
+                color: selectedRegion === region ? 'white' : 'var(--text-sub)',
+              }}
+            >
+              {region !== '전체' && '📍 '}{region}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div style={{ position: 'relative', height: regions.length > 1 ? 'calc(100% - 105px)' : 'calc(100% - 57px)' }}>
         {/* Map */}
         <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
         {/* Place list overlay (scroll) */}
-        {places.length > 0 && !selectedPlace && (
+        {filteredPlaces.length > 0 && !selectedPlace && (
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
             padding: '12px 12px 16px',
             display: 'flex', gap: 8, overflowX: 'auto',
             background: 'linear-gradient(transparent, rgba(0,0,0,0.08))',
           }}>
-            {places.map(place => {
+            {filteredPlaces.map(place => {
               const info = getCategoryInfo(place.category)
               return (
                 <button
@@ -169,7 +223,7 @@ export default function MapPage() {
           </div>
         )}
 
-        {places.length === 0 && (
+        {filteredPlaces.length === 0 && (
           <div style={{
             position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
             background: 'white', borderRadius: 12, padding: '10px 16px',

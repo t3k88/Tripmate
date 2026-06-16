@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
-import { Tag, formatDate, getCategoryInfo } from '../utils/helpers'
+import { Tag, formatDate, getCategoryInfo, getRegion } from '../utils/helpers'
 
 function RegionSection({ region, places, children }) {
   const [open, setOpen] = useState(true)
@@ -29,12 +29,6 @@ function RegionSection({ region, places, children }) {
       )}
     </div>
   )
-}
-
-function getRegion(address) {
-  if (!address) return '기타'
-  const first = address.split(' ')[0]
-  return first || '기타'
 }
 
 export default function FeedPage() {

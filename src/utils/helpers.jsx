@@ -31,3 +31,8 @@ export function formatDate(dateStr) {
   const d = new Date(dateStr)
   return `${d.getMonth() + 1}월 ${d.getDate()}일`
 }
+
+export function getRegion(address) {
+  if (!address) return '기타'
+  return address.split(' ')[0] || '기타'
+}
