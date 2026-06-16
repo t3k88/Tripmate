@@ -24,7 +24,7 @@ export default function GroupPage() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {groups.map(group => {
-              const groupPlaces = places.filter(p => p.groupId === group.id)
+              const groupPlaces = places.filter(p => p.groupIds?.includes(group.id))
               return (
                 <button
                   key={group.id}

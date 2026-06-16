@@ -8,7 +8,7 @@ export default function RoutePage() {
 
   const filtered = selectedGroupId === 'all'
     ? places
-    : places.filter(p => p.groupId === Number(selectedGroupId))
+    : places.filter(p => p.groupIds?.includes(Number(selectedGroupId)))
 
   const byDate = filtered.reduce((acc, p) => {
     acc[p.date] = acc[p.date] || []

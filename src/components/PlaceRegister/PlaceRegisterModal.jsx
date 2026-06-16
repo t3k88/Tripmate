@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext'
 import Step1Category from './Step1Category'
 import Step2MapSearch from './Step2MapSearch'
 import Step3Review from './Step3Review'
+import EditPlaceForm from './EditPlaceForm'
 
 const STEPS = ['카테고리', '위치', '추천포인트']
 
@@ -18,7 +19,7 @@ export default function PlaceRegisterModal() {
     placeUrl: '',
     points: [],
     comment: '',
-    groupId: null,
+    groupIds: [],
   })
 
   const handleClose = () => {
@@ -55,39 +56,45 @@ export default function PlaceRegisterModal() {
         <div className="modal-header">
           <button
             className="modal-close"
-            onClick={step === 0 ? handleClose : handleBack}
+            onClick={editingPlace || step === 0 ? handleClose : handleBack}
             style={{
-              background: step > 0 ? 'var(--primary-bg)' : 'var(--border)',
-              color: step > 0 ? 'var(--primary)' : 'var(--text-sub)',
+              background: !editingPlace && step > 0 ? 'var(--primary-bg)' : 'var(--border)',
+              color: !editingPlace && step > 0 ? 'var(--primary)' : 'var(--text-sub)',
             }}
           >
-            {step === 0 ? '✕' : '←'}
+            {editingPlace || step === 0 ? '✕' : '←'}
           </button>
           <span className="modal-title">{editingPlace ? '장소 수정' : '장소 등록'}</span>
           <div style={{ width: 28 }} />
         </div>
 
-        {/* Step indicator */}
-        <div className="step-indicator">
-          {STEPS.map((_, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div className={`step-dot ${i === step ? 'active' : i < step ? 'done' : ''}`} />
-              {i < STEPS.length - 1 && (
-                <div style={{ width: 20, height: 1, background: i < step ? 'var(--primary)' : 'var(--border)', opacity: 0.5 }} />
-              )}
+        {editingPlace ? (
+          <EditPlaceForm data={data} groups={groups} onSubmit={handleSubmit} />
+        ) : (
+          <>
+            {/* Step indicator */}
+            <div className="step-indicator">
+              {STEPS.map((_, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div className={`step-dot ${i === step ? 'active' : i < step ? 'done' : ''}`} />
+                  {i < STEPS.length - 1 && (
+                    <div style={{ width: 20, height: 1, background: i < step ? 'var(--primary)' : 'var(--border)', opacity: 0.5 }} />
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <div style={{ textAlign: 'center', marginBottom: 8 }}>
-          <span style={{ fontSize: 12, color: 'var(--text-sub)', fontWeight: 600 }}>
-            {step + 1} / {STEPS.length} — {STEPS[step]}
-          </span>
-        </div>
+            <div style={{ textAlign: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: 12, color: 'var(--text-sub)', fontWeight: 600 }}>
+                {step + 1} / {STEPS.length} — {STEPS[step]}
+              </span>
+            </div>
 
-        {step === 0 && <Step1Category data={data} onNext={handleNext} />}
-        {step === 1 && <Step2MapSearch data={data} onNext={handleNext} />}
-        {step === 2 && <Step3Review data={data} groups={groups} onSubmit={handleSubmit} />}
+            {step === 0 && <Step1Category data={data} onNext={handleNext} />}
+            {step === 1 && <Step2MapSearch data={data} onNext={handleNext} />}
+            {step === 2 && <Step3Review data={data} groups={groups} onSubmit={handleSubmit} />}
+          </>
+        )}
       </div>
     </div>
   )

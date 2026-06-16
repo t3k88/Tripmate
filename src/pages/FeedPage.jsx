@@ -41,7 +41,7 @@ export default function FeedPage() {
   const { places, groups, setShowPlaceModal, setPlaces, setEditingPlace } = useApp()
   const [detailPlace, setDetailPlace] = useState(null)
 
-  const getGroupName = (groupId) => groups.find(g => g.id === groupId)?.name || ''
+  const getGroupNames = (groupIds) => (groupIds || []).map(id => groups.find(g => g.id === id)?.name).filter(Boolean)
 
   const handleEdit = (place) => {
     setDetailPlace(null)
@@ -84,7 +84,7 @@ export default function FeedPage() {
                 <PlaceCard
                   key={place.id}
                   place={place}
-                  groupName={getGroupName(place.groupId)}
+                  groupNames={getGroupNames(place.groupIds)}
                   onClick={() => setDetailPlace(place)}
                   onEdit={() => handleEdit(place)}
                   onDelete={() => handleDelete(place.id)}
@@ -101,7 +101,7 @@ export default function FeedPage() {
       {detailPlace && (
         <PlaceDetail
           place={detailPlace}
-          groupName={getGroupName(detailPlace.groupId)}
+          groupNames={getGroupNames(detailPlace.groupIds)}
           onClose={() => setDetailPlace(null)}
           onEdit={() => handleEdit(detailPlace)}
           onDelete={() => handleDelete(detailPlace.id)}
@@ -111,7 +111,7 @@ export default function FeedPage() {
   )
 }
 
-function PlaceCard({ place, groupName, onClick, onEdit, onDelete }) {
+function PlaceCard({ place, groupNames, onClick, onEdit, onDelete }) {
   return (
     <div
       className="card"
@@ -156,14 +156,14 @@ function PlaceCard({ place, groupName, onClick, onEdit, onDelete }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>👤 {place.author}</span>
-          {groupName && (
-            <span style={{
+          {groupNames.map(name => (
+            <span key={name} style={{
               fontSize: 11, fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-bg)',
               padding: '1px 7px', borderRadius: 10,
             }}>
-              {groupName}
+              {name}
             </span>
-          )}
+          ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} onClick={e => e.stopPropagation()}>
           <span style={{ fontSize: 11, color: 'var(--text-sub)' }}>{formatDate(place.date)}</span>
@@ -175,7 +175,7 @@ function PlaceCard({ place, groupName, onClick, onEdit, onDelete }) {
   )
 }
 
-function PlaceDetail({ place, groupName, onClose, onEdit, onDelete }) {
+function PlaceDetail({ place, groupNames, onClose, onEdit, onDelete }) {
   const info = getCategoryInfo(place.category)
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -216,7 +216,7 @@ function PlaceDetail({ place, groupName, onClose, onEdit, onDelete }) {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, color: 'var(--text-sub)', fontSize: 12 }}>
             <span>👤 {place.author}</span>
-            {groupName && <span>· {groupName}</span>}
+            {groupNames.map(name => <span key={name}>· {name}</span>)}
             <span>· {formatDate(place.date)}</span>
           </div>
 
