@@ -9,6 +9,7 @@ export default function MapPage() {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const overlaysRef = useRef([])
+  const [mapReady, setMapReady] = useState(false)
   const [selectedPlace, setSelectedPlace] = useState(null)
   const [filterOpen, setFilterOpen] = useState(false)
 
@@ -118,26 +119,29 @@ export default function MapPage() {
       const map = new window.kakao.maps.Map(el, { center, level: 12 })
       mapInstanceRef.current = map
       map.relayout()
+      setMapReady(true)
     }
     requestAnimationFrame(init)
   }, [ready])
 
   const filteredIds = filteredPlaces.map(p => p.id).join(',')
   useEffect(() => {
-    if (!ready || !mapInstanceRef.current || filteredPlaces.length === 0) return
+    if (!mapReady || !mapInstanceRef.current || filteredPlaces.length === 0) return
+    const map = mapInstanceRef.current
+    map.relayout()
     if (filteredPlaces.length === 1) {
       const p = filteredPlaces[0]
-      mapInstanceRef.current.setCenter(new window.kakao.maps.LatLng(p.lat, p.lng))
-      mapInstanceRef.current.setLevel(5)
+      map.setCenter(new window.kakao.maps.LatLng(p.lat, p.lng))
+      map.setLevel(5)
     } else {
       const bounds = new window.kakao.maps.LatLngBounds()
       filteredPlaces.forEach(p => bounds.extend(new window.kakao.maps.LatLng(p.lat, p.lng)))
-      mapInstanceRef.current.setBounds(bounds, { paddingTop: 80, paddingBottom: 80, paddingLeft: 40, paddingRight: 40 })
+      map.setBounds(bounds)
     }
-  }, [ready, filteredIds])
+  }, [mapReady, filteredIds])
 
   useEffect(() => {
-    if (!ready || !mapInstanceRef.current) return
+    if (!mapReady || !mapInstanceRef.current) return
     overlaysRef.current.forEach(o => o.setMap(null))
     overlaysRef.current = []
 
@@ -157,7 +161,7 @@ export default function MapPage() {
       overlay.setMap(mapInstanceRef.current)
       overlaysRef.current.push(overlay)
     })
-  }, [ready, filteredPlaces])
+  }, [mapReady, filteredIds])
 
   const panTo = (place) => {
     if (!mapInstanceRef.current) return
