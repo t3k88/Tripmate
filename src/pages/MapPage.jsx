@@ -128,7 +128,6 @@ export default function MapPage() {
   useEffect(() => {
     if (!mapReady || !mapInstanceRef.current || filteredPlaces.length === 0) return
     const map = mapInstanceRef.current
-    map.relayout()
     if (filteredPlaces.length === 1) {
       const p = filteredPlaces[0]
       map.setCenter(new window.kakao.maps.LatLng(p.lat, p.lng))
