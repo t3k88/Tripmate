@@ -175,7 +175,7 @@ export default function MapPage() {
       </div>
 
       {/* 지도 */}
-      <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
+      <div style={{ position: 'relative', height: 'calc(100% - 57px)', overflow: 'hidden' }}>
         <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
         {/* 장소 카드 리스트 */}
