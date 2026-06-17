@@ -129,15 +129,16 @@ export default function MapPage() {
     if (!mapReady || !mapInstanceRef.current || filteredPlaces.length === 0) return
     const map = mapInstanceRef.current
     setTimeout(() => {
+      const bounds = new window.kakao.maps.LatLngBounds()
       if (filteredPlaces.length === 1) {
-        const p = filteredPlaces[0]
-        map.setCenter(new window.kakao.maps.LatLng(p.lat, p.lng))
-        map.setLevel(5)
+        const { lat, lng } = filteredPlaces[0]
+        const d = 0.008
+        bounds.extend(new window.kakao.maps.LatLng(lat - d, lng - d))
+        bounds.extend(new window.kakao.maps.LatLng(lat + d, lng + d))
       } else {
-        const bounds = new window.kakao.maps.LatLngBounds()
         filteredPlaces.forEach(p => bounds.extend(new window.kakao.maps.LatLng(p.lat, p.lng)))
-        map.setBounds(bounds)
       }
+      map.setBounds(bounds)
     }, 50)
   }, [mapReady, filteredIds])
 
