@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { Tag, formatDate, getCategoryInfo, getRegion } from '../utils/helpers'
+import { useKakaoMaps } from '../hooks/useKakaoMaps'
 
 function RegionSection({ region, places, children }) {
   const [open, setOpen] = useState(true)
@@ -169,6 +170,27 @@ function PlaceCard({ place, groupNames, onClick, onEdit, onDelete }) {
   )
 }
 
+function MiniMap({ place }) {
+  const { ready } = useKakaoMaps()
+  const mapRef = useRef(null)
+
+  useEffect(() => {
+    if (!ready || !mapRef.current || !place.lat) return
+    const pos = new window.kakao.maps.LatLng(place.lat, place.lng)
+    const map = new window.kakao.maps.Map(mapRef.current, { center: pos, level: 4 })
+    new window.kakao.maps.Marker({ position: pos, map })
+  }, [ready, place.lat, place.lng])
+
+  if (!place.lat) return null
+  return (
+    <div ref={mapRef} style={{
+      width: '100%', height: 160,
+      borderRadius: 12, overflow: 'hidden',
+      marginBottom: 14, background: '#e8e8e8',
+    }} />
+  )
+}
+
 function PlaceDetail({ place, groupNames, onClose, onEdit, onDelete }) {
   const info = getCategoryInfo(place.category)
   return (
@@ -184,7 +206,10 @@ function PlaceDetail({ place, groupNames, onClose, onEdit, onDelete }) {
 
         <div style={{ padding: '10px 16px 24px' }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{place.name}</h2>
-          <p style={{ fontSize: 13, color: 'var(--text-sub)', marginBottom: 16 }}>{place.address}</p>
+          <p style={{ fontSize: 13, color: 'var(--text-sub)', marginBottom: 14 }}>{place.address}</p>
+
+          {/* 미니 지도 */}
+          <MiniMap place={place} />
 
           {place.points && place.points.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
@@ -216,18 +241,15 @@ function PlaceDetail({ place, groupNames, onClose, onEdit, onDelete }) {
 
           {/* 액션 버튼들 */}
           <div style={{ display: 'flex', gap: 8 }}>
-            {(place.placeUrl || place.lat) && (
+            {place.lat && (
               <button
-                onClick={() => {
-                  const url = place.placeUrl || `https://map.kakao.com/link/map/${encodeURIComponent(place.name)},${place.lat},${place.lng}`
-                  window.open(url, '_blank')
-                }}
+                onClick={() => window.open(`https://map.kakao.com/?q=${encodeURIComponent(place.name)}`, '_blank')}
                 style={{
                   flex: 1, padding: '11px', background: '#FEE500',
                   borderRadius: 10, fontSize: 13, fontWeight: 700, color: '#3A1D1D',
                 }}
               >
-                🗺️ 지도에서 보기
+                🗺️ 카카오맵에서 보기
               </button>
             )}
             <button
