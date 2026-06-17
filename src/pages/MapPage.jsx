@@ -128,15 +128,17 @@ export default function MapPage() {
   useEffect(() => {
     if (!mapReady || !mapInstanceRef.current || filteredPlaces.length === 0) return
     const map = mapInstanceRef.current
-    if (filteredPlaces.length === 1) {
-      const p = filteredPlaces[0]
-      map.setCenter(new window.kakao.maps.LatLng(p.lat, p.lng))
-      map.setLevel(5)
-    } else {
-      const bounds = new window.kakao.maps.LatLngBounds()
-      filteredPlaces.forEach(p => bounds.extend(new window.kakao.maps.LatLng(p.lat, p.lng)))
-      map.setBounds(bounds)
-    }
+    setTimeout(() => {
+      if (filteredPlaces.length === 1) {
+        const p = filteredPlaces[0]
+        map.setCenter(new window.kakao.maps.LatLng(p.lat, p.lng))
+        map.setLevel(5)
+      } else {
+        const bounds = new window.kakao.maps.LatLngBounds()
+        filteredPlaces.forEach(p => bounds.extend(new window.kakao.maps.LatLng(p.lat, p.lng)))
+        map.setBounds(bounds)
+      }
+    }, 50)
   }, [mapReady, filteredIds])
 
   useEffect(() => {
