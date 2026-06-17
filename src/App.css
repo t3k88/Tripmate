@@ -27,6 +27,12 @@
   position: relative;
 }
 
+.screen-map {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Header */
 .header {
   background: var(--surface);

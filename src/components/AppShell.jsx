@@ -21,7 +21,7 @@ export default function AppShell() {
 
   return (
     <div className="app-shell">
-      <div className="screen">
+      <div className={`screen${activeTab === 'map' ? ' screen-map' : ''}`}>
         {tabs[activeTab]}
       </div>
 
