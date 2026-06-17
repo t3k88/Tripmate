@@ -62,6 +62,14 @@ export default function MapPage() {
     return true
   })
 
+  const draftFilteredCount = placesWithLevels.filter(p => {
+    if (draftCategory !== '전체' && p.category !== draftCategory) return false
+    if (draftSido !== '전체' && p._levels[0] !== draftSido) return false
+    if (draftGu !== '전체' && p._levels[1] !== draftGu) return false
+    if (draftDong !== '전체' && p._levels[2] !== draftDong) return false
+    return true
+  }).length
+
   const openFilter = () => {
     setDraftCategory(category)
     setDraftSido(sido)
@@ -335,7 +343,7 @@ export default function MapPage() {
 
             <div style={{ padding: '0 20px 8px' }}>
               <button className="btn-primary" onClick={applyFilter}>
-                필터 적용 ({filteredPlaces.length}개 장소)
+                필터 적용 ({draftFilteredCount}개 장소)
               </button>
             </div>
           </div>
