@@ -111,6 +111,7 @@ export default function MapPage() {
     const center = new window.kakao.maps.LatLng(36.5, 127.8)
     const map = new window.kakao.maps.Map(mapRef.current, { center, level: 12 })
     mapInstanceRef.current = map
+    setTimeout(() => map.relayout(), 0)
   }, [ready])
 
   const filteredIds = filteredPlaces.map(p => p.id).join(',')
