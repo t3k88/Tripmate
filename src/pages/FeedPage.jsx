@@ -216,9 +216,12 @@ function PlaceDetail({ place, groupNames, onClose, onEdit, onDelete }) {
 
           {/* 액션 버튼들 */}
           <div style={{ display: 'flex', gap: 8 }}>
-            {place.placeUrl && (
+            {(place.placeUrl || place.lat) && (
               <button
-                onClick={() => window.open(place.placeUrl, '_blank')}
+                onClick={() => {
+                  const url = place.placeUrl || `https://map.kakao.com/link/map/${encodeURIComponent(place.name)},${place.lat},${place.lng}`
+                  window.open(url, '_blank')
+                }}
                 style={{
                   flex: 1, padding: '11px', background: '#FEE500',
                   borderRadius: 10, fontSize: 13, fontWeight: 700, color: '#3A1D1D',

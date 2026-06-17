@@ -54,7 +54,8 @@ export default function Step2MapSearch({ data, onNext }) {
     const lat = parseFloat(place.mapy) / 1e7
     const lng = parseFloat(place.mapx) / 1e7
     const name = place.title.replace(/<[^>]*>/g, '')
-    const info = { name, address: place.roadAddress || place.address, lat, lng, placeUrl: place.link }
+    const kakaoMapUrl = `https://map.kakao.com/link/map/${encodeURIComponent(name)},${lat},${lng}`
+    const info = { name, address: place.roadAddress || place.address, lat, lng, placeUrl: kakaoMapUrl }
     setSelected(info)
     setResults([])
     setQuery(name)

@@ -251,9 +251,12 @@ export default function MapPage() {
               </p>
             )}
 
-            {selectedPlace.placeUrl && (
+            {(selectedPlace.placeUrl || selectedPlace.lat) && (
               <button
-                onClick={() => window.open(selectedPlace.placeUrl, '_blank')}
+                onClick={() => {
+                  const url = selectedPlace.placeUrl || `https://map.kakao.com/link/map/${encodeURIComponent(selectedPlace.name)},${selectedPlace.lat},${selectedPlace.lng}`
+                  window.open(url, '_blank')
+                }}
                 style={{
                   width: '100%',
                   padding: '10px',
