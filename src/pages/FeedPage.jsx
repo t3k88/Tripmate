@@ -96,7 +96,6 @@ export default function FeedPage() {
       {detailPlace && (
         <PlaceDetail
           place={detailPlace}
-          groupNames={getGroupNames(detailPlace.groupIds)}
           onClose={() => setDetailPlace(null)}
           onEdit={() => handleEdit(detailPlace)}
           onDelete={() => handleDelete(detailPlace.id)}
@@ -191,30 +190,42 @@ function MiniMap({ place }) {
   )
 }
 
-function PlaceDetail({ place, groupNames, onClose, onEdit, onDelete }) {
-  const info = getCategoryInfo(place.category)
+function PlaceDetail({ place, onClose, onEdit, onDelete }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '85vh', overflowY: 'auto' }}>
+      <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '88vh', overflowY: 'auto' }}>
         <div className="modal-handle" />
 
-        {/* 헤더 */}
-        <div style={{ padding: '12px 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Tag category={place.category} />
-          <button onClick={onClose} style={{ fontSize: 18, color: 'var(--text-sub)' }}>✕</button>
+        {/* 헤더: 카테고리 + 이름 + 닫기 */}
+        <div style={{ padding: '8px 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ marginBottom: 4 }}>
+              <Tag category={place.category} />
+            </div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 2 }}>{place.name}</h2>
+            <p style={{ fontSize: 12, color: 'var(--text-sub)' }}>{place.address}</p>
+          </div>
+          <button onClick={onClose} style={{ fontSize: 18, color: 'var(--text-sub)', marginLeft: 12, marginTop: 2, flexShrink: 0 }}>✕</button>
         </div>
 
-        <div style={{ padding: '10px 16px 24px' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{place.name}</h2>
-          <p style={{ fontSize: 13, color: 'var(--text-sub)', marginBottom: 14 }}>{place.address}</p>
-
+        <div style={{ padding: '12px 16px 24px' }}>
           {/* 미니 지도 */}
           <MiniMap place={place} />
 
+          {/* 코멘트 */}
+          {place.comment && (
+            <div style={{
+              padding: '12px 14px', borderRadius: 10, background: 'var(--bg)',
+              borderLeft: '3px solid var(--primary)', marginBottom: 12,
+            }}>
+              <p style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.6 }}>"{place.comment}"</p>
+            </div>
+          )}
+
           {/* 추천 메뉴 / 액티비티 */}
           {place.menus && place.menus.length > 0 && (
-            <div style={{ marginBottom: 14 }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 {EXTRA_SECTION[place.category]?.icon} {EXTRA_SECTION[place.category]?.label}
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -230,8 +241,9 @@ function PlaceDetail({ place, groupNames, onClose, onEdit, onDelete }) {
             </div>
           )}
 
+          {/* 추천 태그 */}
           {place.points && place.points.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
               {place.points.map(pt => (
                 <span key={pt} style={{
                   padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
@@ -243,20 +255,10 @@ function PlaceDetail({ place, groupNames, onClose, onEdit, onDelete }) {
             </div>
           )}
 
-          {place.comment && (
-            <div style={{
-              padding: '12px 14px', borderRadius: 10, background: 'var(--bg)',
-              borderLeft: '3px solid var(--primary)', marginBottom: 14,
-            }}>
-              <p style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.6 }}>"{place.comment}"</p>
-            </div>
-          )}
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, color: 'var(--text-sub)', fontSize: 12 }}>
-            <span>👤 {place.author}</span>
-            {groupNames.map(name => <span key={name}>· {name}</span>)}
-            <span>· {formatDate(place.date)}</span>
-          </div>
+          {/* 작성자 + 날짜 */}
+          <p style={{ fontSize: 12, color: 'var(--text-sub)', marginBottom: 16 }}>
+            👤 {place.author} · {formatDate(place.date)}
+          </p>
 
           {/* 액션 버튼들 */}
           <div style={{ display: 'flex', gap: 8 }}>
