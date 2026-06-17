@@ -1,17 +1,40 @@
-import { useState } from 'react'
-import { CATEGORIES, getCategoryInfo, RECOMMENDATION_POINTS } from '../../utils/helpers'
+import { useState, useRef } from 'react'
+import { CATEGORIES, getCategoryInfo, RECOMMENDATION_POINTS, EXTRA_SECTION } from '../../utils/helpers'
 
 export default function EditPlaceForm({ data, groups, onSubmit }) {
   const [category, setCategory] = useState(data.category)
   const [points, setPoints] = useState(data.points || [])
+  const [menus, setMenus] = useState(data.menus || [])
   const [comment, setComment] = useState(data.comment || '')
   const [groupIds, setGroupIds] = useState(data.groupIds || [])
+  const [customTag, setCustomTag] = useState('')
+  const [menuInput, setMenuInput] = useState('')
 
   const availablePoints = RECOMMENDATION_POINTS[category] || RECOMMENDATION_POINTS.etc
+  const extraSection = EXTRA_SECTION[category]
 
   const togglePoint = (pt) => {
     setPoints(prev => prev.includes(pt) ? prev.filter(p => p !== pt) : [...prev, pt])
   }
+
+  const addCustomTag = () => {
+    const tag = customTag.trim().replace(/^#/, '')
+    if (!tag) return
+    const full = `#${tag}`
+    if (!points.includes(full)) setPoints(prev => [...prev, full])
+    setCustomTag('')
+  }
+
+  const removePoint = (pt) => setPoints(prev => prev.filter(p => p !== pt))
+
+  const addMenu = () => {
+    const item = menuInput.trim()
+    if (!item) return
+    if (!menus.includes(item)) setMenus(prev => [...prev, item])
+    setMenuInput('')
+  }
+
+  const removeMenu = (item) => setMenus(prev => prev.filter(m => m !== item))
 
   const toggleGroup = (id) => {
     setGroupIds(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id])
@@ -45,7 +68,7 @@ export default function EditPlaceForm({ data, groups, onSubmit }) {
           {CATEGORIES.map(cat => (
             <button
               key={cat.id}
-              onClick={() => setCategory(cat.id)}
+              onClick={() => { setCategory(cat.id); setPoints([]); setMenus([]) }}
               style={{
                 padding: '12px 6px', borderRadius: 'var(--radius-md)',
                 border: category === cat.id ? '2px solid var(--primary)' : '2px solid var(--border)',
@@ -62,10 +85,48 @@ export default function EditPlaceForm({ data, groups, onSubmit }) {
         </div>
       </div>
 
-      {/* 추천 포인트 */}
+      {/* 추천 메뉴 / 액티비티 */}
+      {extraSection && (
+        <div className="form-group">
+          <label className="form-label">{extraSection.icon} {extraSection.label}</label>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <input
+              className="form-input"
+              style={{ flex: 1 }}
+              placeholder={extraSection.placeholder}
+              value={menuInput}
+              onChange={e => setMenuInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addMenu()}
+            />
+            <button
+              onClick={addMenu}
+              style={{
+                padding: '0 16px', background: 'var(--primary)', color: 'white',
+                borderRadius: 'var(--radius-sm)', fontSize: 20, fontWeight: 700, flexShrink: 0,
+              }}
+            >+</button>
+          </div>
+          {menus.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {menus.map(item => (
+                <span key={item} style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  padding: '5px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                  background: 'var(--primary)', color: 'white',
+                }}>
+                  {item}
+                  <button onClick={() => removeMenu(item)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1 }}>✕</button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 추천 포인트 태그 */}
       <div className="form-group">
-        <label className="form-label">추천 포인트 <span style={{ color: 'var(--text-sub)', fontWeight: 400, textTransform: 'none' }}>(복수 선택 가능)</span></label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <label className="form-label">추천 태그 <span style={{ color: 'var(--text-sub)', fontWeight: 400, textTransform: 'none' }}>(복수 선택 가능)</span></label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
           {availablePoints.map(pt => {
             const isSelected = points.includes(pt)
             return (
@@ -84,6 +145,40 @@ export default function EditPlaceForm({ data, groups, onSubmit }) {
             )
           })}
         </div>
+
+        {/* 직접 입력 */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: points.filter(p => !availablePoints.includes(p)).length > 0 ? 8 : 0 }}>
+          <input
+            className="form-input"
+            style={{ flex: 1 }}
+            placeholder="태그 직접 추가 (예: 뷰맛집)"
+            value={customTag}
+            onChange={e => setCustomTag(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addCustomTag()}
+          />
+          <button
+            onClick={addCustomTag}
+            style={{
+              padding: '0 16px', background: 'var(--primary-bg)', color: 'var(--primary)',
+              borderRadius: 'var(--radius-sm)', fontSize: 20, fontWeight: 700, flexShrink: 0,
+              border: '1.5px solid var(--primary)',
+            }}
+          >+</button>
+        </div>
+        {points.filter(p => !availablePoints.includes(p)).length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {points.filter(p => !availablePoints.includes(p)).map(pt => (
+              <span key={pt} style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                background: 'var(--primary)', color: 'white',
+              }}>
+                {pt}
+                <button onClick={() => removePoint(pt)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1 }}>✕</button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 한마디 */}
@@ -117,7 +212,7 @@ export default function EditPlaceForm({ data, groups, onSubmit }) {
       <button
         className="btn-primary"
         disabled={points.length === 0}
-        onClick={() => onSubmit({ category, points, comment, groupIds })}
+        onClick={() => onSubmit({ category, points, menus, comment, groupIds })}
       >
         수정 완료
       </button>

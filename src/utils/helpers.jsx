@@ -6,6 +6,14 @@ export const CATEGORIES = [
   { id: 'etc', label: '기타', icon: '📌' },
 ]
 
+// 카테고리별 추천 메뉴/액티비티 섹션 설정
+export const EXTRA_SECTION = {
+  restaurant: { label: '추천 메뉴', placeholder: '예) 된장찌개, 삼겹살 2인분', icon: '🍽️' },
+  cafe:       { label: '추천 메뉴', placeholder: '예) 아이스 아메리카노, 딸기케이크', icon: '☕' },
+  bar:        { label: '추천 메뉴', placeholder: '예) 골뱅이소면, 참이슬', icon: '🍺' },
+  attraction: { label: '추천 액티비티', placeholder: '예) 일출 보기, 트레킹 코스', icon: '🏃' },
+}
+
 export const RECOMMENDATION_POINTS = {
   restaurant: ['#맛집', '#가성비', '#뷰맛집', '#혼밥가능', '#단체모임', '#웨이팅없음', '#주차편함', '#친절한서비스'],
   cafe: ['#분위기굿', '#공부하기좋음', '#뷰맛집', '#디저트맛있음', '#넓은좌석', '#반려동물가능', '#주차편함', '#감성카페'],

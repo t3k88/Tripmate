@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
-import { Tag, formatDate, getCategoryInfo, getRegion } from '../utils/helpers'
+import { Tag, formatDate, getCategoryInfo, getRegion, EXTRA_SECTION } from '../utils/helpers'
 import { useKakaoMaps } from '../hooks/useKakaoMaps'
 
 function RegionSection({ region, places, children }) {
@@ -210,6 +210,25 @@ function PlaceDetail({ place, groupNames, onClose, onEdit, onDelete }) {
 
           {/* 미니 지도 */}
           <MiniMap place={place} />
+
+          {/* 추천 메뉴 / 액티비티 */}
+          {place.menus && place.menus.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {EXTRA_SECTION[place.category]?.icon} {EXTRA_SECTION[place.category]?.label}
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {place.menus.map(item => (
+                  <span key={item} style={{
+                    padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                    background: '#FFF3E0', color: '#E67E22',
+                  }}>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {place.points && place.points.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
