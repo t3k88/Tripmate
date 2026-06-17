@@ -295,8 +295,10 @@ function FilterRow({ children, sub }) {
   return (
     <div style={{
       display: 'flex', gap: 6, padding: sub ? '6px 16px' : '8px 16px',
-      overflowX: 'auto', borderBottom: '1px solid var(--border)',
+      overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+      borderBottom: '1px solid var(--border)',
       background: sub ? 'var(--bg)' : 'var(--surface)',
+      scrollbarWidth: 'none', msOverflowStyle: 'none',
     }}>
       {children}
     </div>
