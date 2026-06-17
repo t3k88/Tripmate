@@ -113,9 +113,9 @@ export default function MapPage() {
     mapInstanceRef.current = map
   }, [ready])
 
+  const filteredIds = filteredPlaces.map(p => p.id).join(',')
   useEffect(() => {
-    if (!ready || !mapInstanceRef.current) return
-    if (filteredPlaces.length === 0) return
+    if (!ready || !mapInstanceRef.current || filteredPlaces.length === 0) return
     if (filteredPlaces.length === 1) {
       const p = filteredPlaces[0]
       mapInstanceRef.current.setCenter(new window.kakao.maps.LatLng(p.lat, p.lng))
@@ -123,9 +123,9 @@ export default function MapPage() {
     } else {
       const bounds = new window.kakao.maps.LatLngBounds()
       filteredPlaces.forEach(p => bounds.extend(new window.kakao.maps.LatLng(p.lat, p.lng)))
-      mapInstanceRef.current.setBounds(bounds)
+      mapInstanceRef.current.setBounds(bounds, { paddingTop: 80, paddingBottom: 80, paddingLeft: 40, paddingRight: 40 })
     }
-  }, [ready, category, sido, gu, dong])
+  }, [ready, filteredIds])
 
   useEffect(() => {
     if (!ready || !mapInstanceRef.current) return
