@@ -108,10 +108,18 @@ export default function MapPage() {
 
   useEffect(() => {
     if (!ready || !mapRef.current) return
-    const center = new window.kakao.maps.LatLng(36.5, 127.8)
-    const map = new window.kakao.maps.Map(mapRef.current, { center, level: 12 })
-    mapInstanceRef.current = map
-    setTimeout(() => map.relayout(), 0)
+    const init = () => {
+      const el = mapRef.current
+      if (!el || el.clientWidth === 0 || el.clientHeight === 0) {
+        requestAnimationFrame(init)
+        return
+      }
+      const center = new window.kakao.maps.LatLng(36.5, 127.8)
+      const map = new window.kakao.maps.Map(el, { center, level: 12 })
+      mapInstanceRef.current = map
+      map.relayout()
+    }
+    requestAnimationFrame(init)
   }, [ready])
 
   const filteredIds = filteredPlaces.map(p => p.id).join(',')
