@@ -97,10 +97,25 @@ const initialJournals = [
   },
 ]
 
+function migratePlace(p) {
+  if (!p.lat) return p
+  const isKakaoUrl = p.placeUrl && p.placeUrl.includes('map.kakao.com')
+  if (isKakaoUrl) return p
+  return { ...p, placeUrl: `https://map.kakao.com/link/map/${encodeURIComponent(p.name)},${p.lat},${p.lng}` }
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('feed')
   const [groups, setGroups] = useLocalStorage('tripmate_groups', initialGroups)
   const [places, setPlaces] = useLocalStorage('tripmate_places', initialPlaces)
+
+  useEffect(() => {
+    setPlaces(ps => {
+      const migrated = ps.map(migratePlace)
+      const changed = migrated.some((p, i) => p.placeUrl !== ps[i].placeUrl)
+      return changed ? migrated : ps
+    })
+  }, [])
   const [journals, setJournals] = useLocalStorage('tripmate_journals', initialJournals)
   const [showPlaceModal, setShowPlaceModal] = useState(false)
   const [showGroupModal, setShowGroupModal] = useState(false)
