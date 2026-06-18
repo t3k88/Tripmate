@@ -78,23 +78,32 @@ export default function MapPage() {
     return Array.from(new Set(base.map(p => p.author).filter(Boolean)))
   }, [placesWithLevels, draftGroups])
 
+  // 전체 선택(=allGroupIds 전부) 이면 그룹 필터 없음 처리
+  const activeGroupFilter = filterGroups.length > 0 && filterGroups.length < groups.length ? filterGroups : []
+  const activeCategoryFilter = filterCategories.length > 0 && filterCategories.length < allCategoryIds.length ? filterCategories : []
+  const activeAuthorFilter = filterAuthors.length > 0 && filterAuthors.length < availableAuthors.length ? filterAuthors : []
+
   const filteredPlaces = placesWithLevels.filter(p => {
-    if (filterCategories.length > 0 && !filterCategories.includes(p.category)) return false
+    if (activeCategoryFilter.length > 0 && !activeCategoryFilter.includes(p.category)) return false
     if (sido !== '전체' && p._levels[0] !== sido) return false
     if (gu !== '전체' && p._levels[1] !== gu) return false
     if (dong !== '전체' && p._levels[2] !== dong) return false
-    if (filterGroups.length > 0 && !(p.groupIds || []).some(id => filterGroups.includes(id))) return false
-    if (filterAuthors.length > 0 && !filterAuthors.includes(p.author)) return false
+    if (activeGroupFilter.length > 0 && !(p.groupIds || []).some(id => activeGroupFilter.includes(id))) return false
+    if (activeAuthorFilter.length > 0 && !activeAuthorFilter.includes(p.author)) return false
     return true
   })
 
+  const draftGroupFilter = draftGroups.length > 0 && draftGroups.length < groups.length ? draftGroups : []
+  const draftCategoryFilter = draftCategories.length > 0 && draftCategories.length < allCategoryIds.length ? draftCategories : []
+  const draftAuthorFilter = draftAuthors.length > 0 && draftAuthors.length < availableAuthors.length ? draftAuthors : []
+
   const draftFilteredCount = placesWithLevels.filter(p => {
-    if (draftCategories.length > 0 && !draftCategories.includes(p.category)) return false
+    if (draftCategoryFilter.length > 0 && !draftCategoryFilter.includes(p.category)) return false
     if (draftSido !== '전체' && p._levels[0] !== draftSido) return false
     if (draftGu !== '전체' && p._levels[1] !== draftGu) return false
     if (draftDong !== '전체' && p._levels[2] !== draftDong) return false
-    if (draftGroups.length > 0 && !(p.groupIds || []).some(id => draftGroups.includes(id))) return false
-    if (draftAuthors.length > 0 && !draftAuthors.includes(p.author)) return false
+    if (draftGroupFilter.length > 0 && !(p.groupIds || []).some(id => draftGroupFilter.includes(id))) return false
+    if (draftAuthorFilter.length > 0 && !draftAuthorFilter.includes(p.author)) return false
     return true
   }).length
 
