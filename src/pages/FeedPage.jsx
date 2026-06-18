@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { Tag, formatDate, getCategoryInfo, getRegion, EXTRA_SECTION } from '../utils/helpers'
 import { useKakaoMaps } from '../hooks/useKakaoMaps'
+import AppPortal from '../components/AppPortal'
 
 function RegionSection({ region, places, children }) {
   const [open, setOpen] = useState(true)
@@ -94,12 +95,14 @@ export default function FeedPage() {
 
       {/* 상세보기 바텀시트 */}
       {detailPlace && (
-        <PlaceDetail
-          place={detailPlace}
-          onClose={() => setDetailPlace(null)}
-          onEdit={() => handleEdit(detailPlace)}
-          onDelete={() => handleDelete(detailPlace.id)}
-        />
+        <AppPortal>
+          <PlaceDetail
+            place={detailPlace}
+            onClose={() => setDetailPlace(null)}
+            onEdit={() => handleEdit(detailPlace)}
+            onDelete={() => handleDelete(detailPlace.id)}
+          />
+        </AppPortal>
       )}
     </>
   )

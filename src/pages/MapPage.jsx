@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
 import { CATEGORIES, getCategoryInfo, getAddressLevels } from '../utils/helpers'
 import { useKakaoMaps } from '../hooks/useKakaoMaps'
+import AppPortal from '../components/AppPortal'
 
 export default function MapPage() {
   const { places, groups, setShowPlaceModal } = useApp()
@@ -329,6 +330,7 @@ export default function MapPage() {
 
       {/* 필터 바텀시트 */}
       {filterOpen && (
+        <AppPortal>
         <div className="modal-overlay" onClick={() => setFilterOpen(false)}>
           <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
             <div className="modal-handle" />
@@ -438,6 +440,7 @@ export default function MapPage() {
             </div>
           </div>
         </div>
+        </AppPortal>
       )}
     </>
   )
