@@ -5,25 +5,28 @@ import { formatDate } from '../utils/helpers'
 const MOODS = ['😍', '😊', '😐', '😢', '😤']
 
 export default function JournalPage() {
-  const { journals, setJournals, places, groups } = useApp()
+  const { journals, addJournal, updateJournal, deleteJournal, groups } = useApp()
   const [showEditor, setShowEditor] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState({ title: '', content: '', mood: '😊', groupId: '' })
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim() || !form.content.trim()) return
 
     if (editingId) {
-      setJournals(js => js.map(j => j.id === editingId ? { ...j, ...form } : j))
+      await updateJournal(editingId, {
+        title: form.title,
+        content: form.content,
+        mood: form.mood,
+        groupId: form.groupId || null,
+      })
     } else {
-      setJournals(js => [...js, {
-        id: Date.now(),
-        ...form,
-        groupId: form.groupId ? Number(form.groupId) : null,
-        author: '나',
-        date: new Date().toISOString().slice(0, 10),
-        placeIds: [],
-      }])
+      await addJournal({
+        title: form.title,
+        content: form.content,
+        mood: form.mood,
+        groupId: form.groupId || null,
+      })
     }
     setShowEditor(false)
     setEditingId(null)
@@ -41,8 +44,8 @@ export default function JournalPage() {
     setShowEditor(true)
   }
 
-  const handleDelete = (id) => {
-    setJournals(js => js.filter(j => j.id !== id))
+  const handleDelete = async (id) => {
+    await deleteJournal(id)
   }
 
   return (
@@ -60,7 +63,7 @@ export default function JournalPage() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[...journals].reverse().map(journal => (
+            {journals.map(journal => (
               <JournalCard
                 key={journal.id}
                 journal={journal}

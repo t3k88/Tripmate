@@ -8,7 +8,7 @@ import EditPlaceForm from './EditPlaceForm'
 const STEPS = ['카테고리', '위치', '추천포인트']
 
 export default function PlaceRegisterModal() {
-  const { setShowPlaceModal, setPlaces, groups, editingPlace, setEditingPlace } = useApp()
+  const { setShowPlaceModal, addPlace, updatePlace, groups, editingPlace, setEditingPlace } = useApp()
   const [step, setStep] = useState(0)
   const [data, setData] = useState(editingPlace ?? {
     category: '',
@@ -34,17 +34,11 @@ export default function PlaceRegisterModal() {
 
   const handleBack = () => setStep(s => s - 1)
 
-  const handleSubmit = (finalData) => {
+  const handleSubmit = async (finalData) => {
     if (editingPlace) {
-      setPlaces(ps => ps.map(p => p.id === editingPlace.id ? { ...p, ...data, ...finalData } : p))
+      await updatePlace(editingPlace.id, { ...data, ...finalData })
     } else {
-      setPlaces(ps => [...ps, {
-        id: Date.now(),
-        ...data,
-        ...finalData,
-        author: '나',
-        date: new Date().toISOString().slice(0, 10),
-      }])
+      await addPlace({ ...data, ...finalData })
     }
     handleClose()
   }

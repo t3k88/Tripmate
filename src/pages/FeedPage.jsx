@@ -33,7 +33,7 @@ function RegionSection({ region, places, children }) {
 }
 
 export default function FeedPage() {
-  const { places, groups, setShowPlaceModal, setPlaces, setEditingPlace } = useApp()
+  const { places, groups, setShowPlaceModal, deletePlace, setEditingPlace } = useApp()
   const [detailPlace, setDetailPlace] = useState(null)
 
   const getGroupNames = (groupIds) => (groupIds || []).map(id => groups.find(g => g.id === id)?.name).filter(Boolean)
@@ -44,9 +44,9 @@ export default function FeedPage() {
     setShowPlaceModal(true)
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('이 장소를 삭제할까요?')) {
-      setPlaces(ps => ps.filter(p => p.id !== id))
+      await deletePlace(id)
       setDetailPlace(null)
     }
   }

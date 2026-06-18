@@ -4,33 +4,27 @@ import { useApp } from '../../context/AppContext'
 const COVERS = ['🏝️', '🏔️', '🌊', '🌸', '🍜', '🍺', '🎡', '✈️', '🚂', '🏕️', '🌅', '🗺️']
 
 export default function GroupModal() {
-  const { setShowGroupModal, groups, setGroups, selectedGroup } = useApp()
+  const { setShowGroupModal, groups, addGroup, deleteGroup, selectedGroup } = useApp()
   const [view, setView] = useState(selectedGroup ? 'manage' : 'create')
   const [managingGroup, setManagingGroup] = useState(selectedGroup)
 
   const handleClose = () => setShowGroupModal(false)
 
   if (view === 'create') {
-    return <CreateGroupView onClose={handleClose} onCreated={(group) => { setManagingGroup(group); setView('manage') }} groups={groups} setGroups={setGroups} />
+    return <CreateGroupView onClose={handleClose} onCreated={(group) => { setManagingGroup(group); setView('manage') }} addGroup={addGroup} />
   }
 
-  return <ManageGroupView group={managingGroup} onClose={handleClose} groups={groups} setGroups={setGroups} />
+  return <ManageGroupView group={managingGroup} onClose={handleClose} groups={groups} deleteGroup={deleteGroup} />
 }
 
-function CreateGroupView({ onClose, onCreated, groups, setGroups }) {
+function CreateGroupView({ onClose, onCreated, addGroup }) {
   const [name, setName] = useState('')
   const [cover, setCover] = useState('✈️')
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!name.trim()) return
-    const newGroup = {
-      id: Date.now(),
-      name: name.trim(),
-      cover,
-      members: [{ id: 1, name: '나', email: 'taeeun.kang88@gmail.com', role: 'owner', avatar: '🧡' }],
-    }
-    setGroups(gs => [...gs, newGroup])
-    onCreated(newGroup)
+    const newGroup = await addGroup({ name: name.trim(), cover })
+    if (newGroup) onCreated(newGroup)
   }
 
   return (
@@ -118,7 +112,7 @@ function CreateGroupView({ onClose, onCreated, groups, setGroups }) {
 
 const KAKAO_JS_KEY = '133c1dcabbefac66f726ff7b63a16179'
 
-function ManageGroupView({ group, onClose, groups, setGroups }) {
+function ManageGroupView({ group, onClose, groups, deleteGroup }) {
   const [inviteMsg, setInviteMsg] = useState('')
   const [tab, setTab] = useState('members')
 
@@ -147,15 +141,10 @@ function ManageGroupView({ group, onClose, groups, setGroups }) {
     })
   }
 
-  const handleRemove = (memberId) => {
-    setGroups(gs => gs.map(g => g.id === currentGroup.id
-      ? { ...g, members: g.members.filter(m => m.id !== memberId) }
-      : g
-    ))
-  }
+  const handleRemove = () => {}
 
-  const handleDeleteGroup = () => {
-    setGroups(gs => gs.filter(g => g.id !== currentGroup.id))
+  const handleDeleteGroup = async () => {
+    await deleteGroup(currentGroup.id)
     onClose()
   }
 
