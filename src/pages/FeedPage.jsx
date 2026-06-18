@@ -150,22 +150,31 @@ function PlaceCard({ place, groupNames, onClick, onEdit, onDelete }) {
         </p>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>👤 {place.author}</span>
-          {groupNames.map(name => (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flex: 1, minWidth: 0, flexWrap: 'nowrap', overflow: 'hidden' }}>
+          <span style={{ fontSize: 12, color: 'var(--text-sub)', flexShrink: 0 }}>👤 {place.author}</span>
+          {groupNames.slice(0, 2).map(name => (
             <span key={name} style={{
               fontSize: 11, fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-bg)',
-              padding: '1px 7px', borderRadius: 10,
+              padding: '1px 7px', borderRadius: 10, flexShrink: 0,
+              maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
               {name}
             </span>
           ))}
+          {groupNames.length > 2 && (
+            <span style={{
+              fontSize: 11, fontWeight: 600, color: 'var(--text-sub)', background: 'var(--border)',
+              padding: '1px 7px', borderRadius: 10, flexShrink: 0,
+            }}>
+              +{groupNames.length - 2}
+            </span>
+          )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
           <span style={{ fontSize: 11, color: 'var(--text-sub)' }}>{formatDate(place.date)}</span>
-          <button onClick={onEdit} style={{ fontSize: 11, color: 'var(--text-sub)', padding: '2px 6px', borderRadius: 6, background: 'var(--bg)' }}>수정</button>
-          <button onClick={onDelete} style={{ fontSize: 11, color: '#E05252', padding: '2px 6px', borderRadius: 6, background: '#fff0f0' }}>삭제</button>
+          <button onClick={onEdit} style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>✏️</button>
+          <button onClick={onDelete} style={{ width: 28, height: 28, borderRadius: 8, background: '#fff0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🗑️</button>
         </div>
       </div>
     </div>
