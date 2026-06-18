@@ -24,19 +24,24 @@ export default function MapPage() {
 
   // 임시 필터
   const [draftCategories, setDraftCategories] = useState([])
-  const [draftSido, setDraftSido] = useState('전체')
-  const [draftGu, setDraftGu] = useState('전체')
-  const [draftDong, setDraftDong] = useState('전체')
+  const [draftSido, setDraftSido] = useState('')
+  const [draftGu, setDraftGu] = useState('')
+  const [draftDong, setDraftDong] = useState('')
   const [draftGroups, setDraftGroups] = useState([])
   const [draftAuthors, setDraftAuthors] = useState([])
 
   // 적용된 필터
   const [filterCategories, setFilterCategories] = useState([])
-  const [sido, setSido] = useState('전체')
-  const [gu, setGu] = useState('전체')
-  const [dong, setDong] = useState('전체')
+  const [sido, setSido] = useState('')
+  const [gu, setGu] = useState('')
+  const [dong, setDong] = useState('')
   const [filterGroups, setFilterGroups] = useState([])
   const [filterAuthors, setFilterAuthors] = useState([])
+
+  // 지역 더보기
+  const [sidoExpanded, setSidoExpanded] = useState(false)
+  const [guExpanded, setGuExpanded] = useState(false)
+  const REGION_LIMIT = 6
 
   const allCategoryIds = CATEGORIES.map(c => c.id)
   const allGroupIds = groups.map(g => g.id)
@@ -51,24 +56,24 @@ export default function MapPage() {
     : placesWithLevels.filter(p => draftCategories.includes(p.category))
 
   const sidoOptions = useMemo(() => {
-    const set = new Set(byDraftCategory.map(p => p._levels[0]))
-    return ['전체', ...Array.from(set)]
+    const set = new Set(byDraftCategory.map(p => p._levels[0]).filter(Boolean))
+    return Array.from(set)
   }, [byDraftCategory])
 
   const guOptions = useMemo(() => {
-    if (draftSido === '전체') return []
+    if (!draftSido) return []
     const set = new Set(
       byDraftCategory.filter(p => p._levels[0] === draftSido && p._levels[1]).map(p => p._levels[1])
     )
-    return set.size > 0 ? ['전체', ...Array.from(set)] : []
+    return Array.from(set)
   }, [byDraftCategory, draftSido])
 
   const dongOptions = useMemo(() => {
-    if (draftSido === '전체' || draftGu === '전체') return []
+    if (!draftSido || !draftGu) return []
     const set = new Set(
       byDraftCategory.filter(p => p._levels[0] === draftSido && p._levels[1] === draftGu && p._levels[2]).map(p => p._levels[2])
     )
-    return set.size > 0 ? ['전체', ...Array.from(set)] : []
+    return Array.from(set)
   }, [byDraftCategory, draftSido, draftGu])
 
   const availableAuthors = useMemo(() => {
@@ -85,9 +90,9 @@ export default function MapPage() {
 
   const filteredPlaces = placesWithLevels.filter(p => {
     if (activeCategoryFilter.length > 0 && !activeCategoryFilter.includes(p.category)) return false
-    if (sido !== '전체' && p._levels[0] !== sido) return false
-    if (gu !== '전체' && p._levels[1] !== gu) return false
-    if (dong !== '전체' && p._levels[2] !== dong) return false
+    if (sido && p._levels[0] !== sido) return false
+    if (gu && p._levels[1] !== gu) return false
+    if (dong && p._levels[2] !== dong) return false
     if (activeGroupFilter.length > 0 && !(p.groupIds || []).some(id => activeGroupFilter.includes(id))) return false
     if (activeAuthorFilter.length > 0 && !activeAuthorFilter.includes(p.author)) return false
     return true
@@ -99,9 +104,9 @@ export default function MapPage() {
 
   const draftFilteredCount = placesWithLevels.filter(p => {
     if (draftCategoryFilter.length > 0 && !draftCategoryFilter.includes(p.category)) return false
-    if (draftSido !== '전체' && p._levels[0] !== draftSido) return false
-    if (draftGu !== '전체' && p._levels[1] !== draftGu) return false
-    if (draftDong !== '전체' && p._levels[2] !== draftDong) return false
+    if (draftSido && p._levels[0] !== draftSido) return false
+    if (draftGu && p._levels[1] !== draftGu) return false
+    if (draftDong && p._levels[2] !== draftDong) return false
     if (draftGroupFilter.length > 0 && !(p.groupIds || []).some(id => draftGroupFilter.includes(id))) return false
     if (draftAuthorFilter.length > 0 && !draftAuthorFilter.includes(p.author)) return false
     return true
@@ -130,25 +135,27 @@ export default function MapPage() {
 
   const resetFilter = () => {
     setDraftCategories([])
-    setDraftSido('전체')
-    setDraftGu('전체')
-    setDraftDong('전체')
+    setDraftSido('')
+    setDraftGu('')
+    setDraftDong('')
     setDraftGroups([])
     setDraftAuthors([])
+    setSidoExpanded(false)
+    setGuExpanded(false)
   }
 
   const filterSummary = () => {
     const parts = []
     if (filterCategories.length > 0) parts.push(filterCategories.map(id => CATEGORIES.find(c => c.id === id)?.label).join(', '))
-    if (sido !== '전체') parts.push(sido)
-    if (gu !== '전체') parts.push(gu)
-    if (dong !== '전체') parts.push(dong)
+    if (sido) parts.push(sido)
+    if (gu) parts.push(gu)
+    if (dong) parts.push(dong)
     if (filterGroups.length > 0) parts.push(`그룹 ${filterGroups.length}개`)
     if (filterAuthors.length > 0) parts.push(filterAuthors.join(', '))
     return parts.length > 0 ? parts.join(' · ') : '전체'
   }
 
-  const isFiltered = filterCategories.length > 0 || sido !== '전체' || filterGroups.length > 0 || filterAuthors.length > 0
+  const isFiltered = filterCategories.length > 0 || sido || filterGroups.length > 0 || filterAuthors.length > 0
 
   useEffect(() => {
     if (!ready || !mapRef.current) return
@@ -393,34 +400,55 @@ export default function MapPage() {
               )}
 
               {/* 시/도 */}
-              {sidoOptions.length > 1 && (
+              {sidoOptions.length > 0 && (
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>지역</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {sidoOptions.map(opt => (
+                    <FilterChip label="전체" active={!draftSido} onClick={() => { setDraftSido(''); setDraftGu(''); setDraftDong('') }} />
+                    {(sidoExpanded ? sidoOptions : sidoOptions.slice(0, REGION_LIMIT)).map(opt => (
                       <FilterChip key={opt} label={opt} active={draftSido === opt}
-                        onClick={() => { setDraftSido(opt); setDraftGu('전체'); setDraftDong('전체') }} />
+                        onClick={() => { setDraftSido(opt); setDraftGu(''); setDraftDong(''); setGuExpanded(false) }} />
                     ))}
+                    {sidoOptions.length > REGION_LIMIT && (
+                      <button
+                        onClick={() => setSidoExpanded(e => !e)}
+                        style={{ padding: '8px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600, color: 'var(--primary)', border: '1.5px solid var(--primary)', background: 'transparent' }}
+                      >
+                        {sidoExpanded ? '접기' : `+${sidoOptions.length - REGION_LIMIT}개 더보기`}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
 
+              {/* 구/시 */}
               {guOptions.length > 0 && (
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>구/시</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {guOptions.map(opt => (
+                    <FilterChip label="전체" active={!draftGu} onClick={() => { setDraftGu(''); setDraftDong('') }} />
+                    {(guExpanded ? guOptions : guOptions.slice(0, REGION_LIMIT)).map(opt => (
                       <FilterChip key={opt} label={opt} active={draftGu === opt}
-                        onClick={() => { setDraftGu(opt); setDraftDong('전체') }} />
+                        onClick={() => { setDraftGu(opt); setDraftDong('') }} />
                     ))}
+                    {guOptions.length > REGION_LIMIT && (
+                      <button
+                        onClick={() => setGuExpanded(e => !e)}
+                        style={{ padding: '8px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600, color: 'var(--primary)', border: '1.5px solid var(--primary)', background: 'transparent' }}
+                      >
+                        {guExpanded ? '접기' : `+${guOptions.length - REGION_LIMIT}개 더보기`}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
 
+              {/* 동/읍/면 */}
               {dongOptions.length > 0 && (
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>동/읍/면</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    <FilterChip label="전체" active={!draftDong} onClick={() => setDraftDong('')} />
                     {dongOptions.map(opt => (
                       <FilterChip key={opt} label={opt} active={draftDong === opt} onClick={() => setDraftDong(opt)} />
                     ))}
