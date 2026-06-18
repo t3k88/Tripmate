@@ -4,6 +4,14 @@ import { CATEGORIES, getCategoryInfo, getAddressLevels } from '../utils/helpers'
 import { useKakaoMaps } from '../hooks/useKakaoMaps'
 import AppPortal from '../components/AppPortal'
 
+// 전체 토글 헬퍼: 전체 클릭 시 all↔none, 개별 클릭 시 단순 토글
+function toggleAll(prev, allItems) {
+  return prev.length === allItems.length ? [] : [...allItems]
+}
+function toggleOne(prev, item) {
+  return prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]
+}
+
 export default function MapPage() {
   const { places, groups, setShowPlaceModal } = useApp()
   const { ready } = useKakaoMaps()
@@ -14,8 +22,8 @@ export default function MapPage() {
   const [selectedPlace, setSelectedPlace] = useState(null)
   const [filterOpen, setFilterOpen] = useState(false)
 
-  // 임시 필터 (바텀시트 안에서 조작)
-  const [draftCategory, setDraftCategory] = useState('전체')
+  // 임시 필터
+  const [draftCategories, setDraftCategories] = useState([])
   const [draftSido, setDraftSido] = useState('전체')
   const [draftGu, setDraftGu] = useState('전체')
   const [draftDong, setDraftDong] = useState('전체')
@@ -23,21 +31,24 @@ export default function MapPage() {
   const [draftAuthors, setDraftAuthors] = useState([])
 
   // 적용된 필터
-  const [category, setCategory] = useState('전체')
+  const [filterCategories, setFilterCategories] = useState([])
   const [sido, setSido] = useState('전체')
   const [gu, setGu] = useState('전체')
   const [dong, setDong] = useState('전체')
   const [filterGroups, setFilterGroups] = useState([])
   const [filterAuthors, setFilterAuthors] = useState([])
 
+  const allCategoryIds = CATEGORIES.map(c => c.id)
+  const allGroupIds = groups.map(g => g.id)
+
   const placesWithLevels = useMemo(
     () => places.map(p => ({ ...p, _levels: getAddressLevels(p.address) })),
     [places]
   )
 
-  const byDraftCategory = draftCategory === '전체'
+  const byDraftCategory = draftCategories.length === 0
     ? placesWithLevels
-    : placesWithLevels.filter(p => p.category === draftCategory)
+    : placesWithLevels.filter(p => draftCategories.includes(p.category))
 
   const sidoOptions = useMemo(() => {
     const set = new Set(byDraftCategory.map(p => p._levels[0]))
@@ -60,17 +71,15 @@ export default function MapPage() {
     return set.size > 0 ? ['전체', ...Array.from(set)] : []
   }, [byDraftCategory, draftSido, draftGu])
 
-  // 그룹 선택 시 해당 그룹 장소들의 작성자만 표시
   const availableAuthors = useMemo(() => {
     const base = draftGroups.length > 0
       ? placesWithLevels.filter(p => (p.groupIds || []).some(id => draftGroups.includes(id)))
       : placesWithLevels
-    const set = new Set(base.map(p => p.author).filter(Boolean))
-    return Array.from(set)
+    return Array.from(new Set(base.map(p => p.author).filter(Boolean)))
   }, [placesWithLevels, draftGroups])
 
   const filteredPlaces = placesWithLevels.filter(p => {
-    if (category !== '전체' && p.category !== category) return false
+    if (filterCategories.length > 0 && !filterCategories.includes(p.category)) return false
     if (sido !== '전체' && p._levels[0] !== sido) return false
     if (gu !== '전체' && p._levels[1] !== gu) return false
     if (dong !== '전체' && p._levels[2] !== dong) return false
@@ -80,7 +89,7 @@ export default function MapPage() {
   })
 
   const draftFilteredCount = placesWithLevels.filter(p => {
-    if (draftCategory !== '전체' && p.category !== draftCategory) return false
+    if (draftCategories.length > 0 && !draftCategories.includes(p.category)) return false
     if (draftSido !== '전체' && p._levels[0] !== draftSido) return false
     if (draftGu !== '전체' && p._levels[1] !== draftGu) return false
     if (draftDong !== '전체' && p._levels[2] !== draftDong) return false
@@ -90,7 +99,7 @@ export default function MapPage() {
   }).length
 
   const openFilter = () => {
-    setDraftCategory(category)
+    setDraftCategories(filterCategories)
     setDraftSido(sido)
     setDraftGu(gu)
     setDraftDong(dong)
@@ -100,7 +109,7 @@ export default function MapPage() {
   }
 
   const applyFilter = () => {
-    setCategory(draftCategory)
+    setFilterCategories(draftCategories)
     setSido(draftSido)
     setGu(draftGu)
     setDong(draftDong)
@@ -111,7 +120,7 @@ export default function MapPage() {
   }
 
   const resetFilter = () => {
-    setDraftCategory('전체')
+    setDraftCategories([])
     setDraftSido('전체')
     setDraftGu('전체')
     setDraftDong('전체')
@@ -119,54 +128,24 @@ export default function MapPage() {
     setDraftAuthors([])
   }
 
-  const allGroupIds = groups.map(g => g.id)
-  const isAllGroups = draftGroups.length === 0 || draftGroups.length === allGroupIds.length
-
-  const toggleDraftGroup = (id) => {
-    setDraftGroups(prev => {
-      // 전체 상태(빈 배열)에서 개별 클릭 → 해당 그룹 빼고 나머지 전체 선택
-      const base = prev.length === 0 ? allGroupIds : prev
-      const next = base.includes(id) ? base.filter(g => g !== id) : [...base, id]
-      // 전부 선택되면 빈 배열로 (= 전체)
-      const result = next.length === allGroupIds.length ? [] : next
-      setDraftAuthors([])
-      return result
-    })
-  }
-
-  const allAuthors = availableAuthors
-  const isAllAuthors = draftAuthors.length === 0 || draftAuthors.length === allAuthors.length
-
-  const toggleDraftAuthor = (name) => {
-    setDraftAuthors(prev => {
-      const base = prev.length === 0 ? allAuthors : prev
-      const next = base.includes(name) ? base.filter(a => a !== name) : [...base, name]
-      return next.length === allAuthors.length ? [] : next
-    })
-  }
-
-  // 적용된 필터 요약 텍스트
   const filterSummary = () => {
     const parts = []
-    if (category !== '전체') parts.push(CATEGORIES.find(c => c.id === category)?.label)
+    if (filterCategories.length > 0) parts.push(filterCategories.map(id => CATEGORIES.find(c => c.id === id)?.label).join(', '))
     if (sido !== '전체') parts.push(sido)
     if (gu !== '전체') parts.push(gu)
     if (dong !== '전체') parts.push(dong)
     if (filterGroups.length > 0) parts.push(`그룹 ${filterGroups.length}개`)
-    if (filterAuthors.length > 0) parts.push(`${filterAuthors.join(', ')}`)
+    if (filterAuthors.length > 0) parts.push(filterAuthors.join(', '))
     return parts.length > 0 ? parts.join(' · ') : '전체'
   }
 
-  const isFiltered = category !== '전체' || sido !== '전체' || filterGroups.length > 0 || filterAuthors.length > 0
+  const isFiltered = filterCategories.length > 0 || sido !== '전체' || filterGroups.length > 0 || filterAuthors.length > 0
 
   useEffect(() => {
     if (!ready || !mapRef.current) return
     const init = () => {
       const el = mapRef.current
-      if (!el || el.clientWidth === 0 || el.clientHeight === 0) {
-        requestAnimationFrame(init)
-        return
-      }
+      if (!el || el.clientWidth === 0 || el.clientHeight === 0) { requestAnimationFrame(init); return }
       const center = new window.kakao.maps.LatLng(36.5, 127.8)
       const map = new window.kakao.maps.Map(el, { center, level: 12 })
       mapInstanceRef.current = map
@@ -198,7 +177,6 @@ export default function MapPage() {
     if (!mapReady || !mapInstanceRef.current) return
     overlaysRef.current.forEach(o => o.setMap(null))
     overlaysRef.current = []
-
     filteredPlaces.forEach(place => {
       const position = new window.kakao.maps.LatLng(place.lat, place.lng)
       const info = getCategoryInfo(place.category)
@@ -249,11 +227,9 @@ export default function MapPage() {
         </div>
       </div>
 
-      {/* 지도 */}
       <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
         <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
-        {/* 장소 카드 리스트 */}
         {filteredPlaces.length > 0 && !selectedPlace && (
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
@@ -273,9 +249,7 @@ export default function MapPage() {
                     textAlign: 'left', minWidth: 120,
                   }}
                 >
-                  <p style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600, marginBottom: 2 }}>
-                    {info.icon} {info.label}
-                  </p>
+                  <p style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600, marginBottom: 2 }}>{info.icon} {info.label}</p>
                   <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{place.name}</p>
                   <p style={{ fontSize: 11, color: 'var(--text-sub)', marginTop: 1 }}>by {place.author}</p>
                 </button>
@@ -284,7 +258,6 @@ export default function MapPage() {
           </div>
         )}
 
-        {/* 선택된 장소 패널 */}
         {selectedPlace && (
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
@@ -304,25 +277,17 @@ export default function MapPage() {
             {selectedPlace.points && selectedPlace.points.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
                 {selectedPlace.points.map(pt => (
-                  <span key={pt} style={{
-                    padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600,
-                    background: 'var(--primary-bg)', color: 'var(--primary)',
-                  }}>{pt}</span>
+                  <span key={pt} style={{ padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600, background: 'var(--primary-bg)', color: 'var(--primary)' }}>{pt}</span>
                 ))}
               </div>
             )}
             {selectedPlace.comment && (
-              <p style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5, marginBottom: 10 }}>
-                "{selectedPlace.comment}"
-              </p>
+              <p style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5, marginBottom: 10 }}>"{selectedPlace.comment}"</p>
             )}
             {selectedPlace.lat && (
               <button
                 onClick={() => window.open(`https://map.kakao.com/?q=${encodeURIComponent(selectedPlace.name)}`, '_blank')}
-                style={{
-                  width: '100%', padding: '10px', background: '#FEE500',
-                  borderRadius: 10, fontSize: 14, fontWeight: 700, color: '#3A1D1D',
-                }}
+                style={{ width: '100%', padding: '10px', background: '#FEE500', borderRadius: 10, fontSize: 14, fontWeight: 700, color: '#3A1D1D' }}
               >
                 🗺️ 카카오맵에서 보기
               </button>
@@ -344,117 +309,123 @@ export default function MapPage() {
       {/* 필터 바텀시트 */}
       {filterOpen && (
         <AppPortal>
-        <div className="modal-overlay" onClick={() => setFilterOpen(false)}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-            <div className="modal-handle" />
-            <div style={{ padding: '4px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 17, fontWeight: 700 }}>필터</span>
-              <button onClick={resetFilter} style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600 }}>초기화</button>
-            </div>
+          <div className="modal-overlay" onClick={() => setFilterOpen(false)}>
+            <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+              <div className="modal-handle" />
+              <div style={{ padding: '4px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 17, fontWeight: 700 }}>필터</span>
+                <button onClick={resetFilter} style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600 }}>초기화</button>
+              </div>
 
-            {/* 카테고리 */}
-            <div style={{ padding: '0 20px 20px' }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>카테고리</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                <FilterChip label="전체" active={draftCategory === '전체'} onClick={() => setDraftCategory('전체')} />
-                {CATEGORIES.map(cat => (
+              {/* 카테고리 */}
+              <div style={{ padding: '0 20px 20px' }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>카테고리</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   <FilterChip
-                    key={cat.id}
-                    label={`${cat.icon} ${cat.label}`}
-                    active={draftCategory === cat.id}
-                    onClick={() => setDraftCategory(cat.id)}
+                    label="전체"
+                    active={draftCategories.length === allCategoryIds.length}
+                    onClick={() => setDraftCategories(toggleAll(draftCategories, allCategoryIds))}
                   />
-                ))}
-              </div>
-            </div>
-
-            {/* 그룹 */}
-            {groups.length > 0 && (
-              <div style={{ padding: '0 20px 20px' }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>그룹</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  <FilterChip label="전체" active={isAllGroups} onClick={() => { setDraftGroups([]); setDraftAuthors([]) }} />
-                  {groups.map(g => (
+                  {CATEGORIES.map(cat => (
                     <FilterChip
-                      key={g.id}
-                      label={`${g.cover} ${g.name}`}
-                      active={isAllGroups || draftGroups.includes(g.id)}
-                      onClick={() => toggleDraftGroup(g.id)}
+                      key={cat.id}
+                      label={`${cat.icon} ${cat.label}`}
+                      active={draftCategories.includes(cat.id)}
+                      onClick={() => setDraftCategories(toggleOne(draftCategories, cat.id))}
                     />
                   ))}
                 </div>
               </div>
-            )}
 
-            {/* 멤버 (그룹 선택 시 또는 전체 작성자) */}
-            {availableAuthors.length > 0 && (
-              <div style={{ padding: '0 20px 20px' }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  {draftGroups.length > 0 ? '멤버' : '작성자'}
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  <FilterChip label="전체" active={isAllAuthors} onClick={() => setDraftAuthors([])} />
-                  {availableAuthors.map(name => (
+              {/* 그룹 */}
+              {groups.length > 0 && (
+                <div style={{ padding: '0 20px 20px' }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>그룹</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     <FilterChip
-                      key={name}
-                      label={name}
-                      active={isAllAuthors || draftAuthors.includes(name)}
-                      onClick={() => toggleDraftAuthor(name)}
+                      label="전체"
+                      active={draftGroups.length === allGroupIds.length}
+                      onClick={() => { setDraftGroups(toggleAll(draftGroups, allGroupIds)); setDraftAuthors([]) }}
                     />
-                  ))}
+                    {groups.map(g => (
+                      <FilterChip
+                        key={g.id}
+                        label={`${g.cover} ${g.name}`}
+                        active={draftGroups.includes(g.id)}
+                        onClick={() => { setDraftGroups(toggleOne(draftGroups, g.id)); setDraftAuthors([]) }}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* 시/도 */}
-            {sidoOptions.length > 1 && (
-              <div style={{ padding: '0 20px 20px' }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>지역</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {sidoOptions.map(opt => (
+              {/* 작성자 */}
+              {availableAuthors.length > 0 && (
+                <div style={{ padding: '0 20px 20px' }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {draftGroups.length > 0 ? '멤버' : '작성자'}
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     <FilterChip
-                      key={opt}
-                      label={opt === '전체' ? '전체' : opt}
-                      active={draftSido === opt}
-                      onClick={() => { setDraftSido(opt); setDraftGu('전체'); setDraftDong('전체') }}
+                      label="전체"
+                      active={draftAuthors.length === availableAuthors.length}
+                      onClick={() => setDraftAuthors(toggleAll(draftAuthors, availableAuthors))}
                     />
-                  ))}
+                    {availableAuthors.map(name => (
+                      <FilterChip
+                        key={name}
+                        label={name}
+                        active={draftAuthors.includes(name)}
+                        onClick={() => setDraftAuthors(toggleOne(draftAuthors, name))}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* 구/시 */}
-            {guOptions.length > 0 && (
-              <div style={{ padding: '0 20px 20px' }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>구/시</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {guOptions.map(opt => (
-                    <FilterChip key={opt} label={opt} active={draftGu === opt}
-                      onClick={() => { setDraftGu(opt); setDraftDong('전체') }} />
-                  ))}
+              {/* 시/도 */}
+              {sidoOptions.length > 1 && (
+                <div style={{ padding: '0 20px 20px' }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>지역</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {sidoOptions.map(opt => (
+                      <FilterChip key={opt} label={opt} active={draftSido === opt}
+                        onClick={() => { setDraftSido(opt); setDraftGu('전체'); setDraftDong('전체') }} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* 동/읍/면 */}
-            {dongOptions.length > 0 && (
-              <div style={{ padding: '0 20px 20px' }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>동/읍/면</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {dongOptions.map(opt => (
-                    <FilterChip key={opt} label={opt} active={draftDong === opt} onClick={() => setDraftDong(opt)} />
-                  ))}
+              {guOptions.length > 0 && (
+                <div style={{ padding: '0 20px 20px' }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>구/시</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {guOptions.map(opt => (
+                      <FilterChip key={opt} label={opt} active={draftGu === opt}
+                        onClick={() => { setDraftGu(opt); setDraftDong('전체') }} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div style={{ padding: '0 20px 8px' }}>
-              <button className="btn-primary" onClick={applyFilter}>
-                필터 적용 ({draftFilteredCount}개 장소)
-              </button>
+              {dongOptions.length > 0 && (
+                <div style={{ padding: '0 20px 20px' }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>동/읍/면</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {dongOptions.map(opt => (
+                      <FilterChip key={opt} label={opt} active={draftDong === opt} onClick={() => setDraftDong(opt)} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ padding: '0 20px 8px' }}>
+                <button className="btn-primary" onClick={applyFilter}>
+                  필터 적용 ({draftFilteredCount}개 장소)
+                </button>
+              </div>
             </div>
           </div>
-        </div>
         </AppPortal>
       )}
     </>
@@ -470,6 +441,7 @@ function FilterChip({ label, active, onClick }) {
         border: active ? 'none' : '1.5px solid var(--border)',
         background: active ? 'var(--primary)' : 'var(--surface)',
         color: active ? 'white' : 'var(--text-sub)',
+        transition: 'all 0.15s',
       }}
     >
       {label}
