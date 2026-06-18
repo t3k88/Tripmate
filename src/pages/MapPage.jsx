@@ -119,17 +119,30 @@ export default function MapPage() {
     setDraftAuthors([])
   }
 
+  const allGroupIds = groups.map(g => g.id)
+  const isAllGroups = draftGroups.length === 0 || draftGroups.length === allGroupIds.length
+
   const toggleDraftGroup = (id) => {
     setDraftGroups(prev => {
-      const next = prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
-      // 그룹 바뀌면 작성자 초기화
+      // 전체 상태(빈 배열)에서 개별 클릭 → 해당 그룹 빼고 나머지 전체 선택
+      const base = prev.length === 0 ? allGroupIds : prev
+      const next = base.includes(id) ? base.filter(g => g !== id) : [...base, id]
+      // 전부 선택되면 빈 배열로 (= 전체)
+      const result = next.length === allGroupIds.length ? [] : next
       setDraftAuthors([])
-      return next
+      return result
     })
   }
 
+  const allAuthors = availableAuthors
+  const isAllAuthors = draftAuthors.length === 0 || draftAuthors.length === allAuthors.length
+
   const toggleDraftAuthor = (name) => {
-    setDraftAuthors(prev => prev.includes(name) ? prev.filter(a => a !== name) : [...prev, name])
+    setDraftAuthors(prev => {
+      const base = prev.length === 0 ? allAuthors : prev
+      const next = base.includes(name) ? base.filter(a => a !== name) : [...base, name]
+      return next.length === allAuthors.length ? [] : next
+    })
   }
 
   // 적용된 필터 요약 텍스트
@@ -360,12 +373,12 @@ export default function MapPage() {
               <div style={{ padding: '0 20px 20px' }}>
                 <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>그룹</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  <FilterChip label="전체" active={draftGroups.length === 0} onClick={() => { setDraftGroups([]); setDraftAuthors([]) }} />
+                  <FilterChip label="전체" active={isAllGroups} onClick={() => { setDraftGroups([]); setDraftAuthors([]) }} />
                   {groups.map(g => (
                     <FilterChip
                       key={g.id}
                       label={`${g.cover} ${g.name}`}
-                      active={draftGroups.includes(g.id)}
+                      active={isAllGroups || draftGroups.includes(g.id)}
                       onClick={() => toggleDraftGroup(g.id)}
                     />
                   ))}
@@ -380,12 +393,12 @@ export default function MapPage() {
                   {draftGroups.length > 0 ? '멤버' : '작성자'}
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  <FilterChip label="전체" active={draftAuthors.length === 0} onClick={() => setDraftAuthors([])} />
+                  <FilterChip label="전체" active={isAllAuthors} onClick={() => setDraftAuthors([])} />
                   {availableAuthors.map(name => (
                     <FilterChip
                       key={name}
                       label={name}
-                      active={draftAuthors.includes(name)}
+                      active={isAllAuthors || draftAuthors.includes(name)}
                       onClick={() => toggleDraftAuthor(name)}
                     />
                   ))}
