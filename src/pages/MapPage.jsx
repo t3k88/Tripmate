@@ -323,12 +323,13 @@ export default function MapPage() {
       {filterOpen && (
         <AppPortal>
           <div className="modal-overlay" onClick={() => setFilterOpen(false)}>
-            <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+            <div className="modal-sheet" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
               <div className="modal-handle" />
-              <div style={{ padding: '4px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: '4px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                 <span style={{ fontSize: 17, fontWeight: 700 }}>필터</span>
                 <button onClick={resetFilter} style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600 }}>초기화</button>
               </div>
+              <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
 
               {/* 카테고리 */}
               <div style={{ padding: '0 20px 20px' }}>
@@ -453,7 +454,9 @@ export default function MapPage() {
                 </div>
               )}
 
-              <div style={{ padding: '0 20px 8px' }}>
+              </div>
+              {/* 고정 하단 버튼 */}
+              <div style={{ padding: '12px 20px 16px', flexShrink: 0, borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
                 <button className="btn-primary" onClick={applyFilter}>
                   필터 적용 ({draftFilteredCount}개 장소)
                 </button>
