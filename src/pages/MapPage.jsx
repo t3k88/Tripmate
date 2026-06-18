@@ -51,30 +51,26 @@ export default function MapPage() {
     [places]
   )
 
-  const byDraftCategory = draftCategories.length === 0
-    ? placesWithLevels
-    : placesWithLevels.filter(p => draftCategories.includes(p.category))
-
   const sidoOptions = useMemo(() => {
-    const set = new Set(byDraftCategory.map(p => p._levels[0]).filter(Boolean))
+    const set = new Set(placesWithLevels.map(p => p._levels[0]).filter(Boolean))
     return Array.from(set)
-  }, [byDraftCategory])
+  }, [placesWithLevels])
 
   const guOptions = useMemo(() => {
     if (!draftSido) return []
     const set = new Set(
-      byDraftCategory.filter(p => p._levels[0] === draftSido && p._levels[1]).map(p => p._levels[1])
+      placesWithLevels.filter(p => p._levels[0] === draftSido && p._levels[1]).map(p => p._levels[1])
     )
     return Array.from(set)
-  }, [byDraftCategory, draftSido])
+  }, [placesWithLevels, draftSido])
 
   const dongOptions = useMemo(() => {
     if (!draftSido || !draftGu) return []
     const set = new Set(
-      byDraftCategory.filter(p => p._levels[0] === draftSido && p._levels[1] === draftGu && p._levels[2]).map(p => p._levels[2])
+      placesWithLevels.filter(p => p._levels[0] === draftSido && p._levels[1] === draftGu && p._levels[2]).map(p => p._levels[2])
     )
     return Array.from(set)
-  }, [byDraftCategory, draftSido, draftGu])
+  }, [placesWithLevels, draftSido, draftGu])
 
   const availableAuthors = useMemo(() => {
     const base = draftGroups.length > 0
