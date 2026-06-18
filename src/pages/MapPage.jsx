@@ -4,7 +4,7 @@ import { CATEGORIES, getCategoryInfo, getAddressLevels } from '../utils/helpers'
 import { useKakaoMaps } from '../hooks/useKakaoMaps'
 
 export default function MapPage() {
-  const { places, setShowPlaceModal } = useApp()
+  const { places, groups, setShowPlaceModal } = useApp()
   const { ready } = useKakaoMaps()
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
@@ -18,12 +18,16 @@ export default function MapPage() {
   const [draftSido, setDraftSido] = useState('전체')
   const [draftGu, setDraftGu] = useState('전체')
   const [draftDong, setDraftDong] = useState('전체')
+  const [draftGroups, setDraftGroups] = useState([])
+  const [draftAuthors, setDraftAuthors] = useState([])
 
   // 적용된 필터
   const [category, setCategory] = useState('전체')
   const [sido, setSido] = useState('전체')
   const [gu, setGu] = useState('전체')
   const [dong, setDong] = useState('전체')
+  const [filterGroups, setFilterGroups] = useState([])
+  const [filterAuthors, setFilterAuthors] = useState([])
 
   const placesWithLevels = useMemo(
     () => places.map(p => ({ ...p, _levels: getAddressLevels(p.address) })),
@@ -55,11 +59,22 @@ export default function MapPage() {
     return set.size > 0 ? ['전체', ...Array.from(set)] : []
   }, [byDraftCategory, draftSido, draftGu])
 
+  // 그룹 선택 시 해당 그룹 장소들의 작성자만 표시
+  const availableAuthors = useMemo(() => {
+    const base = draftGroups.length > 0
+      ? placesWithLevels.filter(p => (p.groupIds || []).some(id => draftGroups.includes(id)))
+      : placesWithLevels
+    const set = new Set(base.map(p => p.author).filter(Boolean))
+    return Array.from(set)
+  }, [placesWithLevels, draftGroups])
+
   const filteredPlaces = placesWithLevels.filter(p => {
     if (category !== '전체' && p.category !== category) return false
     if (sido !== '전체' && p._levels[0] !== sido) return false
     if (gu !== '전체' && p._levels[1] !== gu) return false
     if (dong !== '전체' && p._levels[2] !== dong) return false
+    if (filterGroups.length > 0 && !(p.groupIds || []).some(id => filterGroups.includes(id))) return false
+    if (filterAuthors.length > 0 && !filterAuthors.includes(p.author)) return false
     return true
   })
 
@@ -68,6 +83,8 @@ export default function MapPage() {
     if (draftSido !== '전체' && p._levels[0] !== draftSido) return false
     if (draftGu !== '전체' && p._levels[1] !== draftGu) return false
     if (draftDong !== '전체' && p._levels[2] !== draftDong) return false
+    if (draftGroups.length > 0 && !(p.groupIds || []).some(id => draftGroups.includes(id))) return false
+    if (draftAuthors.length > 0 && !draftAuthors.includes(p.author)) return false
     return true
   }).length
 
@@ -76,6 +93,8 @@ export default function MapPage() {
     setDraftSido(sido)
     setDraftGu(gu)
     setDraftDong(dong)
+    setDraftGroups(filterGroups)
+    setDraftAuthors(filterAuthors)
     setFilterOpen(true)
   }
 
@@ -84,6 +103,8 @@ export default function MapPage() {
     setSido(draftSido)
     setGu(draftGu)
     setDong(draftDong)
+    setFilterGroups(draftGroups)
+    setFilterAuthors(draftAuthors)
     setSelectedPlace(null)
     setFilterOpen(false)
   }
@@ -93,6 +114,21 @@ export default function MapPage() {
     setDraftSido('전체')
     setDraftGu('전체')
     setDraftDong('전체')
+    setDraftGroups([])
+    setDraftAuthors([])
+  }
+
+  const toggleDraftGroup = (id) => {
+    setDraftGroups(prev => {
+      const next = prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
+      // 그룹 바뀌면 작성자 초기화
+      setDraftAuthors([])
+      return next
+    })
+  }
+
+  const toggleDraftAuthor = (name) => {
+    setDraftAuthors(prev => prev.includes(name) ? prev.filter(a => a !== name) : [...prev, name])
   }
 
   // 적용된 필터 요약 텍스트
@@ -102,10 +138,12 @@ export default function MapPage() {
     if (sido !== '전체') parts.push(sido)
     if (gu !== '전체') parts.push(gu)
     if (dong !== '전체') parts.push(dong)
+    if (filterGroups.length > 0) parts.push(`그룹 ${filterGroups.length}개`)
+    if (filterAuthors.length > 0) parts.push(`${filterAuthors.join(', ')}`)
     return parts.length > 0 ? parts.join(' · ') : '전체'
   }
 
-  const isFiltered = category !== '전체' || sido !== '전체'
+  const isFiltered = category !== '전체' || sido !== '전체' || filterGroups.length > 0 || filterAuthors.length > 0
 
   useEffect(() => {
     if (!ready || !mapRef.current) return
@@ -225,6 +263,7 @@ export default function MapPage() {
                     {info.icon} {info.label}
                   </p>
                   <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{place.name}</p>
+                  <p style={{ fontSize: 11, color: 'var(--text-sub)', marginTop: 1 }}>by {place.author}</p>
                 </button>
               )
             })}
@@ -313,6 +352,42 @@ export default function MapPage() {
                 ))}
               </div>
             </div>
+
+            {/* 그룹 */}
+            {groups.length > 0 && (
+              <div style={{ padding: '0 20px 20px' }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>그룹</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {groups.map(g => (
+                    <FilterChip
+                      key={g.id}
+                      label={`${g.cover} ${g.name}`}
+                      active={draftGroups.includes(g.id)}
+                      onClick={() => toggleDraftGroup(g.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 멤버 (그룹 선택 시 또는 전체 작성자) */}
+            {availableAuthors.length > 0 && (
+              <div style={{ padding: '0 20px 20px' }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {draftGroups.length > 0 ? '멤버' : '작성자'}
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {availableAuthors.map(name => (
+                    <FilterChip
+                      key={name}
+                      label={name}
+                      active={draftAuthors.includes(name)}
+                      onClick={() => toggleDraftAuthor(name)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* 시/도 */}
             {sidoOptions.length > 1 && (
