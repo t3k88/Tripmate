@@ -113,9 +113,11 @@ export default function App() {
   // Group CRUD
   const addGroup = async (groupData) => {
     const uname = localStorage.getItem('tripmate_username') || '나'
-    const { data } = await supabase.from('groups').insert([{ name: groupData.name, cover: groupData.cover }]).select().single()
+    const { data, error } = await supabase.from('groups').insert([{ name: groupData.name, cover: groupData.cover }]).select().single()
+    if (error) { alert('그룹 생성 오류: ' + error.message); return null }
     if (data) {
-      await supabase.from('group_members').insert([{ group_id: data.id, user_name: uname, user_avatar: '🧡' }])
+      const { error: memberError } = await supabase.from('group_members').insert([{ group_id: data.id, user_name: uname, user_avatar: '🧡' }])
+      if (memberError) console.error('멤버 추가 오류:', memberError.message)
       const newGroup = groupFromDb(data, [{ id: Date.now(), name: uname, avatar: '🧡', role: 'owner' }])
       setGroups(gs => [...gs, newGroup])
       return newGroup
