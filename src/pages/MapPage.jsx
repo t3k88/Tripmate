@@ -360,6 +360,7 @@ export default function MapPage() {
               <div style={{ padding: '0 20px 20px' }}>
                 <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>그룹</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <FilterChip label="전체" active={draftGroups.length === 0} onClick={() => { setDraftGroups([]); setDraftAuthors([]) }} />
                   {groups.map(g => (
                     <FilterChip
                       key={g.id}
@@ -379,6 +380,7 @@ export default function MapPage() {
                   {draftGroups.length > 0 ? '멤버' : '작성자'}
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <FilterChip label="전체" active={draftAuthors.length === 0} onClick={() => setDraftAuthors([])} />
                   {availableAuthors.map(name => (
                     <FilterChip
                       key={name}
