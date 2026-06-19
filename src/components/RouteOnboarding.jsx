@@ -33,9 +33,18 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
   const [routeName, setRouteName] = useState('')
   const [groupId, setGroupId] = useState('')
 
+  // sido → [gu, ...] 구조
   const regionOptions = useMemo(() => {
-    const set = new Set(places.map(p => getAddressLevels(p.address)[0]).filter(Boolean))
-    return Array.from(set).sort()
+    const map = {}
+    places.forEach(p => {
+      const [sido, gu] = getAddressLevels(p.address)
+      if (!sido) return
+      if (!map[sido]) map[sido] = new Set()
+      if (gu) map[sido].add(gu)
+    })
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([sido, gus]) => ({ sido, gus: Array.from(gus).sort() }))
   }, [places])
 
   const toggleStyle = (id) =>
@@ -55,8 +64,8 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
   const buildRoute = () => {
     const selectedCategories = styles.flatMap(s => STYLES.find(st => st.id === s)?.categories || [])
 
-    // 1. 지역 필터
-    const regionFiltered = places.filter(p => regions.includes(getAddressLevels(p.address)[0]))
+    // 1. 지역 필터 (gu 단위)
+    const regionFiltered = places.filter(p => regions.includes(getAddressLevels(p.address)[1]))
     if (regionFiltered.length === 0) return []
 
     // 2. 스타일 점수: 선택 스타일 카테고리면 +2, 포인트 태그 일치하면 +1씩
@@ -163,15 +172,22 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
               {regionOptions.length === 0 ? (
                 <p style={{ color: 'var(--text-sub)', fontSize: 14 }}>등록된 장소가 없어요. 먼저 장소를 추가해주세요!</p>
               ) : (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                  {regionOptions.map(r => (
-                    <button key={r} onClick={() => toggleRegion(r)} style={{
-                      padding: '12px 18px', borderRadius: 14, fontSize: 14, fontWeight: 600,
-                      border: `2px solid ${regions.includes(r) ? 'var(--primary)' : 'var(--border)'}`,
-                      background: regions.includes(r) ? 'var(--primary)' : 'var(--surface)',
-                      color: regions.includes(r) ? 'white' : 'var(--text)',
-                      transition: 'all 0.15s',
-                    }}>{r}</button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  {regionOptions.map(({ sido, gus }) => (
+                    <div key={sido}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10 }}>{sido}</p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {gus.map(gu => (
+                          <button key={gu} onClick={() => toggleRegion(gu)} style={{
+                            padding: '10px 16px', borderRadius: 14, fontSize: 14, fontWeight: 600,
+                            border: `2px solid ${regions.includes(gu) ? 'var(--primary)' : 'var(--border)'}`,
+                            background: regions.includes(gu) ? 'var(--primary)' : 'var(--surface)',
+                            color: regions.includes(gu) ? 'white' : 'var(--text)',
+                            transition: 'all 0.15s',
+                          }}>{gu}</button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
