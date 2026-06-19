@@ -2,12 +2,14 @@ import { useState, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
 import { getCategoryInfo, getAddressLevels } from '../utils/helpers'
 import AppPortal from '../components/AppPortal'
+import RouteOnboarding from '../components/RouteOnboarding'
 
 export default function RoutePage() {
   const { routes, places, groups, addRoute, deleteRoute, saveRouteItems } = useApp()
   const [view, setView] = useState('list')       // 'list' | 'detail'
   const [activeRoute, setActiveRoute] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   const openRoute = (route) => {
     setActiveRoute(route)
@@ -35,7 +37,7 @@ export default function RoutePage() {
     <>
       <div className="header">
         <span className="header-title">루트</span>
-        <button className="header-action" onClick={() => setShowCreate(true)}>+</button>
+        <button className="header-action" onClick={() => setShowOnboarding(true)}>+</button>
       </div>
 
       <div style={{ padding: '16px 16px 80px' }}>
@@ -59,18 +61,21 @@ export default function RoutePage() {
         )}
       </div>
 
-      <button className="fab" onClick={() => setShowCreate(true)}>+</button>
+      <button className="fab" onClick={() => setShowOnboarding(true)}>+</button>
 
-      {showCreate && (
+      {showOnboarding && (
         <AppPortal>
-          <CreateRouteModal
-            groups={groups}
+          <RouteOnboarding
             places={places}
-            onClose={() => setShowCreate(false)}
-            onCreate={async (data) => {
-              const newRoute = await addRoute(data)
-              setShowCreate(false)
-              if (newRoute) openRoute({ ...newRoute, region: data.region })
+            groups={groups}
+            onClose={() => setShowOnboarding(false)}
+            onComplete={async (data) => {
+              const newRoute = await addRoute({ name: data.name, groupId: data.groupId })
+              setShowOnboarding(false)
+              if (newRoute) {
+                await saveRouteItems(newRoute.id, data.items)
+                openRoute({ ...newRoute, region: data.region, items: data.items })
+              }
             }}
           />
         </AppPortal>
