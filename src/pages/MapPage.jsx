@@ -90,7 +90,7 @@ export default function MapPage() {
   const activeAuthorFilter = filterAuthors.length > 0 && filterAuthors.length < availableAuthors.length ? filterAuthors : []
 
   const activeSidoFilter = filterSidos.length > 0 && filterSidos.length < sidoOptions.length ? filterSidos : []
-  const activeGuFilter = filterGus.length > 0 && filterGus.length < guOptions.length ? filterGus : []
+  const activeGuFilter = filterGus.length > 0 ? filterGus : []
   const filteredPlaces = placesWithLevels.filter(p => {
     if (activeCategoryFilter.length > 0 && !activeCategoryFilter.includes(p.category)) return false
     if (activeSidoFilter.length > 0 && !activeSidoFilter.includes(p._levels[0])) return false
@@ -332,13 +332,16 @@ export default function MapPage() {
       {filterOpen && (
         <AppPortal>
           <div className="modal-overlay" onClick={() => setFilterOpen(false)}>
-            <div className="modal-sheet" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-sheet" style={{ display: 'flex', flexDirection: 'column', maxHeight: '88%', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
               <div className="modal-handle" />
               <div style={{ padding: '4px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                 <span style={{ fontSize: 17, fontWeight: 700 }}>필터</span>
-                <button onClick={resetFilter} style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600 }}>초기화</button>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <button onClick={resetFilter} style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, background: 'none', border: 'none' }}>초기화</button>
+                  <button onClick={() => setFilterOpen(false)} style={{ fontSize: 20, color: 'var(--text-sub)', lineHeight: 1, background: 'none', border: 'none', padding: '0 4px', cursor: 'pointer' }}>✕</button>
+                </div>
               </div>
-              <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
 
               {/* 카테고리 */}
               <div style={{ padding: '0 20px 20px' }}>
