@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
-import { getCategoryInfo } from '../utils/helpers'
+import { getCategoryInfo, getAddressLevels } from '../utils/helpers'
 import AppPortal from '../components/AppPortal'
 
 export default function RoutePage() {
@@ -65,11 +65,12 @@ export default function RoutePage() {
         <AppPortal>
           <CreateRouteModal
             groups={groups}
+            places={places}
             onClose={() => setShowCreate(false)}
             onCreate={async (data) => {
               const newRoute = await addRoute(data)
               setShowCreate(false)
-              if (newRoute) openRoute(newRoute)
+              if (newRoute) openRoute({ ...newRoute, region: data.region })
             }}
           />
         </AppPortal>
@@ -127,9 +128,15 @@ function RouteCard({ route, places, groupName, onClick }) {
   )
 }
 
-function CreateRouteModal({ groups, onClose, onCreate }) {
+function CreateRouteModal({ groups, places, onClose, onCreate }) {
   const [name, setName] = useState('')
   const [groupId, setGroupId] = useState('')
+  const [region, setRegion] = useState('')
+
+  const regionOptions = useMemo(() => {
+    const set = new Set(places.map(p => getAddressLevels(p.address)[0]).filter(Boolean))
+    return Array.from(set).sort()
+  }, [places])
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -150,6 +157,15 @@ function CreateRouteModal({ groups, onClose, onCreate }) {
               autoFocus
             />
           </div>
+          {regionOptions.length > 0 && (
+            <div className="form-group">
+              <label className="form-label">지역 (선택) — 장소 추가 시 필터링돼요</label>
+              <select className="form-input" value={region} onChange={e => setRegion(e.target.value)}>
+                <option value="">전체 지역</option>
+                {regionOptions.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+          )}
           {groups.length > 0 && (
             <div className="form-group">
               <label className="form-label">그룹 (선택)</label>
@@ -162,7 +178,7 @@ function CreateRouteModal({ groups, onClose, onCreate }) {
           <button
             className="btn-primary"
             disabled={!name.trim()}
-            onClick={() => onCreate({ name: name.trim(), groupId: groupId ? Number(groupId) : null })}
+            onClick={() => onCreate({ name: name.trim(), groupId: groupId ? Number(groupId) : null, region: region || null })}
           >
             만들기
           </button>
@@ -338,6 +354,7 @@ function RouteDetail({ route, places, groups, onBack, onDelete, onSave }) {
           <PlacePicker
             places={places}
             existingIds={items.map(i => i.placeId)}
+            region={route.region}
             onClose={() => setShowPicker(false)}
             onAdd={(ids) => { addPlaces(ids); setShowPicker(false) }}
           />
@@ -347,12 +364,24 @@ function RouteDetail({ route, places, groups, onBack, onDelete, onSave }) {
   )
 }
 
-function PlacePicker({ places, existingIds, onClose, onAdd }) {
+function PlacePicker({ places, existingIds, region, onClose, onAdd }) {
   const [selected, setSelected] = useState([])
+  const [filterRegion, setFilterRegion] = useState(region || '')
 
   const toggle = (id) => setSelected(prev =>
     prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
   )
+
+  const available = places.filter(p => {
+    if (existingIds.includes(p.id)) return false
+    if (filterRegion && getAddressLevels(p.address)[0] !== filterRegion) return false
+    return true
+  })
+
+  const regionOptions = useMemo(() => {
+    const set = new Set(places.map(p => getAddressLevels(p.address)[0]).filter(Boolean))
+    return Array.from(set).sort()
+  }, [places])
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -362,19 +391,28 @@ function PlacePicker({ places, existingIds, onClose, onAdd }) {
           <span className="modal-title">장소 선택</span>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
+        {regionOptions.length > 1 && (
+          <div style={{ padding: '0 16px 12px', flexShrink: 0, display: 'flex', gap: 8, overflowX: 'auto' }}>
+            <FilterChip label="전체" active={!filterRegion} onClick={() => setFilterRegion('')} />
+            {regionOptions.map(r => (
+              <FilterChip key={r} label={r} active={filterRegion === r} onClick={() => setFilterRegion(r)} />
+            ))}
+          </div>
+        )}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px' }}>
-          {places.filter(p => !existingIds.includes(p.id)).map(place => {
+          {available.length === 0 && (
+            <p style={{ textAlign: 'center', color: 'var(--text-sub)', padding: '40px 0', fontSize: 14 }}>
+              추가할 장소가 없어요
+            </p>
+          )}
+          {available.map(place => {
             const info = getCategoryInfo(place.category)
             const isSelected = selected.includes(place.id)
             return (
-              <div
-                key={place.id}
-                onClick={() => toggle(place.id)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
-                  borderBottom: '1px solid var(--border)', cursor: 'pointer',
-                }}
-              >
+              <div key={place.id} onClick={() => toggle(place.id)} style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
+                borderBottom: '1px solid var(--border)', cursor: 'pointer',
+              }}>
                 <div style={{
                   width: 36, height: 36, borderRadius: '50%',
                   background: isSelected ? 'var(--primary)' : 'var(--bg)',
@@ -405,5 +443,19 @@ function PlacePicker({ places, existingIds, onClose, onAdd }) {
         </div>
       </div>
     </div>
+  )
+}
+
+function FilterChip({ label, active, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600,
+      background: active ? 'var(--primary)' : 'var(--surface)',
+      color: active ? 'white' : 'var(--text-sub)',
+      border: active ? 'none' : '1.5px solid var(--border)',
+      whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s',
+    }}>
+      {label}
+    </button>
   )
 }
