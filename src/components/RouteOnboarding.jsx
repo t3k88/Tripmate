@@ -26,7 +26,7 @@ const STYLES = [
 
 export default function RouteOnboarding({ places, groups, onClose, onComplete }) {
   const [step, setStep] = useState(1)
-  const [region, setRegion] = useState('')
+  const [regions, setRegions] = useState([])
   const [companion, setCompanion] = useState('')
   const [styles, setStyles] = useState([])
   const [duration, setDuration] = useState(null)
@@ -41,8 +41,11 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
   const toggleStyle = (id) =>
     setStyles(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])
 
+  const toggleRegion = (r) =>
+    setRegions(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])
+
   const canNext = () => {
-    if (step === 1) return !!region
+    if (step === 1) return regions.length > 0
     if (step === 2) return !!duration
     if (step === 3) return !!companion
     if (step === 4) return styles.length > 0
@@ -53,7 +56,7 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
     const selectedCategories = styles.flatMap(s => STYLES.find(st => st.id === s)?.categories || [])
 
     // 지역 필터
-    const regionFiltered = places.filter(p => getAddressLevels(p.address)[0] === region)
+    const regionFiltered = places.filter(p => regions.includes(getAddressLevels(p.address)[0]))
 
     // 스타일 필터 (해당 카테고리 우선 + 나머지)
     const matched = regionFiltered.filter(p => selectedCategories.includes(p.category))
@@ -73,11 +76,11 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
 
   const handleComplete = () => {
     const items = buildRoute()
-    const name = routeName.trim() || `${region} ${duration.label}`
+    const name = routeName.trim() || `${regions.join('·')} ${duration.label}`
     onComplete({
       name,
       groupId: groupId ? Number(groupId) : null,
-      region,
+      regions,
       companion,
       styles,
       duration,
@@ -119,17 +122,17 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
           {step === 1 && (
             <div>
               <p style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>어디로 떠나요? 🗺️</p>
-              <p style={{ fontSize: 14, color: 'var(--text-sub)', marginBottom: 24 }}>등록된 장소가 있는 지역이에요</p>
+              <p style={{ fontSize: 14, color: 'var(--text-sub)', marginBottom: 24 }}>복수 선택 가능해요</p>
               {regionOptions.length === 0 ? (
                 <p style={{ color: 'var(--text-sub)', fontSize: 14 }}>등록된 장소가 없어요. 먼저 장소를 추가해주세요!</p>
               ) : (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                   {regionOptions.map(r => (
-                    <button key={r} onClick={() => setRegion(r)} style={{
+                    <button key={r} onClick={() => toggleRegion(r)} style={{
                       padding: '12px 18px', borderRadius: 14, fontSize: 14, fontWeight: 600,
-                      border: `2px solid ${region === r ? 'var(--primary)' : 'var(--border)'}`,
-                      background: region === r ? 'var(--primary)' : 'var(--surface)',
-                      color: region === r ? 'white' : 'var(--text)',
+                      border: `2px solid ${regions.includes(r) ? 'var(--primary)' : 'var(--border)'}`,
+                      background: regions.includes(r) ? 'var(--primary)' : 'var(--surface)',
+                      color: regions.includes(r) ? 'white' : 'var(--text)',
                       transition: 'all 0.15s',
                     }}>{r}</button>
                   ))}
@@ -208,7 +211,7 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
                 <label className="form-label">루트 이름 (선택)</label>
                 <input
                   className="form-input"
-                  placeholder={`예: ${region} ${duration?.label || '여행'}`}
+                  placeholder={`예: ${regions.join('·')} ${duration?.label || '여행'}`}
                   value={routeName}
                   onChange={e => setRouteName(e.target.value)}
                 />
