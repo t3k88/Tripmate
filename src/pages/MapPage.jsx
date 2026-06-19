@@ -24,7 +24,7 @@ export default function MapPage() {
 
   // 임시 필터
   const [draftCategories, setDraftCategories] = useState([])
-  const [draftSido, setDraftSido] = useState('')
+  const [draftSidos, setDraftSidos] = useState([])   // 복수 선택
   const [draftGu, setDraftGu] = useState('')
   const [draftDong, setDraftDong] = useState('')
   const [draftGroups, setDraftGroups] = useState([])
@@ -32,18 +32,20 @@ export default function MapPage() {
 
   // 적용된 필터
   const [filterCategories, setFilterCategories] = useState([])
-  const [sido, setSido] = useState('')
+  const [filterSidos, setFilterSidos] = useState([])
   const [gu, setGu] = useState('')
   const [dong, setDong] = useState('')
   const [filterGroups, setFilterGroups] = useState([])
   const [filterAuthors, setFilterAuthors] = useState([])
 
-  // 지역 더보기 / 전체 명시 선택
+  // 지역 더보기
   const [sidoExpanded, setSidoExpanded] = useState(false)
   const [guExpanded, setGuExpanded] = useState(false)
-  const [draftSidoAll, setDraftSidoAll] = useState(false)
   const [draftGuAll, setDraftGuAll] = useState(false)
   const REGION_LIMIT = 6
+
+  // sido 1개만 선택됐을 때 구/시 보여줌
+  const soloSido = draftSidos.length === 1 ? draftSidos[0] : null
 
   const allCategoryIds = CATEGORIES.map(c => c.id)
   const allGroupIds = groups.map(g => g.id)
@@ -59,20 +61,20 @@ export default function MapPage() {
   }, [placesWithLevels])
 
   const guOptions = useMemo(() => {
-    if (!draftSido) return []
+    if (!soloSido) return []
     const set = new Set(
-      placesWithLevels.filter(p => p._levels[0] === draftSido && p._levels[1]).map(p => p._levels[1])
+      placesWithLevels.filter(p => p._levels[0] === soloSido && p._levels[1]).map(p => p._levels[1])
     )
     return Array.from(set)
-  }, [placesWithLevels, draftSido])
+  }, [placesWithLevels, soloSido])
 
   const dongOptions = useMemo(() => {
-    if (!draftSido || !draftGu) return []
+    if (!soloSido || !draftGu) return []
     const set = new Set(
-      placesWithLevels.filter(p => p._levels[0] === draftSido && p._levels[1] === draftGu && p._levels[2]).map(p => p._levels[2])
+      placesWithLevels.filter(p => p._levels[0] === soloSido && p._levels[1] === draftGu && p._levels[2]).map(p => p._levels[2])
     )
     return Array.from(set)
-  }, [placesWithLevels, draftSido, draftGu])
+  }, [placesWithLevels, soloSido, draftGu])
 
   const availableAuthors = useMemo(() => {
     const base = draftGroups.length > 0
@@ -86,9 +88,10 @@ export default function MapPage() {
   const activeCategoryFilter = filterCategories.length > 0 && filterCategories.length < allCategoryIds.length ? filterCategories : []
   const activeAuthorFilter = filterAuthors.length > 0 && filterAuthors.length < availableAuthors.length ? filterAuthors : []
 
+  const activeSidoFilter = filterSidos.length > 0 && filterSidos.length < sidoOptions.length ? filterSidos : []
   const filteredPlaces = placesWithLevels.filter(p => {
     if (activeCategoryFilter.length > 0 && !activeCategoryFilter.includes(p.category)) return false
-    if (sido && p._levels[0] !== sido) return false
+    if (activeSidoFilter.length > 0 && !activeSidoFilter.includes(p._levels[0])) return false
     if (gu && p._levels[1] !== gu) return false
     if (dong && p._levels[2] !== dong) return false
     if (activeGroupFilter.length > 0 && !(p.groupIds || []).some(id => activeGroupFilter.includes(id))) return false
@@ -99,10 +102,11 @@ export default function MapPage() {
   const draftGroupFilter = draftGroups.length > 0 && draftGroups.length < groups.length ? draftGroups : []
   const draftCategoryFilter = draftCategories.length > 0 && draftCategories.length < allCategoryIds.length ? draftCategories : []
   const draftAuthorFilter = draftAuthors.length > 0 && draftAuthors.length < availableAuthors.length ? draftAuthors : []
+  const draftSidoFilter = draftSidos.length > 0 && draftSidos.length < sidoOptions.length ? draftSidos : []
 
   const draftFilteredCount = placesWithLevels.filter(p => {
     if (draftCategoryFilter.length > 0 && !draftCategoryFilter.includes(p.category)) return false
-    if (draftSido && p._levels[0] !== draftSido) return false
+    if (draftSidoFilter.length > 0 && !draftSidoFilter.includes(p._levels[0])) return false
     if (draftGu && p._levels[1] !== draftGu) return false
     if (draftDong && p._levels[2] !== draftDong) return false
     if (draftGroupFilter.length > 0 && !(p.groupIds || []).some(id => draftGroupFilter.includes(id))) return false
@@ -115,17 +119,16 @@ export default function MapPage() {
     setDraftCategories(filterCategories.length === allCategoryIds.length ? [] : filterCategories)
     setDraftGroups(filterGroups.length === groups.length ? [] : filterGroups)
     setDraftAuthors(filterAuthors.length > 0 && filterAuthors.length === availableAuthors.length ? [] : filterAuthors)
-    setDraftSido(sido)
+    setDraftSidos(filterSidos.length === sidoOptions.length ? [] : filterSidos)
     setDraftGu(gu)
     setDraftDong(dong)
-    setDraftSidoAll(false)
     setDraftGuAll(false)
     setFilterOpen(true)
   }
 
   const applyFilter = () => {
     setFilterCategories(draftCategories)
-    setSido(draftSido)
+    setFilterSidos(draftSidos)
     setGu(draftGu)
     setDong(draftDong)
     setFilterGroups(draftGroups)
@@ -136,21 +139,20 @@ export default function MapPage() {
 
   const resetFilter = () => {
     setDraftCategories([])
-    setDraftSido('')
+    setDraftSidos([])
     setDraftGu('')
     setDraftDong('')
     setDraftGroups([])
     setDraftAuthors([])
     setSidoExpanded(false)
     setGuExpanded(false)
-    setDraftSidoAll(false)
     setDraftGuAll(false)
   }
 
   const filterSummary = () => {
     const parts = []
     if (filterCategories.length > 0) parts.push(filterCategories.map(id => CATEGORIES.find(c => c.id === id)?.label).join(', '))
-    if (sido) parts.push(sido)
+    if (filterSidos.length > 0) parts.push(filterSidos.length === sidoOptions.length ? '전체지역' : filterSidos.join(', '))
     if (gu) parts.push(gu)
     if (dong) parts.push(dong)
     if (filterGroups.length > 0) parts.push(`그룹 ${filterGroups.length}개`)
@@ -158,7 +160,7 @@ export default function MapPage() {
     return parts.length > 0 ? parts.join(' · ') : '전체'
   }
 
-  const isFiltered = filterCategories.length > 0 || sido || filterGroups.length > 0 || filterAuthors.length > 0
+  const isFiltered = filterCategories.length > 0 || filterSidos.length > 0 || filterGroups.length > 0 || filterAuthors.length > 0
 
   useEffect(() => {
     if (!ready || !mapRef.current) return
@@ -408,10 +410,11 @@ export default function MapPage() {
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>지역</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    <FilterChip label="전체" active={draftSidoAll} onClick={() => { setDraftSidoAll(true); setDraftSido(''); setDraftGu(''); setDraftDong(''); setSidoExpanded(false); setGuExpanded(false) }} />
+                    <FilterChip label="전체" active={draftSidos.length === sidoOptions.length}
+                      onClick={() => { setDraftSidos(toggleAll(draftSidos, sidoOptions)); setDraftGu(''); setDraftDong(''); setGuExpanded(false) }} />
                     {(sidoExpanded ? sidoOptions : sidoOptions.slice(0, REGION_LIMIT)).map(opt => (
-                      <FilterChip key={opt} label={opt} active={draftSido === opt}
-                        onClick={() => { setDraftSido(opt); setDraftSidoAll(false); setDraftGu(''); setDraftDong(''); setGuExpanded(false) }} />
+                      <FilterChip key={opt} label={opt} active={draftSidos.includes(opt)}
+                        onClick={() => { setDraftSidos(toggleOne(draftSidos, opt)); setDraftGu(''); setDraftDong(''); setGuExpanded(false) }} />
                     ))}
                     {sidoOptions.length > REGION_LIMIT && (
                       <button
@@ -426,7 +429,7 @@ export default function MapPage() {
               )}
 
               {/* 구/시 */}
-              {guOptions.length > 0 && (
+              {soloSido && guOptions.length > 0 && (
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>구/시</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -448,7 +451,7 @@ export default function MapPage() {
               )}
 
               {/* 동/읍/면 */}
-              {dongOptions.length > 0 && (
+              {soloSido && dongOptions.length > 0 && (
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>동/읍/면</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
