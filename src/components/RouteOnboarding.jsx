@@ -34,12 +34,7 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
   const [groupId, setGroupId] = useState('')
 
   const regionOptions = useMemo(() => {
-    const set = new Set(
-      places.map(p => {
-        const levels = getAddressLevels(p.address)
-        return levels[1] ? `${levels[0]} ${levels[1]}` : levels[0]
-      }).filter(Boolean)
-    )
+    const set = new Set(places.map(p => getAddressLevels(p.address)[0]).filter(Boolean))
     return Array.from(set).sort()
   }, [places])
 
@@ -58,11 +53,7 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
     const selectedCategories = styles.flatMap(s => STYLES.find(st => st.id === s)?.categories || [])
 
     // 지역 필터
-    const regionFiltered = places.filter(p => {
-      const levels = getAddressLevels(p.address)
-      const placeRegion = levels[1] ? `${levels[0]} ${levels[1]}` : levels[0]
-      return placeRegion === region
-    })
+    const regionFiltered = places.filter(p => getAddressLevels(p.address)[0] === region)
 
     // 스타일 필터 (해당 카테고리 우선 + 나머지)
     const matched = regionFiltered.filter(p => selectedCategories.includes(p.category))
