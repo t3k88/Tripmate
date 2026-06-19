@@ -96,7 +96,7 @@ function RouteCard({ route, places, groupName, onClick }) {
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {maxDay > 0 && (
               <span style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600, background: 'var(--primary-bg)', padding: '2px 8px', borderRadius: 10 }}>
-                {maxDay}박{maxDay + 1}일
+                {maxDay === 1 ? '당일치기' : `${maxDay - 1}박${maxDay}일`}
               </span>
             )}
             {groupName && (
