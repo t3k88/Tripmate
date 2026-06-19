@@ -38,9 +38,11 @@ export default function MapPage() {
   const [filterGroups, setFilterGroups] = useState([])
   const [filterAuthors, setFilterAuthors] = useState([])
 
-  // 지역 더보기
+  // 지역 더보기 / 전체 명시 선택
   const [sidoExpanded, setSidoExpanded] = useState(false)
   const [guExpanded, setGuExpanded] = useState(false)
+  const [draftSidoAll, setDraftSidoAll] = useState(false)
+  const [draftGuAll, setDraftGuAll] = useState(false)
   const REGION_LIMIT = 6
 
   const allCategoryIds = CATEGORIES.map(c => c.id)
@@ -116,6 +118,8 @@ export default function MapPage() {
     setDraftSido(sido)
     setDraftGu(gu)
     setDraftDong(dong)
+    setDraftSidoAll(false)
+    setDraftGuAll(false)
     setFilterOpen(true)
   }
 
@@ -139,6 +143,8 @@ export default function MapPage() {
     setDraftAuthors([])
     setSidoExpanded(false)
     setGuExpanded(false)
+    setDraftSidoAll(false)
+    setDraftGuAll(false)
   }
 
   const filterSummary = () => {
@@ -402,10 +408,10 @@ export default function MapPage() {
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>지역</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    <FilterChip label="전체" active={false} onClick={() => { setDraftSido(''); setDraftGu(''); setDraftDong(''); setSidoExpanded(false); setGuExpanded(false) }} />
+                    <FilterChip label="전체" active={draftSidoAll} onClick={() => { setDraftSidoAll(true); setDraftSido(''); setDraftGu(''); setDraftDong(''); setSidoExpanded(false); setGuExpanded(false) }} />
                     {(sidoExpanded ? sidoOptions : sidoOptions.slice(0, REGION_LIMIT)).map(opt => (
                       <FilterChip key={opt} label={opt} active={draftSido === opt}
-                        onClick={() => { setDraftSido(opt); setDraftGu(''); setDraftDong(''); setGuExpanded(false) }} />
+                        onClick={() => { setDraftSido(opt); setDraftSidoAll(false); setDraftGu(''); setDraftDong(''); setGuExpanded(false) }} />
                     ))}
                     {sidoOptions.length > REGION_LIMIT && (
                       <button
@@ -424,10 +430,10 @@ export default function MapPage() {
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>구/시</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    <FilterChip label="전체" active={false} onClick={() => { setDraftGu(''); setDraftDong(''); setGuExpanded(false) }} />
+                    <FilterChip label="전체" active={draftGuAll} onClick={() => { setDraftGuAll(true); setDraftGu(''); setDraftDong(''); setGuExpanded(false) }} />
                     {(guExpanded ? guOptions : guOptions.slice(0, REGION_LIMIT)).map(opt => (
                       <FilterChip key={opt} label={opt} active={draftGu === opt}
-                        onClick={() => { setDraftGu(opt); setDraftDong('') }} />
+                        onClick={() => { setDraftGu(opt); setDraftGuAll(false); setDraftDong('') }} />
                     ))}
                     {guOptions.length > REGION_LIMIT && (
                       <button
