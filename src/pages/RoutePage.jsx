@@ -134,7 +134,12 @@ function CreateRouteModal({ groups, places, onClose, onCreate }) {
   const [region, setRegion] = useState('')
 
   const regionOptions = useMemo(() => {
-    const set = new Set(places.map(p => getAddressLevels(p.address)[0]).filter(Boolean))
+    const set = new Set(
+      places.map(p => {
+        const levels = getAddressLevels(p.address)
+        return levels[1] ? `${levels[0]} ${levels[1]}` : levels[0]
+      }).filter(Boolean)
+    )
     return Array.from(set).sort()
   }, [places])
 
@@ -372,14 +377,19 @@ function PlacePicker({ places, existingIds, region, onClose, onAdd }) {
     prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
   )
 
+  const getPlaceRegion = (p) => {
+    const levels = getAddressLevels(p.address)
+    return levels[1] ? `${levels[0]} ${levels[1]}` : levels[0]
+  }
+
   const available = places.filter(p => {
     if (existingIds.includes(p.id)) return false
-    if (filterRegion && getAddressLevels(p.address)[0] !== filterRegion) return false
+    if (filterRegion && getPlaceRegion(p) !== filterRegion) return false
     return true
   })
 
   const regionOptions = useMemo(() => {
-    const set = new Set(places.map(p => getAddressLevels(p.address)[0]).filter(Boolean))
+    const set = new Set(places.map(p => getPlaceRegion(p)).filter(Boolean))
     return Array.from(set).sort()
   }, [places])
 
