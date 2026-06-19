@@ -3,7 +3,6 @@ import BottomNav from './BottomNav'
 import FeedPage from '../pages/FeedPage'
 import MapPage from '../pages/MapPage'
 import RoutePage from '../pages/RoutePage'
-import JournalPage from '../pages/JournalPage'
 import GroupPage from '../pages/GroupPage'
 import PlaceRegisterModal from './PlaceRegister/PlaceRegisterModal'
 import GroupModal from './Group/GroupModal'
@@ -15,7 +14,6 @@ export default function AppShell() {
     feed: <FeedPage />,
     map: <MapPage />,
     route: <RoutePage />,
-    journal: <JournalPage />,
     group: <GroupPage />,
   }
 

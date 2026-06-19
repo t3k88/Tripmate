@@ -58,6 +58,7 @@ export default function App() {
   const [groups, setGroups] = useState([])
   const [places, setPlaces] = useState([])
   const [journals, setJournals] = useState([])
+  const [routes, setRoutes] = useState([])
   const [loading, setLoading] = useState(true)
   const [showPlaceModal, setShowPlaceModal] = useState(false)
   const [showGroupModal, setShowGroupModal] = useState(false)
@@ -93,11 +94,13 @@ export default function App() {
 
   const loadAll = async () => {
     setLoading(true)
-    const [placesRes, groupsRes, membersRes, journalsRes] = await Promise.all([
+    const [placesRes, groupsRes, membersRes, journalsRes, routesRes, routePlacesRes] = await Promise.all([
       supabase.from('places').select('*').order('created_at', { ascending: false }),
       supabase.from('groups').select('*'),
       supabase.from('group_members').select('*'),
       supabase.from('journals').select('*').order('created_at', { ascending: false }),
+      supabase.from('routes').select('*').order('created_at', { ascending: false }),
+      supabase.from('route_places').select('*').order('sort_order'),
     ])
     if (placesRes.data) setPlaces(placesRes.data.map(placeFromDb))
     if (groupsRes.data) {
@@ -109,6 +112,16 @@ export default function App() {
       ))
     }
     if (journalsRes.data) setJournals(journalsRes.data.map(journalFromDb))
+    if (routesRes.data) {
+      const rp = routePlacesRes.data || []
+      setRoutes(routesRes.data.map(r => ({
+        id: r.id, name: r.name, groupId: r.group_id, author: r.author,
+        date: r.created_at?.split('T')[0],
+        items: rp.filter(p => p.route_id === r.id).map(p => ({
+          id: p.id, placeId: p.place_id, dayNumber: p.day_number, sortOrder: p.sort_order,
+        })),
+      })))
+    }
     setLoading(false)
   }
 
@@ -179,6 +192,32 @@ export default function App() {
     setJournals(js => js.filter(j => j.id !== id))
   }
 
+  // Route CRUD
+  const addRoute = async ({ name, groupId }) => {
+    const uname = localStorage.getItem('tripmate_username') || '나'
+    const { data } = await supabase.from('routes').insert([{ name, group_id: groupId || null, author: uname }]).select().single()
+    if (data) {
+      const newRoute = { id: data.id, name: data.name, groupId: data.group_id, author: data.author, date: data.created_at?.split('T')[0], items: [] }
+      setRoutes(rs => [newRoute, ...rs])
+      return newRoute
+    }
+  }
+
+  const deleteRoute = async (id) => {
+    await supabase.from('routes').delete().eq('id', id)
+    setRoutes(rs => rs.filter(r => r.id !== id))
+  }
+
+  const saveRouteItems = async (routeId, items) => {
+    await supabase.from('route_places').delete().eq('route_id', routeId)
+    if (items.length > 0) {
+      await supabase.from('route_places').insert(
+        items.map((item, i) => ({ route_id: routeId, place_id: item.placeId, day_number: item.dayNumber, sort_order: i }))
+      )
+    }
+    setRoutes(rs => rs.map(r => r.id === routeId ? { ...r, items } : r))
+  }
+
   const handleSetUsername = (name) => {
     localStorage.setItem('tripmate_username', name)
     setUsername(name)
@@ -190,6 +229,7 @@ export default function App() {
     groups, setGroups, addGroup, deleteGroup,
     places, setPlaces, addPlace, updatePlace, deletePlace,
     journals, setJournals, addJournal, updateJournal, deleteJournal,
+    routes, addRoute, deleteRoute, saveRouteItems,
     loading,
     showPlaceModal, setShowPlaceModal,
     showGroupModal, setShowGroupModal,
