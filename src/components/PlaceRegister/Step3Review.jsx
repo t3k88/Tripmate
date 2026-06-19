@@ -179,14 +179,14 @@ export default function Step3Review({ data, groups, onSubmit }) {
 
       {/* 그룹 공유 */}
       <div className="form-group">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <label className="form-label" style={{ margin: 0 }}>그룹 공유</label>
+        <div style={{ position: 'relative' }}>
+          <label className="form-label">그룹 공유</label>
           {groups.length > 0 && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-sub)', cursor: 'pointer' }}>
+            <label style={{ position: 'absolute', top: 0, right: 0, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text-sub)', cursor: 'pointer' }}>
               <input type="checkbox"
                 checked={groupIds.length === groups.length}
                 onChange={() => setGroupIds(groupIds.length === groups.length ? [] : groups.map(g => g.id))}
-                style={{ accentColor: 'var(--primary)', width: 15, height: 15 }}
+                style={{ accentColor: 'var(--primary)', width: 14, height: 14 }}
               />
               전체 선택
             </label>
