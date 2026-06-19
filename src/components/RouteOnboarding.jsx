@@ -55,23 +55,60 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
   const buildRoute = () => {
     const selectedCategories = styles.flatMap(s => STYLES.find(st => st.id === s)?.categories || [])
 
-    // 지역 필터
+    // 1. 지역 필터
     const regionFiltered = places.filter(p => regions.includes(getAddressLevels(p.address)[0]))
+    if (regionFiltered.length === 0) return []
 
-    // 스타일 필터 (해당 카테고리 우선 + 나머지)
-    const matched = regionFiltered.filter(p => selectedCategories.includes(p.category))
-    const others = regionFiltered.filter(p => !selectedCategories.includes(p.category))
-    const sorted = [...matched, ...others]
+    // 2. 스타일 점수: 선택 스타일 카테고리면 +2, 포인트 태그 일치하면 +1씩
+    const styleKeywords = styles.map(s => STYLES.find(st => st.id === s)?.label || '')
+    const scored = regionFiltered.map(p => {
+      let score = 0
+      if (selectedCategories.includes(p.category)) score += 2
+      ;(p.points || []).forEach(pt => {
+        if (styleKeywords.some(kw => pt.includes(kw))) score += 1
+      })
+      return { ...p, _score: score }
+    })
 
-    // Day별 배분 (duration.days 기준으로 균등 분배)
-    const perDay = Math.ceil(sorted.length / duration.days)
-    const items = sorted.map((p, i) => ({
-      placeId: p.id,
-      dayNumber: Math.min(Math.floor(i / perDay) + 1, duration.days),
-      sortOrder: i % perDay,
-    }))
+    // 3. 구/군 단위로 그룹핑 (비슷한 동선끼리 묶기)
+    const byGu = scored.reduce((acc, p) => {
+      const gu = getAddressLevels(p.address)[1] || '기타'
+      if (!acc[gu]) acc[gu] = []
+      acc[gu].push(p)
+      return acc
+    }, {})
 
-    return items
+    // 4. 각 구/군 내에서 스코어 높은 순 정렬
+    Object.keys(byGu).forEach(gu => {
+      byGu[gu].sort((a, b) => b._score - a._score)
+    })
+
+    // 5. 구/군별로 Day에 균등 배분 (같은 구/군은 같은 날 몰기)
+    const guGroups = Object.values(byGu)
+    const days = duration.days
+    const items = []
+    let currentDay = 1
+
+    guGroups.forEach(group => {
+      // 이 구/군의 장소들은 같은 날(들)에 배치
+      group.forEach((p, i) => {
+        items.push({
+          placeId: p.id,
+          dayNumber: Math.min(currentDay, days),
+          sortOrder: items.length,
+        })
+        // 하루에 너무 많이 몰리면 다음 날로
+        const dayCount = items.filter(it => it.dayNumber === currentDay).length
+        if (dayCount >= Math.ceil(scored.length / days) && currentDay < days) {
+          currentDay++
+        }
+      })
+      // 구/군 바뀌면 다음 날 고려
+      if (currentDay < days) currentDay++
+    })
+
+    // day 범위 초과 방지
+    return items.map(it => ({ ...it, dayNumber: Math.min(it.dayNumber, days) }))
   }
 
   const handleComplete = () => {
