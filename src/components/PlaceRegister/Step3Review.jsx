@@ -179,7 +179,15 @@ export default function Step3Review({ data, groups, onSubmit }) {
 
       {/* 그룹 공유 */}
       <div className="form-group">
-        <label className="form-label">그룹 공유</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <label className="form-label" style={{ margin: 0 }}>그룹 공유</label>
+          {groups.length > 0 && (
+            <button onClick={() => setGroupIds(groupIds.length === groups.length ? [] : groups.map(g => g.id))}
+              style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>
+              {groupIds.length === groups.length ? '전체 해제' : '전체 선택'}
+            </button>
+          )}
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {groups.map(g => (
             <GroupOption
