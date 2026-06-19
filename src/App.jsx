@@ -67,8 +67,29 @@ export default function App() {
   const [showUsernameModal, setShowUsernameModal] = useState(!localStorage.getItem('tripmate_username'))
 
   useEffect(() => {
-    loadAll()
+    loadAll().then(() => handleJoinFromUrl())
   }, [])
+
+  const handleJoinFromUrl = async () => {
+    const params = new URLSearchParams(window.location.search)
+    const joinParam = params.get('join')
+    if (!joinParam) return
+
+    const groupId = parseInt(joinParam, 36)
+    const uname = localStorage.getItem('tripmate_username') || '나'
+
+    const { data: existing } = await supabase
+      .from('group_members').select('id')
+      .eq('group_id', groupId).eq('user_name', uname).maybeSingle()
+
+    if (!existing) {
+      await supabase.from('group_members').insert([{ group_id: groupId, user_name: uname, user_avatar: '👤' }])
+    }
+
+    window.history.replaceState({}, '', '/')
+    await loadAll()
+    alert('그룹에 참여했어요! 🎉')
+  }
 
   const loadAll = async () => {
     setLoading(true)
