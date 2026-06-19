@@ -1,9 +1,16 @@
 import { useState, useMemo } from 'react'
 import { getCategoryInfo, getAddressLevels } from '../utils/helpers'
 
+const DURATIONS = [
+  { id: 1, label: '당일치기', days: 1 },
+  { id: 2, label: '1박 2일', days: 2 },
+  { id: 3, label: '2박 3일', days: 3 },
+  { id: 4, label: '3박 이상', days: 4 },
+]
+
 const COMPANIONS = [
   { id: 'solo', icon: '🙋', label: '혼자' },
-  { id: 'friends', icon: '👫', label: '친구들' },
+  { id: 'friends', icon: '👯', label: '친구들' },
   { id: 'couple', icon: '💑', label: '연인' },
   { id: 'family', icon: '👨‍👩‍👧', label: '가족' },
 ]
@@ -15,13 +22,6 @@ const STYLES = [
   { id: 'activity', icon: '🎯', label: '액티비티', categories: ['attraction'] },
   { id: 'shopping', icon: '🛍️', label: '쇼핑', categories: ['shopping'] },
   { id: 'drink', icon: '🍺', label: '술/바', categories: ['bar'] },
-]
-
-const DURATIONS = [
-  { id: 1, label: '당일치기', days: 1 },
-  { id: 2, label: '1박 2일', days: 2 },
-  { id: 3, label: '2박 3일', days: 3 },
-  { id: 4, label: '3박 이상', days: 4 },
 ]
 
 export default function RouteOnboarding({ places, groups, onClose, onComplete }) {
@@ -48,9 +48,9 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
 
   const canNext = () => {
     if (step === 1) return !!region
-    if (step === 2) return !!companion
-    if (step === 3) return styles.length > 0
-    if (step === 4) return !!duration
+    if (step === 2) return !!duration
+    if (step === 3) return !!companion
+    if (step === 4) return styles.length > 0
     return false
   }
 
@@ -147,8 +147,27 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
             </div>
           )}
 
-          {/* Step 2: 동행 */}
+          {/* Step 2: 기간 */}
           {step === 2 && (
+            <div>
+              <p style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>며칠 동안 가요? 📅</p>
+              <p style={{ fontSize: 14, color: 'var(--text-sub)', marginBottom: 24 }}>여행 기간을 선택해주세요</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {DURATIONS.map(d => (
+                  <button key={d.id} onClick={() => setDuration(d)} style={{
+                    padding: '24px 16px', borderRadius: 16, fontSize: 14, fontWeight: 700,
+                    border: `2px solid ${duration?.id === d.id ? 'var(--primary)' : 'var(--border)'}`,
+                    background: duration?.id === d.id ? 'var(--primary-bg)' : 'var(--surface)',
+                    color: duration?.id === d.id ? 'var(--primary)' : 'var(--text)',
+                    transition: 'all 0.15s',
+                  }}>{d.label}</button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: 동행 */}
+          {step === 3 && (
             <div>
               <p style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>누구랑 가요? 👥</p>
               <p style={{ fontSize: 14, color: 'var(--text-sub)', marginBottom: 24 }}>여행 동반자를 알려주세요</p>
@@ -170,12 +189,12 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
             </div>
           )}
 
-          {/* Step 3: 스타일 */}
-          {step === 3 && (
+          {/* Step 4: 스타일 + 루트명 */}
+          {step === 4 && (
             <div>
               <p style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>여행 스타일은요? ✨</p>
               <p style={{ fontSize: 14, color: 'var(--text-sub)', marginBottom: 24 }}>복수 선택 가능해요</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
                 {STYLES.map(s => {
                   const active = styles.includes(s.id)
                   return (
@@ -192,25 +211,6 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
                     </button>
                   )
                 })}
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: 기간 + 루트명 */}
-          {step === 4 && (
-            <div>
-              <p style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>며칠 동안? 📅</p>
-              <p style={{ fontSize: 14, color: 'var(--text-sub)', marginBottom: 24 }}>여행 기간을 선택해주세요</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
-                {DURATIONS.map(d => (
-                  <button key={d.id} onClick={() => setDuration(d)} style={{
-                    padding: '18px 16px', borderRadius: 16, fontSize: 14, fontWeight: 700,
-                    border: `2px solid ${duration?.id === d.id ? 'var(--primary)' : 'var(--border)'}`,
-                    background: duration?.id === d.id ? 'var(--primary-bg)' : 'var(--surface)',
-                    color: duration?.id === d.id ? 'var(--primary)' : 'var(--text)',
-                    transition: 'all 0.15s',
-                  }}>{d.label}</button>
-                ))}
               </div>
 
               <div className="form-group">
