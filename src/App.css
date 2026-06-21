@@ -20,6 +20,35 @@
   }
 }
 
+/* 데스크탑 레이아웃 */
+@media (min-width: 768px) {
+  body {
+    background: var(--bg);
+    display: block;
+  }
+
+  .app-shell {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+    flex-direction: row;
+    overflow: hidden;
+  }
+
+  .side-nav {
+    display: flex;
+  }
+
+  .bottom-nav {
+    display: none;
+  }
+
+  .screen {
+    max-width: 680px;
+  }
+}
+
 .screen {
   flex: 1;
   overflow-y: auto;
@@ -69,6 +98,61 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Side Nav (데스크탑) */
+.side-nav {
+  display: none;
+  flex-direction: column;
+  width: 220px;
+  min-width: 220px;
+  height: 100%;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 32px 16px 24px;
+  gap: 4px;
+}
+
+.side-nav-logo {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  margin-bottom: 32px;
+  padding: 0 8px;
+}
+
+.side-nav-logo span {
+  color: var(--primary);
+}
+
+.side-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-sub);
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.side-nav-item:hover {
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+
+.side-nav-item.active {
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.side-nav-icon {
+  font-size: 20px;
+  line-height: 1;
 }
 
 /* Bottom Nav */
