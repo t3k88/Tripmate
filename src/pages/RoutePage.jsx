@@ -70,7 +70,7 @@ export default function RoutePage() {
             groups={groups}
             onClose={() => setShowOnboarding(false)}
             onComplete={async (data) => {
-              const newRoute = await addRoute({ name: data.name, groupId: data.groupId })
+              const newRoute = await addRoute({ name: data.name, groupId: data.groupIds?.[0] ?? null })
               setShowOnboarding(false)
               if (newRoute) {
                 await saveRouteItems(newRoute.id, data.items)

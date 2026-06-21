@@ -31,7 +31,7 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
   const [styles, setStyles] = useState([])
   const [duration, setDuration] = useState(null)
   const [routeName, setRouteName] = useState('')
-  const [groupId, setGroupId] = useState('')
+  const [groupIds, setGroupIds] = useState([])
 
   // sido → [gu, ...] 구조
   const regionOptions = useMemo(() => {
@@ -125,7 +125,7 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
     const name = routeName.trim() || `${regions.join('·')} ${duration.label}`
     onComplete({
       name,
-      groupId: groupId ? Number(groupId) : null,
+      groupIds,
       regions,
       companion,
       styles,
@@ -271,11 +271,38 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
               </div>
               {groups.length > 0 && (
                 <div className="form-group">
-                  <label className="form-label">그룹 공유 (선택)</label>
-                  <select className="form-input" value={groupId} onChange={e => setGroupId(e.target.value)}>
-                    <option value="">선택 안 함</option>
-                    {groups.map(g => <option key={g.id} value={g.id}>{g.cover} {g.name}</option>)}
-                  </select>
+                  <div style={{ position: 'relative' }}>
+                    <label className="form-label">그룹 공유 (선택)</label>
+                    <label style={{ position: 'absolute', top: 0, right: 0, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text-sub)', cursor: 'pointer' }}>
+                      <input type="checkbox"
+                        checked={groupIds.length === groups.length}
+                        onChange={() => setGroupIds(groupIds.length === groups.length ? [] : groups.map(g => g.id))}
+                        style={{ accentColor: 'var(--primary)', width: 14, height: 14 }}
+                      />
+                      전체 선택
+                    </label>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {groups.map(g => (
+                      <button key={g.id}
+                        onClick={() => setGroupIds(prev => prev.includes(g.id) ? prev.filter(id => id !== g.id) : [...prev, g.id])}
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '12px 14px', borderRadius: 12, textAlign: 'left',
+                          border: `1.5px solid ${groupIds.includes(g.id) ? 'var(--primary)' : 'var(--border)'}`,
+                          background: groupIds.includes(g.id) ? 'var(--primary-bg)' : 'var(--surface)',
+                        }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: 22 }}>{g.cover}</span>
+                          <span>
+                            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{g.name}</p>
+                            <p style={{ fontSize: 12, color: 'var(--text-sub)' }}>멤버 {g.members.length}명</p>
+                          </span>
+                        </span>
+                        {groupIds.includes(g.id) && <span style={{ color: 'var(--primary)', fontSize: 16 }}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
