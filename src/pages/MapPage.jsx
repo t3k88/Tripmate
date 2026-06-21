@@ -349,8 +349,8 @@ export default function MapPage() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   <FilterChip
                     label="전체"
-                    active={draftCategories.length === allCategoryIds.length}
-                    onClick={() => setDraftCategories(toggleAll(draftCategories, allCategoryIds))}
+                    active={draftCategories.length === 0}
+                    onClick={() => setDraftCategories([])}
                   />
                   {CATEGORIES.map(cat => (
                     <FilterChip
@@ -370,8 +370,8 @@ export default function MapPage() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     <FilterChip
                       label="전체"
-                      active={draftGroups.length === allGroupIds.length}
-                      onClick={() => { setDraftGroups(toggleAll(draftGroups, allGroupIds)); setDraftAuthors([]) }}
+                      active={draftGroups.length === 0}
+                      onClick={() => { setDraftGroups([]); setDraftAuthors([]) }}
                     />
                     {groups.map(g => (
                       <FilterChip
@@ -394,8 +394,8 @@ export default function MapPage() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     <FilterChip
                       label="전체"
-                      active={draftAuthors.length === availableAuthors.length}
-                      onClick={() => setDraftAuthors(toggleAll(draftAuthors, availableAuthors))}
+                      active={draftAuthors.length === 0}
+                      onClick={() => setDraftAuthors([])}
                     />
                     {availableAuthors.map(name => (
                       <FilterChip
@@ -414,8 +414,8 @@ export default function MapPage() {
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>지역</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    <FilterChip label="전체" active={draftSidos.length === sidoOptions.length}
-                      onClick={() => { setDraftSidos(toggleAll(draftSidos, sidoOptions)); setDraftGu(''); setDraftDong(''); setGuExpanded(false) }} />
+                    <FilterChip label="전체" active={draftSidos.length === 0}
+                      onClick={() => { setDraftSidos([]); setDraftGus([]); setDraftDong(''); setGuExpanded(false) }} />
                     {(sidoExpanded ? sidoOptions : sidoOptions.slice(0, REGION_LIMIT)).map(opt => (
                       <FilterChip key={opt} label={opt} active={draftSidos.includes(opt)}
                         onClick={() => { setDraftSidos(toggleOne(draftSidos, opt)); setDraftGu(''); setDraftDong(''); setGuExpanded(false) }} />
@@ -437,8 +437,8 @@ export default function MapPage() {
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>구/시</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    <FilterChip label="전체" active={draftGus.length === guOptions.length}
-                      onClick={() => { setDraftGus(toggleAll(draftGus, guOptions)); setDraftDong('') }} />
+                    <FilterChip label="전체" active={draftGus.length === 0}
+                      onClick={() => { setDraftGus([]); setDraftDong('') }} />
                     {(guExpanded ? guOptions : guOptions.slice(0, REGION_LIMIT)).map(opt => (
                       <FilterChip key={opt} label={opt} active={draftGus.includes(opt)}
                         onClick={() => { setDraftGus(toggleOne(draftGus, opt)); setDraftDong('') }} />
