@@ -22,21 +22,16 @@
 
 /* 데스크탑 레이아웃 */
 @media (min-width: 768px) {
-  body {
-    background: var(--bg);
-    display: block;
-  }
-
   .app-shell {
     width: 100vw;
     height: 100vh;
     border-radius: 0;
     box-shadow: none;
-    flex-direction: row;
+    flex-direction: column;
     overflow: hidden;
   }
 
-  .side-nav {
+  .top-nav {
     display: flex;
   }
 
@@ -46,8 +41,14 @@
 
   .screen {
     flex: 1;
-    max-width: 720px;
+    max-width: 860px;
+    width: 100%;
     margin: 0 auto;
+    overflow-y: auto;
+  }
+
+  .screen-map {
+    max-width: 100%;
   }
 }
 
@@ -100,6 +101,49 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Top Nav (데스크탑) */
+.top-nav {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  height: 60px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.top-nav-logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.5px;
+}
+
+.top-nav-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.top-nav-tab {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-sub);
+  transition: all 0.15s;
+}
+
+.top-nav-tab:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+
+.top-nav-tab.active {
+  color: var(--primary);
+  font-weight: 700;
 }
 
 /* Side Nav (데스크탑) */

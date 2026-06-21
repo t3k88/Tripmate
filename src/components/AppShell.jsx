@@ -1,6 +1,6 @@
 import { useApp } from '../context/AppContext'
 import BottomNav from './BottomNav'
-import SideNav from './SideNav'
+import TopNav from './TopNav'
 import FeedPage from '../pages/FeedPage'
 import MapPage from '../pages/MapPage'
 import RoutePage from '../pages/RoutePage'
@@ -20,7 +20,7 @@ export default function AppShell() {
 
   return (
     <div className="app-shell">
-      <SideNav />
+      <TopNav />
 
       <div className={`screen${activeTab === 'map' ? ' screen-map' : ''}`}>
         {tabs[activeTab]}
