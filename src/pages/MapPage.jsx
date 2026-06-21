@@ -417,7 +417,7 @@ export default function MapPage() {
                       onClick={() => { setDraftSidos([]); setDraftGus([]); setDraftDong(''); setGuExpanded(false) }} />
                     {(sidoExpanded ? sidoOptions : sidoOptions.slice(0, REGION_LIMIT)).map(opt => (
                       <FilterChip key={opt} label={opt} active={draftSidos.includes(opt)}
-                        onClick={() => { setDraftSidos(toggleOne(draftSidos, opt)); setDraftGu(''); setDraftDong(''); setGuExpanded(false) }} />
+                        onClick={() => { setDraftSidos(toggleOne(draftSidos, opt)); setDraftGus([]); setDraftDong(''); setGuExpanded(false) }} />
                     ))}
                     {sidoOptions.length > REGION_LIMIT && (
                       <button
