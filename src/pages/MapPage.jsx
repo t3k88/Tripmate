@@ -118,11 +118,11 @@ export default function MapPage() {
   }).length
 
   const openFilter = () => {
-    setDraftCategories(filterCategories.length === 0 ? [...allCategoryIds] : filterCategories)
-    setDraftGroups(filterGroups.length === 0 ? [...allGroupIds] : filterGroups)
-    setDraftAuthors(filterAuthors.length === 0 ? [...availableAuthors] : filterAuthors)
-    setDraftSidos(filterSidos.length === 0 ? [...sidoOptions] : filterSidos)
-    setDraftGus(filterGus.length === 0 ? [...guOptions] : filterGus)
+    setDraftCategories(filterCategories)
+    setDraftGroups(filterGroups)
+    setDraftAuthors(filterAuthors)
+    setDraftSidos(filterSidos)
+    setDraftGus(filterGus)
     setDraftDong(dong)
     setFilterOpen(true)
   }
