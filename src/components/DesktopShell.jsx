@@ -40,8 +40,9 @@ export default function DesktopShell() {
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 40px', height: 64,
-        background: page ? 'var(--surface)' : 'transparent',
+        background: page ? 'var(--surface)' : 'rgba(15, 28, 64, 0.85)',
         borderBottom: page ? '1px solid var(--border)' : 'none',
+        backdropFilter: !page ? 'blur(8px)' : 'none',
         transition: 'background 0.3s, border 0.3s',
       }}>
         <button
