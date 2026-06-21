@@ -52,6 +52,6 @@ export function getAddressLevels(address) {
   const levels = []
   if (parts[0]) levels.push(parts[0])
   if (parts[1]) levels.push(parts[1])
-  if (parts[2] && /(동|읍|면|리)$/.test(parts[2])) levels.push(parts[2])
+  if (parts[2]) levels.push(parts[2])
   return levels.length > 0 ? levels : ['기타']
 }

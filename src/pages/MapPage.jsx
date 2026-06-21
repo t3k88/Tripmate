@@ -460,7 +460,7 @@ export default function MapPage() {
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>동/읍/면</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    <FilterChip label="전체" active={false} onClick={() => setDraftDong('')} />
+                    <FilterChip label="전체" active={draftDong === ''} onClick={() => setDraftDong('')} />
                     {dongOptions.map(opt => (
                       <FilterChip key={opt} label={opt} active={draftDong === opt} onClick={() => setDraftDong(opt)} />
                     ))}
