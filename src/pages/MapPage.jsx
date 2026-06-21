@@ -118,12 +118,11 @@ export default function MapPage() {
   }).length
 
   const openFilter = () => {
-    // 전체 선택 상태(= 필터 없음)면 빈 배열로 초기화
-    setDraftCategories(filterCategories.length === allCategoryIds.length ? [] : filterCategories)
-    setDraftGroups(filterGroups.length === groups.length ? [] : filterGroups)
-    setDraftAuthors(filterAuthors.length > 0 && filterAuthors.length === availableAuthors.length ? [] : filterAuthors)
-    setDraftSidos(filterSidos.length === sidoOptions.length ? [] : filterSidos)
-    setDraftGus(filterGus.length === guOptions.length ? [] : filterGus)
+    setDraftCategories(filterCategories)
+    setDraftGroups(filterGroups)
+    setDraftAuthors(filterAuthors)
+    setDraftSidos(filterSidos)
+    setDraftGus(filterGus)
     setDraftDong(dong)
     setFilterOpen(true)
   }
