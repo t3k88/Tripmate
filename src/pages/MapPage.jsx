@@ -118,11 +118,11 @@ export default function MapPage() {
   }).length
 
   const openFilter = () => {
-    setDraftCategories(filterCategories)
-    setDraftGroups(filterGroups)
-    setDraftAuthors(filterAuthors)
-    setDraftSidos(filterSidos)
-    setDraftGus(filterGus)
+    setDraftCategories(filterCategories.length === 0 ? [...allCategoryIds] : filterCategories)
+    setDraftGroups(filterGroups.length === 0 ? [...allGroupIds] : filterGroups)
+    setDraftAuthors(filterAuthors.length === 0 ? [...availableAuthors] : filterAuthors)
+    setDraftSidos(filterSidos.length === 0 ? [...sidoOptions] : filterSidos)
+    setDraftGus(filterGus.length === 0 ? [...guOptions] : filterGus)
     setDraftDong(dong)
     setFilterOpen(true)
   }
@@ -348,8 +348,8 @@ export default function MapPage() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   <FilterChip
                     label="전체"
-                    active={draftCategories.length === 0}
-                    onClick={() => setDraftCategories([])}
+                    active={draftCategories.length === allCategoryIds.length}
+                    onClick={() => setDraftCategories(toggleAll(draftCategories, allCategoryIds))}
                   />
                   {CATEGORIES.map(cat => (
                     <FilterChip
@@ -369,8 +369,8 @@ export default function MapPage() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     <FilterChip
                       label="전체"
-                      active={draftGroups.length === 0}
-                      onClick={() => { setDraftGroups([]); setDraftAuthors([]) }}
+                      active={draftGroups.length === allGroupIds.length}
+                      onClick={() => { setDraftGroups(toggleAll(draftGroups, allGroupIds)); setDraftAuthors([]) }}
                     />
                     {groups.map(g => (
                       <FilterChip
@@ -393,8 +393,8 @@ export default function MapPage() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     <FilterChip
                       label="전체"
-                      active={draftAuthors.length === 0}
-                      onClick={() => setDraftAuthors([])}
+                      active={draftAuthors.length === availableAuthors.length}
+                      onClick={() => setDraftAuthors(toggleAll(draftAuthors, availableAuthors))}
                     />
                     {availableAuthors.map(name => (
                       <FilterChip
@@ -413,8 +413,8 @@ export default function MapPage() {
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>지역</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    <FilterChip label="전체" active={draftSidos.length === 0}
-                      onClick={() => { setDraftSidos([]); setDraftGus([]); setDraftDong(''); setGuExpanded(false) }} />
+                    <FilterChip label="전체" active={draftSidos.length === sidoOptions.length}
+                      onClick={() => { setDraftSidos(toggleAll(draftSidos, sidoOptions)); setDraftGus([]); setDraftDong(''); setGuExpanded(false) }} />
                     {(sidoExpanded ? sidoOptions : sidoOptions.slice(0, REGION_LIMIT)).map(opt => (
                       <FilterChip key={opt} label={opt} active={draftSidos.includes(opt)}
                         onClick={() => { setDraftSidos(toggleOne(draftSidos, opt)); setDraftGus([]); setDraftDong(''); setGuExpanded(false) }} />
@@ -436,8 +436,8 @@ export default function MapPage() {
                 <div style={{ padding: '0 20px 20px' }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>구/시</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    <FilterChip label="전체" active={draftGus.length === 0}
-                      onClick={() => { setDraftGus([]); setDraftDong('') }} />
+                    <FilterChip label="전체" active={draftGus.length === guOptions.length}
+                      onClick={() => { setDraftGus(toggleAll(draftGus, guOptions)); setDraftDong('') }} />
                     {(guExpanded ? guOptions : guOptions.slice(0, REGION_LIMIT)).map(opt => (
                       <FilterChip key={opt} label={opt} active={draftGus.includes(opt)}
                         onClick={() => { setDraftGus(toggleOne(draftGus, opt)); setDraftDong('') }} />
