@@ -40,6 +40,17 @@ html, body {
   align-items: center;
 }
 
+@media (min-width: 768px) {
+  html, body {
+    background: var(--bg);
+  }
+
+  #root {
+    display: block;
+    height: 100%;
+  }
+}
+
 button {
   cursor: pointer;
   border: none;
