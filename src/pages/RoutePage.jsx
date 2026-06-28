@@ -3,13 +3,15 @@ import { useApp } from '../context/AppContext'
 import { getCategoryInfo, getAddressLevels } from '../utils/helpers'
 import AppPortal from '../components/AppPortal'
 import RouteOnboarding from '../components/RouteOnboarding'
+import ManualRouteCreate from '../components/ManualRouteCreate'
 
 export default function RoutePage() {
   const { routes, places, groups, addRoute, deleteRoute, saveRouteItems } = useApp()
   const [view, setView] = useState('list')       // 'list' | 'detail'
   const [activeRoute, setActiveRoute] = useState(null)
-  const [showCreate, setShowCreate] = useState(false)
+  const [showPicker, setShowPicker] = useState(false)   // 자동/수동 선택
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showManual, setShowManual] = useState(false)    // 수동 루트 이름 입력
 
   const openRoute = (route) => {
     setActiveRoute(route)
@@ -37,7 +39,7 @@ export default function RoutePage() {
     <>
       <div className="header">
         <span className="header-title">루트</span>
-        <button className="header-action" onClick={() => setShowOnboarding(true)}>+</button>
+        <button className="header-action" onClick={() => setShowPicker(true)}>+</button>
       </div>
 
       <div style={{ padding: '16px 16px 80px' }}>
@@ -61,7 +63,64 @@ export default function RoutePage() {
         )}
       </div>
 
-      <button className="fab" onClick={() => setShowOnboarding(true)}>+</button>
+      <button className="fab" onClick={() => setShowPicker(true)}>+</button>
+
+      {/* 자동/수동 선택 picker */}
+      {showPicker && (
+        <AppPortal>
+          <div className="modal-overlay" onClick={() => setShowPicker(false)}>
+            <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ padding: '24px 20px 32px' }}>
+              <div className="modal-handle" />
+              <p style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, marginTop: 8 }}>루트 만들기</p>
+              <p style={{ fontSize: 14, color: 'var(--text-sub)', marginBottom: 24 }}>어떻게 만들까요?</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <button
+                  onClick={() => { setShowPicker(false); setShowManual(true) }}
+                  style={{
+                    padding: '20px 20px', borderRadius: 16, textAlign: 'left',
+                    border: '2px solid var(--border)', background: 'var(--surface)',
+                    display: 'flex', alignItems: 'center', gap: 16,
+                  }}
+                >
+                  <span style={{ fontSize: 36 }}>✏️</span>
+                  <span>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>직접 만들기</p>
+                    <p style={{ fontSize: 13, color: 'var(--text-sub)' }}>빈 루트를 만들고 장소를 직접 추가해요</p>
+                  </span>
+                </button>
+                <button
+                  onClick={() => { setShowPicker(false); setShowOnboarding(true) }}
+                  style={{
+                    padding: '20px 20px', borderRadius: 16, textAlign: 'left',
+                    border: '2px solid var(--border)', background: 'var(--surface)',
+                    display: 'flex', alignItems: 'center', gap: 16,
+                  }}
+                >
+                  <span style={{ fontSize: 36 }}>🤖</span>
+                  <span>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>자동 추천</p>
+                    <p style={{ fontSize: 13, color: 'var(--text-sub)' }}>지역·스타일 선택하면 루트를 짜줘요</p>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </AppPortal>
+      )}
+
+      {showManual && (
+        <AppPortal>
+          <ManualRouteCreate
+            groups={groups}
+            onClose={() => setShowManual(false)}
+            onComplete={async (data) => {
+              const newRoute = await addRoute({ name: data.name, groupId: data.groupId })
+              setShowManual(false)
+              if (newRoute) openRoute({ ...newRoute, items: [] })
+            }}
+          />
+        </AppPortal>
+      )}
 
       {showOnboarding && (
         <AppPortal>
