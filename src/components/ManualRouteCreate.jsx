@@ -1,8 +1,32 @@
 import { useState } from 'react'
+import RouteMapPicker from './RouteMapPicker'
+import RouteDayAssign from './RouteDayAssign'
 
-export default function ManualRouteCreate({ groups, onClose, onComplete }) {
+export default function ManualRouteCreate({ places, groups, onClose, onComplete }) {
+  const [step, setStep] = useState('name') // 'name' | 'map' | 'days'
   const [name, setName] = useState('')
   const [groupId, setGroupId] = useState(null)
+  const [selectedPlaces, setSelectedPlaces] = useState([])
+
+  if (step === 'map') {
+    return (
+      <RouteMapPicker
+        places={places}
+        onBack={() => setStep('name')}
+        onComplete={(picked) => { setSelectedPlaces(picked); setStep('days') }}
+      />
+    )
+  }
+
+  if (step === 'days') {
+    return (
+      <RouteDayAssign
+        selectedPlaces={selectedPlaces}
+        onBack={() => setStep('map')}
+        onComplete={(items) => onComplete({ name, groupId, items })}
+      />
+    )
+  }
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -10,7 +34,7 @@ export default function ManualRouteCreate({ groups, onClose, onComplete }) {
         <div className="modal-handle" />
 
         <div style={{ padding: '12px 20px 0', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-          <button onClick={onClose} style={{ fontSize: 20, color: 'var(--text-sub)' }}>✕</button>
+          <button onClick={onClose} style={{ fontSize: 20, color: 'var(--text-sub)', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
           <p style={{ fontSize: 18, fontWeight: 800 }}>직접 루트 만들기</p>
         </div>
 
@@ -58,9 +82,9 @@ export default function ManualRouteCreate({ groups, onClose, onComplete }) {
           <button
             className="btn-primary"
             disabled={!name.trim()}
-            onClick={() => onComplete({ name: name.trim(), groupId })}
+            onClick={() => setStep('map')}
           >
-            루트 만들기
+            지도에서 장소 선택 →
           </button>
         </div>
       </div>

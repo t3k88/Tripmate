@@ -111,12 +111,16 @@ export default function RoutePage() {
       {showManual && (
         <AppPortal>
           <ManualRouteCreate
+            places={places}
             groups={groups}
             onClose={() => setShowManual(false)}
             onComplete={async (data) => {
               const newRoute = await addRoute({ name: data.name, groupId: data.groupId })
               setShowManual(false)
-              if (newRoute) openRoute({ ...newRoute, items: [] })
+              if (newRoute) {
+                if (data.items?.length > 0) await saveRouteItems(newRoute.id, data.items)
+                openRoute({ ...newRoute, items: data.items || [] })
+              }
             }}
           />
         </AppPortal>
