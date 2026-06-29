@@ -141,7 +141,8 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
     })
   }
 
-  const handleRemove = (memberId) => {
+  const handleRemove = (memberId, memberName) => {
+    if (!window.confirm(`${memberName}님을 그룹에서 내보낼까요?`)) return
     removeMember(currentGroup.id, memberId)
   }
 
@@ -213,7 +214,7 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
                       }}>방장</span>
                     ) : (
                       <button
-                        onClick={() => handleRemove(member.id)}
+                        onClick={() => handleRemove(member.id, member.name)}
                         style={{ fontSize: 12, color: 'var(--danger)', fontWeight: 600, padding: '2px 6px' }}
                       >
                         내보내기
