@@ -28,10 +28,10 @@ const pages = {
 export default function DesktopShell() {
   const { showPlaceModal, showGroupModal, setActiveTab } = useApp()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [page, setPage] = useState(() => localStorage.getItem('tripmate_tab') || null)
+  const [page, setPage] = useState(() => sessionStorage.getItem('tripmate_page') || null)
 
   const navigate = (id) => {
-    localStorage.setItem('tripmate_tab', id)
+    sessionStorage.setItem('tripmate_page', id)
     setPage(id)
     setActiveTab(id)
     setDrawerOpen(false)
@@ -50,7 +50,7 @@ export default function DesktopShell() {
         transition: 'background 0.3s, border 0.3s',
       }}>
         <button
-          onClick={() => { setPage(null); setActiveTab('feed') }}
+          onClick={() => { sessionStorage.removeItem('tripmate_page'); setPage(null); setActiveTab('feed') }}
           style={{
             fontSize: 20, fontWeight: 800, letterSpacing: '-0.5px',
             color: page ? 'var(--primary)' : 'white',
