@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import BottomNav from './BottomNav'
 import DesktopShell from './DesktopShell'
+import LandingPage from '../pages/LandingPage'
 import FeedPage from '../pages/FeedPage'
 import MapPage from '../pages/MapPage'
 import RoutePage from '../pages/RoutePage'
@@ -15,10 +17,21 @@ const useIsDesktop = () => {
 }
 
 export default function AppShell() {
-  const { activeTab, showPlaceModal, showGroupModal } = useApp()
+  const { activeTab, setActiveTab, showPlaceModal, showGroupModal } = useApp()
   const isDesktop = useIsDesktop()
+  const [entered, setEntered] = useState(() => !!sessionStorage.getItem('tripmate_page'))
 
   if (isDesktop) return <DesktopShell />
+
+  const navigate = (tab) => {
+    sessionStorage.setItem('tripmate_page', tab)
+    setActiveTab(tab)
+    setEntered(true)
+  }
+
+  if (!entered) {
+    return <LandingPage onNavigate={navigate} />
+  }
 
   const tabs = {
     feed: <FeedPage />,
@@ -31,7 +44,7 @@ export default function AppShell() {
   return (
     <div className="app-shell">
       <div className={`screen${activeTab === 'map' ? ' screen-map' : ''}`}>
-        {tabs[activeTab]}
+        {tabs[activeTab] || <FeedPage />}
       </div>
 
       <BottomNav />
