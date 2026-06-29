@@ -55,7 +55,12 @@ const journalFromDb = (j) => ({
 })
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('feed')
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('tripmate_tab') || 'feed')
+
+  const setActiveTabPersist = (tab) => {
+    localStorage.setItem('tripmate_tab', tab)
+    setActiveTab(tab)
+  }
   const [groups, setGroups] = useState([])
   const [places, setPlaces] = useState([])
   const [journals, setJournals] = useState([])
@@ -235,7 +240,7 @@ export default function App() {
   }
 
   const ctx = {
-    activeTab, setActiveTab,
+    activeTab, setActiveTab: setActiveTabPersist,
     groups, setGroups, addGroup, deleteGroup, removeMember,
     places, setPlaces, addPlace, updatePlace, deletePlace,
     journals, setJournals, addJournal, updateJournal, deleteJournal,

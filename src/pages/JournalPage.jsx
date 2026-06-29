@@ -49,8 +49,10 @@ export default function JournalPage() {
   }
 
   const handleUpload = async (e) => {
-    const files = Array.from(e.target.files)
+    const remaining = 3 - form.imageUrls.length
+    const files = Array.from(e.target.files).slice(0, remaining)
     if (!files.length) return
+    if (remaining <= 0) { setUploadError('사진은 최대 3장까지 추가할 수 있어요.'); return }
     setUploading(true)
     setUploadError('')
     const urls = []
@@ -265,18 +267,19 @@ function PhotoUploader({ imageUrls, uploading, uploadError, onUpload, onRemove }
       {/* 업로드 버튼 */}
       <button
         onClick={() => inputRef.current?.click()}
-        disabled={uploading}
+        disabled={uploading || imageUrls.length >= 3}
         style={{
           width: '100%', padding: '14px', borderRadius: 10,
           border: `2px dashed ${uploading ? 'var(--primary)' : 'var(--border)'}`,
           background: uploading ? 'var(--primary-bg)' : 'var(--bg)',
           color: uploading ? 'var(--primary)' : 'var(--text-sub)',
-          fontSize: 14, fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer',
+          fontSize: 14, fontWeight: 600, cursor: (uploading || imageUrls.length >= 3) ? 'not-allowed' : 'pointer',
+          opacity: imageUrls.length >= 3 ? 0.4 : 1,
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           transition: 'all 0.2s',
         }}
       >
-        {uploading ? '⏳ 업로드 중...' : '📷 사진 추가하기'}
+        {uploading ? '⏳ 업로드 중...' : imageUrls.length >= 3 ? '📷 최대 3장 (완료)' : `📷 사진 추가하기 (${imageUrls.length}/3)`}
       </button>
 
       {/* 에러 메시지 */}
