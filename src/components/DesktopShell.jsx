@@ -28,9 +28,10 @@ const pages = {
 export default function DesktopShell() {
   const { showPlaceModal, showGroupModal, setActiveTab } = useApp()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [page, setPage] = useState(null) // null = landing
+  const [page, setPage] = useState(() => localStorage.getItem('tripmate_tab') || null)
 
   const navigate = (id) => {
+    localStorage.setItem('tripmate_tab', id)
     setPage(id)
     setActiveTab(id)
     setDrawerOpen(false)
