@@ -12,6 +12,7 @@ export default function JournalPage() {
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState({ title: '', content: '', mood: '😊', imageUrls: [], isPublic: false })
   const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
   const [detail, setDetail] = useState(null) // 상세 보기
 
   // 내 일지만 필터
@@ -51,18 +52,22 @@ export default function JournalPage() {
     const files = Array.from(e.target.files)
     if (!files.length) return
     setUploading(true)
+    setUploadError('')
     const urls = []
     for (const file of files) {
       const ext = file.name.split('.').pop()
       const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
       const { error } = await supabase.storage.from('journal-images').upload(path, file)
-      if (!error) {
+      if (error) {
+        setUploadError('사진 업로드에 실패했어요. Supabase Storage 버킷(journal-images)을 확인해주세요.')
+      } else {
         const { data } = supabase.storage.from('journal-images').getPublicUrl(path)
         urls.push(data.publicUrl)
       }
     }
-    setForm(f => ({ ...f, imageUrls: [...f.imageUrls, ...urls] }))
+    if (urls.length > 0) setForm(f => ({ ...f, imageUrls: [...f.imageUrls, ...urls] }))
     setUploading(false)
+    e.target.value = ''
   }
 
   const removeImage = (url) => {
@@ -205,6 +210,7 @@ export default function JournalPage() {
                   <PhotoUploader
                     imageUrls={form.imageUrls}
                     uploading={uploading}
+                    uploadError={uploadError}
                     onUpload={handleUpload}
                     onRemove={removeImage}
                   />
@@ -225,39 +231,59 @@ export default function JournalPage() {
   )
 }
 
-function PhotoUploader({ imageUrls, uploading, onUpload, onRemove }) {
+function PhotoUploader({ imageUrls, uploading, uploadError, onUpload, onRemove }) {
   const inputRef = useRef(null)
 
   return (
     <div>
+      {/* 추가된 사진 목록 */}
       {imageUrls.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
-          {imageUrls.map((url, i) => (
-            <div key={i} style={{ position: 'relative', aspectRatio: '1/1' }}>
-              <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
-              <button onClick={() => onRemove(url)} style={{
-                position: 'absolute', top: 4, right: 4,
-                width: 20, height: 20, borderRadius: '50%',
-                background: 'rgba(0,0,0,0.55)', color: 'white',
-                fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: 'none', cursor: 'pointer',
-              }}>✕</button>
-            </div>
-          ))}
+        <div style={{ marginBottom: 12 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-sub)', marginBottom: 8 }}>
+            사진 {imageUrls.length}장 추가됨 · 탭하면 삭제
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {imageUrls.map((url, i) => (
+              <div key={i} style={{ position: 'relative', aspectRatio: '1/1' }}>
+                <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10, display: 'block' }} />
+                <button
+                  onClick={() => onRemove(url)}
+                  style={{
+                    position: 'absolute', top: 4, right: 4,
+                    width: 22, height: 22, borderRadius: '50%',
+                    background: 'rgba(0,0,0,0.6)', color: 'white',
+                    fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: 'none', cursor: 'pointer',
+                  }}
+                >✕</button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
+
+      {/* 업로드 버튼 */}
       <button
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
         style={{
-          width: '100%', padding: '12px', borderRadius: 10,
-          border: '2px dashed var(--border)', background: 'var(--bg)',
-          color: 'var(--text-sub)', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+          width: '100%', padding: '14px', borderRadius: 10,
+          border: `2px dashed ${uploading ? 'var(--primary)' : 'var(--border)'}`,
+          background: uploading ? 'var(--primary-bg)' : 'var(--bg)',
+          color: uploading ? 'var(--primary)' : 'var(--text-sub)',
+          fontSize: 14, fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          transition: 'all 0.2s',
         }}
       >
-        {uploading ? '⏳ 업로드 중...' : '📷 사진 추가'}
+        {uploading ? '⏳ 업로드 중...' : '📷 사진 추가하기'}
       </button>
+
+      {/* 에러 메시지 */}
+      {uploadError && (
+        <p style={{ fontSize: 12, color: '#E05252', marginTop: 8, lineHeight: 1.5 }}>{uploadError}</p>
+      )}
+
       <input ref={inputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={onUpload} />
     </div>
   )
