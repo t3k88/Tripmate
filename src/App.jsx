@@ -47,9 +47,9 @@ const journalFromDb = (j) => ({
   id: j.id,
   title: j.title,
   content: j.content,
-  groupId: j.group_id,
   author: j.author || '알 수 없음',
   mood: j.mood,
+  imageUrls: j.image_urls || [],
   date: j.created_at ? j.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
 })
 
@@ -177,9 +177,9 @@ export default function App() {
     const { data } = await supabase.from('journals').insert([{
       title: journalData.title,
       content: journalData.content,
-      group_id: journalData.groupId || null,
       author: uname,
       mood: journalData.mood,
+      image_urls: journalData.imageUrls || [],
     }]).select().single()
     if (data) setJournals(js => [journalFromDb(data), ...js])
   }
@@ -188,8 +188,8 @@ export default function App() {
     const { data } = await supabase.from('journals').update({
       title: updates.title,
       content: updates.content,
-      group_id: updates.groupId || null,
       mood: updates.mood,
+      image_urls: updates.imageUrls || [],
     }).eq('id', id).select().single()
     if (data) setJournals(js => js.map(j => j.id === id ? journalFromDb(data) : j))
   }

@@ -5,6 +5,7 @@ import FeedPage from '../pages/FeedPage'
 import MapPage from '../pages/MapPage'
 import RoutePage from '../pages/RoutePage'
 import GroupPage from '../pages/GroupPage'
+import JournalPage from '../pages/JournalPage'
 import PlaceRegisterModal from './PlaceRegister/PlaceRegisterModal'
 import GroupModal from './Group/GroupModal'
 
@@ -12,6 +13,7 @@ const tabs = [
   { id: 'feed', label: '피드' },
   { id: 'map', label: '지도' },
   { id: 'route', label: '루트' },
+  { id: 'journal', label: '일지' },
   { id: 'group', label: '그룹' },
 ]
 
@@ -19,6 +21,7 @@ const pages = {
   feed: <FeedPage />,
   map: <MapPage />,
   route: <RoutePage />,
+  journal: <JournalPage />,
   group: <GroupPage />,
 }
 
