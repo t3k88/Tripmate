@@ -50,6 +50,7 @@ const journalFromDb = (j) => ({
   author: j.author || '알 수 없음',
   mood: j.mood,
   imageUrls: j.image_urls || [],
+  isPublic: j.is_public || false,
   date: j.created_at ? j.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
 })
 
@@ -180,6 +181,7 @@ export default function App() {
       author: uname,
       mood: journalData.mood,
       image_urls: journalData.imageUrls || [],
+      is_public: journalData.isPublic || false,
     }]).select().single()
     if (data) setJournals(js => [journalFromDb(data), ...js])
   }
@@ -190,6 +192,7 @@ export default function App() {
       content: updates.content,
       mood: updates.mood,
       image_urls: updates.imageUrls || [],
+      is_public: updates.isPublic || false,
     }).eq('id', id).select().single()
     if (data) setJournals(js => js.map(j => j.id === id ? journalFromDb(data) : j))
   }

@@ -34,8 +34,11 @@ function RegionSection({ region, places, children }) {
 }
 
 export default function FeedPage() {
-  const { places, groups, setShowPlaceModal, deletePlace, setEditingPlace } = useApp()
+  const { places, groups, journals, setShowPlaceModal, deletePlace, setEditingPlace, username } = useApp()
   const [detailPlace, setDetailPlace] = useState(null)
+  const [detailJournal, setDetailJournal] = useState(null)
+
+  const publicJournals = (journals || []).filter(j => j.isPublic)
 
   const getGroupNames = (groupIds) => (groupIds || []).map(id => groups.find(g => g.id === id)?.name).filter(Boolean)
 
@@ -68,6 +71,37 @@ export default function FeedPage() {
       </div>
 
       <div style={{ padding: '16px 16px 80px' }}>
+        {/* 공개 일지 섹션 */}
+        {publicJournals.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 16 }}>📔</span>
+              <span style={{ fontSize: 15, fontWeight: 700 }}>여행 일지</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {publicJournals.map(j => (
+                <button key={j.id} className="card" onClick={() => setDetailJournal(j)}
+                  style={{ padding: 14, textAlign: 'left', width: '100%', cursor: 'pointer' }}>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    {j.imageUrls?.[0] && (
+                      <img src={j.imageUrls[0]} alt="" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 10, flexShrink: 0 }} />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                        <span style={{ fontSize: 16 }}>{j.mood}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.title}</span>
+                      </div>
+                      <p style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{j.content}</p>
+                      <p style={{ fontSize: 11, color: 'var(--text-sub)', marginTop: 4 }}>{j.author} · {formatDate(j.date)}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {places.length === 0 ? (
           <div className="empty-state">
             <span className="empty-icon">🗺️</span>
@@ -93,7 +127,7 @@ export default function FeedPage() {
 
       <button className="fab" onClick={() => setShowPlaceModal(true)}>+</button>
 
-      {/* 상세보기 바텀시트 */}
+      {/* 장소 상세보기 */}
       {detailPlace && (
         <AppPortal>
           <PlaceDetail
@@ -102,6 +136,38 @@ export default function FeedPage() {
             onEdit={() => handleEdit(detailPlace)}
             onDelete={() => handleDelete(detailPlace.id)}
           />
+        </AppPortal>
+      )}
+
+      {/* 일지 상세보기 */}
+      {detailJournal && (
+        <AppPortal>
+          <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setDetailJournal(null)}>
+            <div className="modal-sheet" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div className="modal-handle" />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 20px 12px', flexShrink: 0 }}>
+                <button onClick={() => setDetailJournal(null)} style={{ fontSize: 20, color: 'var(--text-sub)', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                <span style={{ fontSize: 11, color: 'var(--text-sub)' }}>🌍 공개 일지</span>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <span style={{ fontSize: 36 }}>{detailJournal.mood}</span>
+                  <div>
+                    <h2 style={{ fontSize: 18, fontWeight: 800 }}>{detailJournal.title}</h2>
+                    <p style={{ fontSize: 12, color: 'var(--text-sub)', marginTop: 2 }}>{detailJournal.author} · {formatDate(detailJournal.date)}</p>
+                  </div>
+                </div>
+                {detailJournal.imageUrls?.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: detailJournal.imageUrls.length === 1 ? '1fr' : '1fr 1fr', gap: 8, marginBottom: 16 }}>
+                    {detailJournal.imageUrls.map((url, i) => (
+                      <img key={i} src={url} alt="" style={{ width: '100%', borderRadius: 12, objectFit: 'cover', aspectRatio: detailJournal.imageUrls.length === 1 ? '16/9' : '1/1' }} />
+                    ))}
+                  </div>
+                )}
+                <p style={{ fontSize: 15, color: 'var(--text)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{detailJournal.content}</p>
+              </div>
+            </div>
+          </div>
         </AppPortal>
       )}
     </>

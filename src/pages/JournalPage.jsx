@@ -10,7 +10,7 @@ export default function JournalPage() {
   const { journals, addJournal, updateJournal, deleteJournal, username } = useApp()
   const [showEditor, setShowEditor] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState({ title: '', content: '', mood: '😊', imageUrls: [] })
+  const [form, setForm] = useState({ title: '', content: '', mood: '😊', imageUrls: [], isPublic: false })
   const [uploading, setUploading] = useState(false)
   const [detail, setDetail] = useState(null) // 상세 보기
 
@@ -18,13 +18,13 @@ export default function JournalPage() {
   const myJournals = journals.filter(j => j.author === username)
 
   const openNew = () => {
-    setForm({ title: '', content: '', mood: '😊', imageUrls: [] })
+    setForm({ title: '', content: '', mood: '😊', imageUrls: [], isPublic: false })
     setEditingId(null)
     setShowEditor(true)
   }
 
   const openEdit = (journal) => {
-    setForm({ title: journal.title, content: journal.content, mood: journal.mood, imageUrls: journal.imageUrls || [] })
+    setForm({ title: journal.title, content: journal.content, mood: journal.mood, imageUrls: journal.imageUrls || [], isPublic: journal.isPublic || false })
     setEditingId(journal.id)
     setShowEditor(true)
     setDetail(null)
@@ -177,6 +177,28 @@ export default function JournalPage() {
                     style={{ minHeight: 140 }} />
                 </div>
 
+                {/* 공개/비공개 */}
+                <div className="form-group">
+                  <label className="form-label">공개 설정</label>
+                  <div style={{ display: 'flex', background: 'var(--bg)', borderRadius: 10, padding: 3 }}>
+                    {[
+                      { value: false, icon: '🔒', label: '나만 보기' },
+                      { value: true,  icon: '🌍', label: '전체 공개' },
+                    ].map(opt => (
+                      <button key={String(opt.value)} onClick={() => setForm(f => ({ ...f, isPublic: opt.value }))} style={{
+                        flex: 1, padding: '10px 8px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        background: form.isPublic === opt.value ? 'var(--surface)' : 'transparent',
+                        color: form.isPublic === opt.value ? 'var(--primary)' : 'var(--text-sub)',
+                        boxShadow: form.isPublic === opt.value ? 'var(--shadow-sm)' : 'none',
+                        transition: 'all 0.15s',
+                      }}>
+                        {opt.icon} {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* 사진 */}
                 <div className="form-group">
                   <label className="form-label">사진</label>
@@ -256,7 +278,14 @@ function JournalCard({ journal, onClick }) {
           <p style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
             {journal.content}
           </p>
-          <p style={{ fontSize: 11, color: 'var(--text-sub)', marginTop: 6 }}>{formatDate(journal.date)}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+            <p style={{ fontSize: 11, color: 'var(--text-sub)' }}>{formatDate(journal.date)}</p>
+            <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 8,
+              background: journal.isPublic ? '#E8F5E9' : 'var(--bg)',
+              color: journal.isPublic ? '#2E7D32' : 'var(--text-sub)' }}>
+              {journal.isPublic ? '🌍 공개' : '🔒 비공개'}
+            </span>
+          </div>
         </div>
       </div>
     </button>
