@@ -164,6 +164,13 @@ export default function App() {
     setGroups(gs => gs.filter(g => g.id !== id))
   }
 
+  const removeMember = async (groupId, memberId) => {
+    await supabase.from('group_members').delete().eq('id', memberId)
+    setGroups(gs => gs.map(g =>
+      g.id === groupId ? { ...g, members: g.members.filter(m => m.id !== memberId) } : g
+    ))
+  }
+
   // Journal CRUD
   const addJournal = async (journalData) => {
     const uname = localStorage.getItem('tripmate_username') || '나'
@@ -226,7 +233,7 @@ export default function App() {
 
   const ctx = {
     activeTab, setActiveTab,
-    groups, setGroups, addGroup, deleteGroup,
+    groups, setGroups, addGroup, deleteGroup, removeMember,
     places, setPlaces, addPlace, updatePlace, deletePlace,
     journals, setJournals, addJournal, updateJournal, deleteJournal,
     routes, addRoute, deleteRoute, saveRouteItems,

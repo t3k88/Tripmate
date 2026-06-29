@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext'
 const COVERS = ['🏝️', '🏔️', '🌊', '🌸', '🍜', '🍺', '🎡', '✈️', '🚂', '🏕️', '🌅', '🗺️']
 
 export default function GroupModal() {
-  const { setShowGroupModal, groups, addGroup, deleteGroup, selectedGroup } = useApp()
+  const { setShowGroupModal, groups, addGroup, deleteGroup, removeMember, selectedGroup } = useApp()
   const [view, setView] = useState(selectedGroup ? 'manage' : 'create')
   const [managingGroup, setManagingGroup] = useState(selectedGroup)
 
@@ -14,7 +14,7 @@ export default function GroupModal() {
     return <CreateGroupView onClose={handleClose} onCreated={(group) => { setManagingGroup(group); setView('manage') }} addGroup={addGroup} />
   }
 
-  return <ManageGroupView group={managingGroup} onClose={handleClose} groups={groups} deleteGroup={deleteGroup} />
+  return <ManageGroupView group={managingGroup} onClose={handleClose} groups={groups} deleteGroup={deleteGroup} removeMember={removeMember} />
 }
 
 function CreateGroupView({ onClose, onCreated, addGroup }) {
@@ -112,7 +112,7 @@ function CreateGroupView({ onClose, onCreated, addGroup }) {
 
 const KAKAO_JS_KEY = '133c1dcabbefac66f726ff7b63a16179'
 
-function ManageGroupView({ group, onClose, groups, deleteGroup }) {
+function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) {
   const [inviteMsg, setInviteMsg] = useState('')
   const [tab, setTab] = useState('members')
 
@@ -141,7 +141,9 @@ function ManageGroupView({ group, onClose, groups, deleteGroup }) {
     })
   }
 
-  const handleRemove = () => {}
+  const handleRemove = (memberId) => {
+    removeMember(currentGroup.id, memberId)
+  }
 
   const handleDeleteGroup = async () => {
     await deleteGroup(currentGroup.id)
