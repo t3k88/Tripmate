@@ -118,27 +118,23 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
 
   const currentGroup = groups.find(g => g.id === group.id) || group
 
-  const handleKakaoShare = () => {
-    if (!window.Kakao) return
-    if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_JS_KEY)
-
+  const handleShare = async () => {
     const inviteUrl = `${window.location.origin}/?join=${currentGroup.id.toString(36)}`
+    const text = `${currentGroup.cover} ${currentGroup.name}\n초대코드: ${currentGroup.inviteCode}\n\nTripMate에서 함께 여행 기록해요!\n${inviteUrl}`
 
-    window.Kakao.Share.sendDefault({
-      objectType: 'feed',
-      content: {
-        title: `${currentGroup.cover} ${currentGroup.name}`,
-        description: `초대코드: ${currentGroup.inviteCode} · 함께 장소를 공유해보세요 :)`,
-        imageUrl: 'https://tripmate-dun.vercel.app/favicon.svg',
-        link: { mobileWebUrl: inviteUrl, webUrl: inviteUrl },
-      },
-      buttons: [
-        {
-          title: '그룹 참여하기',
-          link: { mobileWebUrl: inviteUrl, webUrl: inviteUrl },
-        },
-      ],
-    })
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `TripMate - ${currentGroup.name}`, text })
+        return
+      } catch (e) {
+        if (e.name === 'AbortError') return
+      }
+    }
+
+    // fallback: 클립보드 복사
+    await navigator.clipboard?.writeText(text)
+    setInviteMsg('✓ 초대 메시지가 복사됐어요! 카카오톡에 붙여넣기 하세요.')
+    setTimeout(() => setInviteMsg(''), 3000)
   }
 
   const handleRemove = (memberId, memberName) => {
@@ -252,7 +248,7 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
             </div>
 
             <button
-              onClick={handleKakaoShare}
+              onClick={handleShare}
               style={{
                 width: '100%',
                 padding: '13px',
@@ -268,7 +264,7 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
                 marginBottom: 20,
               }}
             >
-              💬 카카오톡으로 공유하기
+              📤 초대 메시지 공유하기
             </button>
 
             {/* Invite link */}
