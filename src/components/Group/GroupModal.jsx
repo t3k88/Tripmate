@@ -271,17 +271,20 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
             {/* 초대코드 강조 표시 */}
             <div style={{ background: 'var(--primary-bg)', borderRadius: 14, padding: '16px', marginBottom: 16, textAlign: 'center' }}>
               <p style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600, marginBottom: 8 }}>초대코드</p>
-              <p style={{ fontSize: 32, fontWeight: 800, color: 'var(--primary)', letterSpacing: '6px', marginBottom: 8 }}>
-                {currentGroup.inviteCode}
-              </p>
-              <button
+              <div
                 onClick={() => {
                   navigator.clipboard?.writeText(currentGroup.inviteCode)
                   setInviteMsg('✓ 코드가 복사됐어요!')
                   setTimeout(() => setInviteMsg(''), 2000)
                 }}
-                style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}
-              >탭해서 복사</button>
+                style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 10, padding: '8px 16px', borderRadius: 10, background: 'white', margin: '0 auto 4px' }}
+              >
+                <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--primary)', letterSpacing: '6px' }}>
+                  {currentGroup.inviteCode}
+                </span>
+                <span style={{ fontSize: 16 }}>📋</span>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--primary)', opacity: 0.7 }}>탭해서 복사</p>
             </div>
 
             <div style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 16 }}>
