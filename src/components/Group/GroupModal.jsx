@@ -128,7 +128,7 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
       objectType: 'feed',
       content: {
         title: `${currentGroup.cover} ${currentGroup.name}`,
-        description: 'TripMate 여행 그룹에 초대됐어요! 함께 장소를 공유해보세요 :)',
+        description: `초대코드: ${currentGroup.inviteCode} · 함께 장소를 공유해보세요 :)`,
         imageUrl: 'https://tripmate-dun.vercel.app/favicon.svg',
         link: { mobileWebUrl: inviteUrl, webUrl: inviteUrl },
       },
