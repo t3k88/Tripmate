@@ -13,7 +13,7 @@ function toggleOne(prev, item) {
 }
 
 export default function MapPage() {
-  const { places, groups, setShowPlaceModal } = useApp()
+  const { places, groups, myGroupIds, username, setShowPlaceModal } = useApp()
   const { ready } = useKakaoMaps()
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
@@ -49,9 +49,15 @@ export default function MapPage() {
   const allCategoryIds = CATEGORIES.map(c => c.id)
   const allGroupIds = groups.map(g => g.id)
 
+  const visiblePlaces = useMemo(() => places.filter(p => {
+    if (p.author === username) return true
+    if ((p.groupIds || []).length === 0) return false
+    return (p.groupIds || []).some(id => myGroupIds.includes(id))
+  }), [places, username, myGroupIds])
+
   const placesWithLevels = useMemo(
-    () => places.map(p => ({ ...p, _levels: getAddressLevels(p.address) })),
-    [places]
+    () => visiblePlaces.map(p => ({ ...p, _levels: getAddressLevels(p.address) })),
+    [visiblePlaces]
   )
 
   const sidoOptions = useMemo(() => {

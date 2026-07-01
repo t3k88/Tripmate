@@ -77,21 +77,25 @@ export default function App() {
     const params = new URLSearchParams(window.location.search)
     const joinParam = params.get('join')
     if (!joinParam) return
-
     const groupId = parseInt(joinParam, 36)
     const uname = localStorage.getItem('tripmate_username') || '나'
-
-    const { data: existing } = await supabase
-      .from('group_members').select('id')
-      .eq('group_id', groupId).eq('user_name', uname).maybeSingle()
-
+    const { data: existing } = await supabase.from('group_members').select('id').eq('group_id', groupId).eq('user_name', uname).maybeSingle()
     if (!existing) {
       await supabase.from('group_members').insert([{ group_id: groupId, user_name: uname, user_avatar: '👤' }])
     }
-
     window.history.replaceState({}, '', '/')
     await loadAll()
-    alert('그룹에 참여했어요! 🎉')
+  }
+
+  const joinGroupByCode = async (code) => {
+    const uname = localStorage.getItem('tripmate_username') || '나'
+    const { data: group } = await supabase.from('groups').select('*').eq('invite_code', code.toUpperCase()).maybeSingle()
+    if (!group) return { error: '존재하지 않는 코드예요.' }
+    const { data: existing } = await supabase.from('group_members').select('id').eq('group_id', group.id).eq('user_name', uname).maybeSingle()
+    if (existing) return { error: '이미 참여 중인 그룹이에요.' }
+    await supabase.from('group_members').insert([{ group_id: group.id, user_name: uname, user_avatar: '👤' }])
+    await loadAll()
+    return { success: true, groupName: group.name }
   }
 
   const loadAll = async () => {
@@ -235,9 +239,12 @@ export default function App() {
     setShowUsernameModal(false)
   }
 
+  const myGroupIds = groups.filter(g => g.members.some(m => m.name === username)).map(g => g.id)
+
   const ctx = {
     activeTab, setActiveTab: setActiveTabPersist,
-    groups, setGroups, addGroup, deleteGroup, removeMember,
+    groups, setGroups, addGroup, deleteGroup, removeMember, joinGroupByCode,
+    myGroupIds,
     places, setPlaces, addPlace, updatePlace, deletePlace,
     journals, setJournals, addJournal, updateJournal, deleteJournal,
     routes, addRoute, deleteRoute, saveRouteItems,

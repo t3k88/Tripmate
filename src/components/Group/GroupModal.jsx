@@ -272,35 +272,36 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
             </button>
 
             {/* Invite link */}
-            <div style={{
-              padding: 14,
-              background: 'var(--bg)',
-              borderRadius: 'var(--radius-sm)',
-              marginBottom: 16,
-            }}>
+            {/* 초대코드 강조 표시 */}
+            <div style={{ background: 'var(--primary-bg)', borderRadius: 14, padding: '16px', marginBottom: 16, textAlign: 'center' }}>
+              <p style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600, marginBottom: 8 }}>초대코드</p>
+              <p style={{ fontSize: 32, fontWeight: 800, color: 'var(--primary)', letterSpacing: '6px', marginBottom: 8 }}>
+                {currentGroup.inviteCode}
+              </p>
+              <button
+                onClick={() => {
+                  navigator.clipboard?.writeText(currentGroup.inviteCode)
+                  setInviteMsg('✓ 코드가 복사됐어요!')
+                  setTimeout(() => setInviteMsg(''), 2000)
+                }}
+                style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+              >탭해서 복사</button>
+            </div>
+
+            <div style={{ padding: 14, background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 16 }}>
               <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-sub)', marginBottom: 6 }}>초대 링크</p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <p style={{ fontSize: 12, color: 'var(--text)', flex: 1, wordBreak: 'break-all' }}>
                   {window.location.origin}/?join={currentGroup.id.toString(36)}
                 </p>
                 <button
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: 6,
-                    background: 'var(--primary)',
-                    color: 'white',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    flexShrink: 0,
-                  }}
+                  style={{ padding: '4px 10px', borderRadius: 6, background: 'var(--primary)', color: 'white', fontSize: 12, fontWeight: 600, flexShrink: 0 }}
                   onClick={() => {
                     navigator.clipboard?.writeText(`${window.location.origin}/?join=${currentGroup.id.toString(36)}`)
                     setInviteMsg('✓ 링크가 복사됐어요!')
                     setTimeout(() => setInviteMsg(''), 2000)
                   }}
-                >
-                  복사
-                </button>
+                >복사</button>
               </div>
             </div>
 

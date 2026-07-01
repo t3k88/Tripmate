@@ -34,9 +34,16 @@ function RegionSection({ region, places, children }) {
 }
 
 export default function FeedPage() {
-  const { places, groups, journals, setShowPlaceModal, deletePlace, setEditingPlace, username } = useApp()
+  const { places, groups, journals, myGroupIds, setShowPlaceModal, deletePlace, setEditingPlace, username } = useApp()
   const [detailPlace, setDetailPlace] = useState(null)
   const [detailJournal, setDetailJournal] = useState(null)
+
+  // 내가 올린 것 + 내 그룹 장소만
+  const visiblePlaces = places.filter(p => {
+    if (p.author === username) return true
+    if ((p.groupIds || []).length === 0) return false
+    return (p.groupIds || []).some(id => myGroupIds.includes(id))
+  })
 
   const publicJournals = (journals || []).filter(j => j.isPublic)
 
@@ -56,7 +63,7 @@ export default function FeedPage() {
   }
 
   // 지역별 묶음
-  const grouped = [...places].reverse().reduce((acc, place) => {
+  const grouped = [...visiblePlaces].reverse().reduce((acc, place) => {
     const region = getRegion(place.address)
     if (!acc[region]) acc[region] = []
     acc[region].push(place)
@@ -102,7 +109,7 @@ export default function FeedPage() {
           </div>
         )}
 
-        {places.length === 0 ? (
+        {visiblePlaces.length === 0 ? (
           <div className="empty-state">
             <span className="empty-icon">🗺️</span>
             <p className="empty-text">아직 등록된 장소가 없어요.<br />첫 번째 장소를 추가해보세요!</p>
