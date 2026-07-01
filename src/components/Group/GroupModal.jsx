@@ -115,27 +115,23 @@ const KAKAO_JS_KEY = '133c1dcabbefac66f726ff7b63a16179'
 function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) {
   const [inviteMsg, setInviteMsg] = useState('')
   const [tab, setTab] = useState('members')
+  const [showShareBox, setShowShareBox] = useState(false)
 
   const currentGroup = groups.find(g => g.id === group.id) || group
 
-  const handleShare = async () => {
-    const inviteUrl = `${window.location.origin}/?join=${currentGroup.id.toString(36)}`
-    const text = `${currentGroup.cover} ${currentGroup.name}\n초대코드: ${currentGroup.inviteCode}\n\nTripMate에서 함께 여행 기록해요!\n${inviteUrl}`
+  const inviteUrl = `${window.location.origin}/?join=${currentGroup.id.toString(36)}`
+  const shareText = `${currentGroup.cover} ${currentGroup.name}\n초대코드: ${currentGroup.inviteCode}\n\nTripMate에서 함께 여행 기록해요!\n${inviteUrl}`
 
-    // 모바일에서만 navigator.share 시도
+  const handleShare = async () => {
     if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
       try {
-        await navigator.share({ title: `TripMate - ${currentGroup.name}`, text })
+        await navigator.share({ title: `TripMate - ${currentGroup.name}`, text: shareText })
         return
       } catch (e) {
         if (e.name === 'AbortError') return
       }
     }
-
-    // 데스크탑 or fallback: 클립보드 복사
-    await navigator.clipboard?.writeText(text)
-    setInviteMsg('✓ 초대 메시지가 복사됐어요! 카카오톡에 붙여넣기 하세요.')
-    setTimeout(() => setInviteMsg(''), 3000)
+    setShowShareBox(true)
   }
 
   const handleRemove = (memberId, memberName) => {
@@ -269,6 +265,40 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
             </button>
 
             {/* Invite link */}
+            {/* 공유 메시지 박스 */}
+            {showShareBox && (
+              <div style={{ background: 'var(--bg)', borderRadius: 14, padding: 16, marginBottom: 16, border: '1.5px solid var(--primary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>초대 메시지 복사하기</p>
+                  <button onClick={() => setShowShareBox(false)} style={{ fontSize: 16, color: 'var(--text-sub)', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                </div>
+                <textarea
+                  readOnly
+                  value={shareText}
+                  onFocus={e => e.target.select()}
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 10,
+                    border: '1px solid var(--border)', background: 'white',
+                    fontSize: 13, lineHeight: 1.7, color: 'var(--text)',
+                    resize: 'none', minHeight: 100, boxSizing: 'border-box',
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard?.writeText(shareText)
+                    setInviteMsg('✓ 복사됐어요! 카카오톡에 붙여넣기 하세요.')
+                    setShowShareBox(false)
+                    setTimeout(() => setInviteMsg(''), 3000)
+                  }}
+                  style={{
+                    marginTop: 8, width: '100%', padding: '10px',
+                    background: 'var(--primary)', color: 'white',
+                    borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', border: 'none',
+                  }}
+                >📋 전체 복사</button>
+              </div>
+            )}
+
             {/* 초대코드 강조 표시 */}
             <div style={{ background: 'var(--primary-bg)', borderRadius: 14, padding: '16px', marginBottom: 16, textAlign: 'center' }}>
               <p style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600, marginBottom: 8 }}>초대코드</p>
