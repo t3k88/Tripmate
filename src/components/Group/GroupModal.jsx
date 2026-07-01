@@ -122,7 +122,8 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
     const inviteUrl = `${window.location.origin}/?join=${currentGroup.id.toString(36)}`
     const text = `${currentGroup.cover} ${currentGroup.name}\n초대코드: ${currentGroup.inviteCode}\n\nTripMate에서 함께 여행 기록해요!\n${inviteUrl}`
 
-    if (navigator.share) {
+    // 모바일에서만 navigator.share 시도
+    if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
       try {
         await navigator.share({ title: `TripMate - ${currentGroup.name}`, text })
         return
@@ -131,7 +132,7 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
       }
     }
 
-    // fallback: 클립보드 복사
+    // 데스크탑 or fallback: 클립보드 복사
     await navigator.clipboard?.writeText(text)
     setInviteMsg('✓ 초대 메시지가 복사됐어요! 카카오톡에 붙여넣기 하세요.')
     setTimeout(() => setInviteMsg(''), 3000)
