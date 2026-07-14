@@ -7,25 +7,48 @@ import AppPortal from '../components/AppPortal'
 const MOODS = ['😍', '😊', '😐', '😢', '😤']
 
 export default function JournalPage() {
-  const { journals, addJournal, updateJournal, deleteJournal, username } = useApp()
+  const { journals, addJournal, updateJournal, deleteJournal, username, places, myGroupIds } = useApp()
   const [showEditor, setShowEditor] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState({ title: '', content: '', mood: '😊', imageUrls: [], isPublic: false })
+  const [form, setForm] = useState({ title: '', content: '', mood: '😊', imageUrls: [], isPublic: false, placeId: null, visitDate: '' })
+  const [showPlacePicker, setShowPlacePicker] = useState(false)
+  const [selectedMonth, setSelectedMonth] = useState(null) // 'YYYY-MM'
+
+  const myPlaces = places.filter(p => p.author === username || (p.groupIds || []).some(id => myGroupIds.includes(id)))
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
-  const [detail, setDetail] = useState(null) // 상세 보기
+  const [detail, setDetail] = useState(null)
 
-  // 내 일지만 필터
   const myJournals = journals.filter(j => j.author === username)
 
+  // 방문일자 기준으로 정렬 (없으면 작성일)
+  const sortedJournals = [...myJournals].sort((a, b) => {
+    const da = a.visitDate || a.date
+    const db = b.visitDate || b.date
+    return db.localeCompare(da)
+  })
+
+  // 월별 목록 (방문일자 기준)
+  const monthGroups = sortedJournals.reduce((acc, j) => {
+    const key = (j.visitDate || j.date).slice(0, 7) // 'YYYY-MM'
+    if (!acc[key]) acc[key] = []
+    acc[key].push(j)
+    return acc
+  }, {})
+  const months = Object.keys(monthGroups).sort((a, b) => b.localeCompare(a))
+
+  // 선택된 달 없으면 최신 달로 기본값
+  const activeMonth = selectedMonth || months[0] || null
+  const filteredJournals = activeMonth ? (monthGroups[activeMonth] || []) : sortedJournals
+
   const openNew = () => {
-    setForm({ title: '', content: '', mood: '😊', imageUrls: [], isPublic: false })
+    setForm({ title: '', content: '', mood: '😊', imageUrls: [], isPublic: false, placeId: null })
     setEditingId(null)
     setShowEditor(true)
   }
 
   const openEdit = (journal) => {
-    setForm({ title: journal.title, content: journal.content, mood: journal.mood, imageUrls: journal.imageUrls || [], isPublic: journal.isPublic || false })
+    setForm({ title: journal.title, content: journal.content, mood: journal.mood, imageUrls: journal.imageUrls || [], isPublic: journal.isPublic || false, placeId: journal.placeId || null, visitDate: journal.visitDate || '' })
     setEditingId(journal.id)
     setShowEditor(true)
     setDetail(null)
@@ -83,7 +106,29 @@ export default function JournalPage() {
         <button className="header-action" onClick={openNew}>+</button>
       </div>
 
-      <div style={{ padding: '16px 16px 80px' }}>
+      {/* 월별 탭 */}
+      {months.length > 1 && (
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 16px 12px', scrollbarWidth: 'none' }}>
+          {months.map(m => {
+            const [y, mo] = m.split('-')
+            const label = `${y}.${mo}`
+            const isActive = m === activeMonth
+            return (
+              <button key={m} onClick={() => setSelectedMonth(m === activeMonth && months.length > 0 ? m : m)}
+                style={{
+                  flexShrink: 0, padding: '7px 16px', borderRadius: 20, fontSize: 13, fontWeight: 700,
+                  background: isActive ? 'var(--primary)' : 'var(--surface)',
+                  color: isActive ? 'white' : 'var(--text-sub)',
+                  border: isActive ? 'none' : '1.5px solid var(--border)',
+                }}>
+                {label} <span style={{ fontSize: 11, opacity: 0.8 }}>({monthGroups[m].length})</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      <div style={{ padding: '0 16px 80px' }}>
         {myJournals.length === 0 ? (
           <div className="empty-state">
             <span className="empty-icon">📔</span>
@@ -91,7 +136,7 @@ export default function JournalPage() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {myJournals.map(journal => (
+            {filteredJournals.map(journal => (
               <JournalCard
                 key={journal.id}
                 journal={journal}
@@ -123,14 +168,29 @@ export default function JournalPage() {
                   <span style={{ fontSize: 36 }}>{detail.mood}</span>
                   <div>
                     <h2 style={{ fontSize: 18, fontWeight: 800 }}>{detail.title}</h2>
-                    <p style={{ fontSize: 12, color: 'var(--text-sub)', marginTop: 2 }}>{formatDate(detail.date)}</p>
+                    <p style={{ fontSize: 12, color: 'var(--text-sub)', marginTop: 2 }}>
+                      {detail.visitDate ? `📅 ${formatDate(detail.visitDate)}` : formatDate(detail.date)}
+                    </p>
                   </div>
                 </div>
 
+                {detail.placeId && (() => {
+                  const p = places.find(pl => pl.id === detail.placeId)
+                  return p ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--bg)', borderRadius: 10, marginBottom: 16 }}>
+                      <span>📍</span>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 700 }}>{p.name}</p>
+                        <p style={{ fontSize: 11, color: 'var(--text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.address}</p>
+                      </div>
+                    </div>
+                  ) : null
+                })()}
+
                 {detail.imageUrls?.length > 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: detail.imageUrls.length === 1 ? '1fr' : '1fr 1fr', gap: 8, marginBottom: 16 }}>
+                  <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, scrollbarWidth: 'none' }}>
                     {detail.imageUrls.map((url, i) => (
-                      <img key={i} src={url} alt="" style={{ width: '100%', borderRadius: 12, objectFit: 'cover', aspectRatio: detail.imageUrls.length === 1 ? '16/9' : '1/1' }} />
+                      <img key={i} src={url} alt="" style={{ height: 180, width: 'auto', borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
                     ))}
                   </div>
                 )}
@@ -155,6 +215,49 @@ export default function JournalPage() {
               </div>
 
               <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px' }}>
+                {/* 장소 연결 */}
+                <div className="form-group">
+                  <label className="form-label">장소 연결 <span style={{ color: 'var(--text-sub)', fontWeight: 400, textTransform: 'none' }}>(선택)</span></label>
+                  {form.placeId ? (() => {
+                    const p = myPlaces.find(p => p.id === form.placeId)
+                    return p ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--primary-bg)', borderRadius: 10, border: '1.5px solid var(--primary)' }}>
+                        <span style={{ fontSize: 20 }}>📍</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--primary)' }}>{p.name}</p>
+                          <p style={{ fontSize: 12, color: 'var(--text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.address}</p>
+                        </div>
+                        <button onClick={() => setForm(f => ({ ...f, placeId: null }))} style={{ fontSize: 18, color: 'var(--text-sub)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>✕</button>
+                      </div>
+                    ) : null
+                  })() : (
+                    <button
+                      onClick={() => setShowPlacePicker(true)}
+                      style={{
+                        width: '100%', padding: '12px 14px', borderRadius: 10,
+                        border: '2px dashed var(--border)', background: 'var(--bg)',
+                        color: 'var(--text-sub)', fontSize: 14, fontWeight: 600,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      📍 장소 선택하기
+                    </button>
+                  )}
+                </div>
+
+                {/* 방문일자 */}
+                <div className="form-group">
+                  <label className="form-label">방문일자 <span style={{ color: 'var(--text-sub)', fontWeight: 400, textTransform: 'none' }}>(선택)</span></label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={form.visitDate || ''}
+                    onChange={e => setForm(f => ({ ...f, visitDate: e.target.value }))}
+                    max={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+
                 {/* 기분 */}
                 <div className="form-group">
                   <label className="form-label">오늘의 기분</label>
@@ -224,6 +327,48 @@ export default function JournalPage() {
                   disabled={!form.title.trim() || !form.content.trim() || uploading}>
                   {uploading ? '업로드 중...' : editingId ? '수정 완료' : '저장하기'}
                 </button>
+              </div>
+            </div>
+          </div>
+        </AppPortal>
+      )}
+
+      {/* 장소 선택 모달 */}
+      {showPlacePicker && (
+        <AppPortal>
+          <div className="modal-overlay" onClick={() => setShowPlacePicker(false)}>
+            <div className="modal-sheet" style={{ display: 'flex', flexDirection: 'column', maxHeight: '80%', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+              <div className="modal-handle" />
+              <div className="modal-header" style={{ flexShrink: 0 }}>
+                <button className="modal-close" onClick={() => setShowPlacePicker(false)}>✕</button>
+                <span className="modal-title">장소 선택</span>
+                <div style={{ width: 28 }} />
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px' }}>
+                {myPlaces.length === 0 ? (
+                  <p style={{ fontSize: 14, color: 'var(--text-sub)', textAlign: 'center', padding: '24px 0' }}>저장된 장소가 없어요</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {myPlaces.map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => { setForm(f => ({ ...f, placeId: p.id })); setShowPlacePicker(false) }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          padding: '12px 14px', borderRadius: 10, textAlign: 'left',
+                          border: '1.5px solid var(--border)', background: 'var(--surface)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <span style={{ fontSize: 20 }}>📍</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 14, fontWeight: 700 }}>{p.name}</p>
+                          <p style={{ fontSize: 12, color: 'var(--text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.address}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -308,7 +453,9 @@ function JournalCard({ journal, onClick }) {
             {journal.content}
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-            <p style={{ fontSize: 11, color: 'var(--text-sub)' }}>{formatDate(journal.date)}</p>
+            <p style={{ fontSize: 11, color: 'var(--text-sub)' }}>
+              {journal.visitDate ? `📅 ${formatDate(journal.visitDate)}` : ''}
+            </p>
             <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 8,
               background: journal.isPublic ? '#E8F5E9' : 'var(--bg)',
               color: journal.isPublic ? '#2E7D32' : 'var(--text-sub)' }}>

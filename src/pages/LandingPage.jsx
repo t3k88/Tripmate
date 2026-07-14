@@ -33,7 +33,7 @@ export default function LandingPage({ onNavigate }) {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 360 }}>
           <button
-            onClick={() => onNavigate('feed')}
+            onClick={() => onNavigate('home')}
             style={{
               padding: '18px 36px', borderRadius: 16,
               background: '#E8734A', color: 'white',

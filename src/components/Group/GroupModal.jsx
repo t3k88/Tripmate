@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useApp } from '../../context/AppContext'
 
 const COVERS = ['🏝️', '🏔️', '🌊', '🌸', '🍜', '🍺', '🎡', '✈️', '🚂', '🏕️', '🌅', '🗺️']
@@ -113,23 +113,51 @@ function CreateGroupView({ onClose, onCreated, addGroup }) {
 const KAKAO_JS_KEY = '133c1dcabbefac66f726ff7b63a16179'
 
 function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) {
+  const { username, places, updatePlace } = useApp()
   const [inviteMsg, setInviteMsg] = useState('')
   const [tab, setTab] = useState('members')
   const [showShareBox, setShowShareBox] = useState(false)
+  const [selectedPlaceIds, setSelectedPlaceIds] = useState([])
+  const [saving, setSaving] = useState(false)
 
   const currentGroup = groups.find(g => g.id === group.id) || group
+  const isOwner = currentGroup.createdBy === username || (!currentGroup.createdBy && currentGroup.members.some(m => m.name === username))
+
+  // 내 장소 중 이 그룹에 아직 안 들어간 것
+  const myPlaces = useMemo(() =>
+    places.filter(p => p.author === username),
+    [places, username]
+  )
+  const notInGroup = useMemo(() =>
+    myPlaces.filter(p => !(p.groupIds || []).includes(currentGroup.id)),
+    [myPlaces, currentGroup.id]
+  )
+
+  const togglePlace = (id) =>
+    setSelectedPlaceIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+
+  const handleBulkAdd = async () => {
+    setSaving(true)
+    await Promise.all(selectedPlaceIds.map(id => {
+      const place = places.find(p => p.id === id)
+      const newGroupIds = [...new Set([...(place.groupIds || []), currentGroup.id])]
+      return updatePlace(id, { groupIds: newGroupIds })
+    }))
+    setSelectedPlaceIds([])
+    setSaving(false)
+  }
 
   const inviteUrl = `${window.location.origin}/?join=${currentGroup.id.toString(36)}`
   const shareText = `${currentGroup.cover} ${currentGroup.name}\n초대코드: ${currentGroup.inviteCode}\n\nTripMate에서 함께 여행 기록해요!\n${inviteUrl}`
 
-  const handleShare = async () => {
-    if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
-      try {
-        await navigator.share({ title: `TripMate - ${currentGroup.name}`, text: shareText })
-        return
-      } catch (e) {
-        if (e.name === 'AbortError') return
-      }
+  const handleShare = () => {
+    if (window.Kakao?.isInitialized()) {
+      window.Kakao.Share.sendDefault({
+        objectType: 'text',
+        text: shareText,
+        link: { mobileWebUrl: inviteUrl, webUrl: inviteUrl },
+      })
+      return
     }
     setShowShareBox(true)
   }
@@ -156,7 +184,7 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
 
         {/* Tab switcher */}
         <div style={{ display: 'flex', margin: '0 20px 16px', background: 'var(--bg)', borderRadius: 10, padding: 3 }}>
-          {[['members', '멤버 관리'], ['invite', '초대하기']].map(([id, label]) => (
+          {[['members', '멤버 관리'], ['places', '장소 추가'], ['invite', '초대하기']].map(([id, label]) => (
             <button
               key={id}
               onClick={() => setTab(id)}
@@ -184,55 +212,128 @@ function ManageGroupView({ group, onClose, groups, deleteGroup, removeMember }) 
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-              {currentGroup.members.map(member => (
-                <div key={member.id} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '10px 14px',
-                  background: 'var(--bg)',
-                  borderRadius: 'var(--radius-sm)',
-                }}>
-                  <div className="avatar" style={{ fontSize: 20 }}>{member.avatar}</div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 14, fontWeight: 600 }}>{member.name}</p>
-                    <p style={{ fontSize: 12, color: 'var(--text-sub)' }}>{member.email}</p>
+              {currentGroup.members.map(member => {
+                const isMe = member.name === username
+                return (
+                  <div key={member.id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '10px 14px',
+                    background: isMe ? 'var(--primary-bg)' : 'var(--bg)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: isMe ? '1.5px solid var(--primary)' : '1.5px solid transparent',
+                  }}>
+                    <div className="avatar" style={{ fontSize: 20 }}>{member.avatar}</div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: 14, fontWeight: 600 }}>
+                        {member.name}
+                        {isMe && <span style={{ fontSize: 11, color: 'var(--primary)', marginLeft: 6 }}>나</span>}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {member.name === currentGroup.createdBy ? (
+                        <span style={{
+                          fontSize: 11, fontWeight: 600,
+                          color: 'var(--primary)', background: 'white',
+                          padding: '2px 8px', borderRadius: 10,
+                        }}>방장</span>
+                      ) : isOwner && !isMe ? (
+                        <button
+                          onClick={() => handleRemove(member.id, member.name)}
+                          style={{ fontSize: 12, color: 'var(--danger)', fontWeight: 600, padding: '2px 6px' }}
+                        >
+                          내보내기
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {member.role === 'owner' ? (
-                      <span style={{
-                        fontSize: 11, fontWeight: 600,
-                        color: 'var(--primary)', background: 'var(--primary-bg)',
-                        padding: '2px 8px', borderRadius: 10,
-                      }}>방장</span>
-                    ) : (
-                      <button
-                        onClick={() => handleRemove(member.id, member.name)}
-                        style={{ fontSize: 12, color: 'var(--danger)', fontWeight: 600, padding: '2px 6px' }}
-                      >
-                        내보내기
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
-            <button
-              onClick={handleDeleteGroup}
-              style={{
-                width: '100%',
-                padding: 14,
-                border: '1.5px solid #E05252',
-                borderRadius: 'var(--radius-md)',
-                color: '#E05252',
-                fontSize: 14,
-                fontWeight: 600,
-                background: 'transparent',
-              }}
-            >
-              그룹 삭제
-            </button>
+            {isOwner && (
+              <button
+                onClick={handleDeleteGroup}
+                style={{
+                  width: '100%',
+                  padding: 14,
+                  border: '1.5px solid #E05252',
+                  borderRadius: 'var(--radius-md)',
+                  color: '#E05252',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  background: 'transparent',
+                }}
+              >
+                그룹 삭제
+              </button>
+            )}
+          </div>
+        )}
+
+        {tab === 'places' && (
+          <div className="form-section" style={{ paddingBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <p style={{ fontSize: 13, color: 'var(--text-sub)' }}>
+                {notInGroup.length === 0 ? '추가할 장소가 없어요' : `${notInGroup.length}개 장소`}
+              </p>
+              {notInGroup.length > 0 && (
+                <button
+                  onClick={() => setSelectedPlaceIds(
+                    selectedPlaceIds.length === notInGroup.length ? [] : notInGroup.map(p => p.id)
+                  )}
+                  style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600 }}
+                >
+                  {selectedPlaceIds.length === notInGroup.length ? '전체 해제' : '전체 선택'}
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+              {notInGroup.map(place => {
+                const selected = selectedPlaceIds.includes(place.id)
+                return (
+                  <button
+                    key={place.id}
+                    onClick={() => togglePlace(place.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '10px 12px', borderRadius: 10, textAlign: 'left',
+                      border: selected ? '2px solid var(--primary)' : '2px solid var(--border)',
+                      background: selected ? 'var(--primary-bg)' : 'var(--surface)',
+                    }}
+                  >
+                    <div style={{
+                      width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+                      border: selected ? 'none' : '2px solid var(--border)',
+                      background: selected ? 'var(--primary)' : 'white',
+                      color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, fontWeight: 700,
+                    }}>{selected && '✓'}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: selected ? 'var(--primary)' : 'var(--text)' }}>{place.name}</p>
+                      <p style={{ fontSize: 11, color: 'var(--text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{place.address}</p>
+                    </div>
+                  </button>
+                )
+              })}
+              {notInGroup.length === 0 && (
+                <p style={{ fontSize: 13, color: 'var(--text-sub)', textAlign: 'center', padding: '20px 0' }}>
+                  내 장소가 모두 이 그룹에 포함돼 있어요 ✓
+                </p>
+              )}
+            </div>
+
+            {selectedPlaceIds.length > 0 && (
+              <button
+                className="btn-primary"
+                onClick={handleBulkAdd}
+                disabled={saving}
+              >
+                {saving ? '추가 중...' : `선택한 장소 ${selectedPlaceIds.length}개 그룹에 추가`}
+              </button>
+            )}
           </div>
         )}
 

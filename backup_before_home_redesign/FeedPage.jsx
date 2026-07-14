@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { Tag, formatDate, getCategoryInfo, getRegion, EXTRA_SECTION } from '../utils/helpers'
+import { useKakaoMaps } from '../hooks/useKakaoMaps'
 import AppPortal from '../components/AppPortal'
-import PlaceDetailModal from '../components/PlaceDetailModal'
 
 function RegionSection({ region, places, children, selectMode, selectedIds, onToggleRegion }) {
   const [open, setOpen] = useState(true)
@@ -51,7 +51,7 @@ function RegionSection({ region, places, children, selectMode, selectedIds, onTo
 }
 
 export default function FeedPage() {
-  const { places, groups, journals, myGroupIds, setShowPlaceModal, deletePlace, setEditingPlace, username, updatePlace, toggleLike, toggleDislike, addComment, deleteComment } = useApp()
+  const { places, groups, journals, myGroupIds, setShowPlaceModal, deletePlace, setEditingPlace, username, updatePlace, toggleLike } = useApp()
   const [detailPlace, setDetailPlace] = useState(null)
   const [detailJournal, setDetailJournal] = useState(null)
   const [selectMode, setSelectMode] = useState(false)
@@ -159,6 +159,89 @@ export default function FeedPage() {
 
       <div style={{ padding: '16px 16px 80px' }}>
 
+        {/* 인기 장소 */}
+        {!selectMode && hotPlaces.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 16 }}>🔥</span>
+              <span style={{ fontSize: 15, fontWeight: 700 }}>인기 장소</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            </div>
+            <PlaceScrollRow places={hotPlaces} username={username} onSelect={setDetailPlace} onLike={toggleLike} />
+          </div>
+        )}
+
+        {/* 최근 등록 장소 */}
+        {!selectMode && recentPlaces.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 16 }}>🆕</span>
+              <span style={{ fontSize: 15, fontWeight: 700 }}>최근 등록 장소</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            </div>
+            <PlaceScrollRow places={recentPlaces} username={username} onSelect={setDetailPlace} onLike={toggleLike} />
+          </div>
+        )}
+
+        {/* 작년 이맘때 or 최근 일지 */}
+        {!selectMode && (thisTimeLastYear.length > 0 || myJournals.length > 0) && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 16 }}>{thisTimeLastYear.length > 0 ? '📅' : '📔'}</span>
+              <span style={{ fontSize: 15, fontWeight: 700 }}>{thisTimeLastYear.length > 0 ? '작년 이맘때' : '최근 일지'}</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {(thisTimeLastYear.length > 0 ? thisTimeLastYear : myJournals.slice(0, 2)).map(j => (
+                <button key={j.id} className="card" onClick={() => setDetailJournal(j)}
+                  style={{ padding: 12, textAlign: 'left', width: '100%' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <span style={{ fontSize: 24, flexShrink: 0 }}>{j.mood}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.title}</p>
+                      <p style={{ fontSize: 12, color: 'var(--text-sub)' }}>{formatDate(j.date)}</p>
+                    </div>
+                    {j.imageUrls?.[0] && (
+                      <img src={j.imageUrls[0]} alt="" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 공개 일지 섹션 */}
+        {publicJournals.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 16 }}>📔</span>
+              <span style={{ fontSize: 15, fontWeight: 700 }}>여행 일지</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {publicJournals.map(j => (
+                <button key={j.id} className="card" onClick={() => setDetailJournal(j)}
+                  style={{ padding: 14, textAlign: 'left', width: '100%', cursor: 'pointer' }}>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    {j.imageUrls?.[0] && (
+                      <img src={j.imageUrls[0]} alt="" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 10, flexShrink: 0 }} />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                        <span style={{ fontSize: 16 }}>{j.mood}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.title}</span>
+                      </div>
+                      <p style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{j.content}</p>
+                      <p style={{ fontSize: 11, color: 'var(--text-sub)', marginTop: 4 }}>{j.author} · {formatDate(j.date)}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {visiblePlaces.length === 0 ? (
           <div className="empty-state">
             <span className="empty-icon">🗺️</span>
@@ -237,7 +320,7 @@ export default function FeedPage() {
       {/* 장소 상세보기 */}
       {detailPlace && (
         <AppPortal>
-          <PlaceDetailModal
+          <PlaceDetail
             place={detailPlace}
             groupNames={getGroupNames(detailPlace.groupIds)}
             isOwner={detailPlace.author === username}
@@ -246,9 +329,6 @@ export default function FeedPage() {
             onEdit={() => handleEdit(detailPlace)}
             onDelete={() => handleDelete(detailPlace.id)}
             onLike={() => toggleLike(detailPlace.id)}
-            onDislike={() => toggleDislike(detailPlace.id)}
-            onComment={text => addComment(detailPlace.id, text)}
-            onDeleteComment={cid => deleteComment(detailPlace.id, cid)}
           />
         </AppPortal>
       )}
@@ -377,6 +457,158 @@ function PlaceCard({ place, groupNames, isOwner, selectMode, selected, onClick, 
   )
 }
 
+function MiniMap({ place }) {
+  const { ready } = useKakaoMaps()
+  const mapRef = useRef(null)
+
+  useEffect(() => {
+    if (!ready || !mapRef.current || !place.lat) return
+    const pos = new window.kakao.maps.LatLng(place.lat, place.lng)
+    const map = new window.kakao.maps.Map(mapRef.current, { center: pos, level: 4 })
+    new window.kakao.maps.Marker({ position: pos, map })
+  }, [ready, place.lat, place.lng])
+
+  if (!place.lat) return null
+  return (
+    <div ref={mapRef} style={{
+      width: '100%', height: 160,
+      borderRadius: 12, overflow: 'hidden',
+      marginBottom: 14, background: '#e8e8e8',
+    }} />
+  )
+}
+
+function PlaceDetail({ place, groupNames, isOwner, username, onClose, onEdit, onDelete, onLike }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '88vh', overflowY: 'auto', height: 'auto' }}>
+        <div className="modal-handle" />
+
+        {/* 헤더: 카테고리 + 이름 + 닫기 */}
+        <div style={{ padding: '8px 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ marginBottom: 4 }}>
+              <Tag category={place.category} />
+            </div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 2 }}>{place.name}</h2>
+            <p style={{ fontSize: 12, color: 'var(--text-sub)' }}>{place.address}</p>
+          </div>
+          <button onClick={onClose} style={{ fontSize: 18, color: 'var(--text-sub)', marginLeft: 12, marginTop: 2, flexShrink: 0 }}>✕</button>
+        </div>
+
+        <div style={{ padding: '12px 16px 24px' }}>
+          {/* 미니 지도 */}
+          <MiniMap place={place} />
+
+          {/* 코멘트 */}
+          {place.comment && (
+            <div style={{
+              padding: '12px 14px', borderRadius: 10, background: 'var(--bg)',
+              borderLeft: '3px solid var(--primary)', marginBottom: 12,
+            }}>
+              <p style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.6 }}>"{place.comment}"</p>
+            </div>
+          )}
+
+          {/* 추천 메뉴 / 액티비티 */}
+          {place.menus && place.menus.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {EXTRA_SECTION[place.category]?.icon} {EXTRA_SECTION[place.category]?.label}
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {place.menus.map(item => (
+                  <span key={item} style={{
+                    padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                    background: '#FFF3E0', color: '#E67E22',
+                  }}>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 추천 태그 */}
+          {place.points && place.points.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+              {place.points.map(pt => (
+                <span key={pt} style={{
+                  padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                  background: 'var(--primary-bg)', color: 'var(--primary)',
+                }}>
+                  {pt}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* 그룹 or 작성자 + 날짜 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+            {groupNames && groupNames.length > 0 ? groupNames.map(name => (
+              <span key={name} style={{
+                fontSize: 11, fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-bg)',
+                padding: '2px 8px', borderRadius: 10,
+              }}>🏷️ {name}</span>
+            )) : (
+              <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>👤 {place.author}</span>
+            )}
+            <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>· {formatDate(place.date)}</span>
+          </div>
+
+          {/* 액션 버튼들 */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={onLike}
+              style={{
+                padding: '11px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                background: (place.likes || []).includes(username) ? '#fff0f5' : 'var(--bg)',
+                color: (place.likes || []).includes(username) ? '#E05252' : 'var(--text-sub)',
+                border: '1.5px solid var(--border)',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              {(place.likes || []).includes(username) ? '❤️' : '🤍'}
+              {(place.likes || []).length > 0 && (place.likes || []).length}
+            </button>
+            {place.lat && (
+              <button
+                onClick={() => window.open(`https://map.kakao.com/?q=${encodeURIComponent(place.name)}`, '_blank')}
+                style={{
+                  flex: 1, padding: '11px', background: '#FEE500',
+                  borderRadius: 10, fontSize: 13, fontWeight: 700, color: '#3A1D1D',
+                }}
+              >
+                🗺️ 카카오맵에서 보기
+              </button>
+            )}
+            {isOwner && <>
+              <button
+                onClick={onEdit}
+                style={{
+                  flex: 1, padding: '11px', background: 'var(--bg)',
+                  borderRadius: 10, fontSize: 13, fontWeight: 700, color: 'var(--text)',
+                  border: '1.5px solid var(--border)',
+                }}
+              >
+                ✏️ 수정
+              </button>
+              <button
+                onClick={onDelete}
+                style={{
+                  padding: '11px 16px', background: '#fff0f0',
+                  borderRadius: 10, fontSize: 13, fontWeight: 700, color: '#E05252',
+                }}
+              >
+                🗑️
+              </button>
+            </>}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function PlaceScrollRow({ places, username, onSelect, onLike }) {
   return (
