@@ -159,15 +159,14 @@ function RouteCard({ route, places, groupName, onClick }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
         <div>
           <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{route.name}</h3>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             {maxDay > 0 && (
               <span style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600, background: 'var(--primary-bg)', padding: '2px 8px', borderRadius: 10 }}>
                 {maxDay === 1 ? '당일치기' : `${maxDay - 1}박${maxDay}일`}
               </span>
             )}
-            {groupName && (
-              <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>· {groupName}</span>
-            )}
+            {groupName && <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>· {groupName}</span>}
+            {route.author && <span style={{ fontSize: 12, color: 'var(--text-sub)' }}>· by {route.author}</span>}
           </div>
         </div>
         <span style={{ fontSize: 13, color: 'var(--text-sub)' }}>{placeCount}곳 ›</span>
