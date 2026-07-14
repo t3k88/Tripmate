@@ -1,9 +1,10 @@
 import { useApp } from '../context/AppContext'
 
 const tabs = [
-  { id: 'feed', label: '피드' },
-  { id: 'map', label: '지도' },
+  { id: 'home', label: '홈' },
+  { id: 'feed', label: '장소' },
   { id: 'route', label: '루트' },
+  { id: 'journal', label: '일지' },
   { id: 'group', label: '그룹' },
 ]
 

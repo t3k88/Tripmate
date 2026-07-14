@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import BottomNav from './BottomNav'
 import DesktopShell from './DesktopShell'
 import LandingPage from '../pages/LandingPage'
+import HomePage from '../pages/HomePage'
 import FeedPage from '../pages/FeedPage'
 import MapPage from '../pages/MapPage'
 import RoutePage from '../pages/RoutePage'
@@ -34,6 +35,7 @@ export default function AppShell() {
   }
 
   const tabs = {
+    home: <HomePage />,
     feed: <FeedPage />,
     map: <MapPage />,
     route: <RoutePage />,
@@ -43,8 +45,8 @@ export default function AppShell() {
 
   return (
     <div className="app-shell">
-      <div className={`screen${activeTab === 'map' ? ' screen-map' : ''}`}>
-        {tabs[activeTab] || <FeedPage />}
+      <div className="screen">
+        {tabs[activeTab] || <HomePage />}
       </div>
 
       <BottomNav />

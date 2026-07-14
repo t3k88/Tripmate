@@ -1,12 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { getCategoryInfo, getAddressLevels } from '../utils/helpers'
 import AppPortal from '../components/AppPortal'
 import RouteOnboarding from '../components/RouteOnboarding'
 import ManualRouteCreate from '../components/ManualRouteCreate'
+import { useKakaoMaps } from '../hooks/useKakaoMaps'
 
 export default function RoutePage() {
-  const { routes, places, groups, addRoute, deleteRoute, saveRouteItems } = useApp()
+  const { routes, places, groups, addRoute, deleteRoute, saveRouteItems, username } = useApp()
   const [view, setView] = useState('list')       // 'list' | 'detail'
   const [activeRoute, setActiveRoute] = useState(null)
   const [showPicker, setShowPicker] = useState(false)   // 자동/수동 선택
@@ -28,6 +29,7 @@ export default function RoutePage() {
         route={activeRoute}
         places={places}
         groups={groups}
+        isOwner={activeRoute.author === username}
         onBack={() => setView('list')}
         onDelete={async () => { await deleteRoute(activeRoute.id); setView('list') }}
         onSave={async (items) => { await saveRouteItems(activeRoute.id, items); handleRouteUpdated({ ...activeRoute, items }) }}
@@ -261,12 +263,56 @@ function CreateRouteModal({ groups, places, onClose, onCreate }) {
   )
 }
 
-function RouteDetail({ route, places, groups, onBack, onDelete, onSave }) {
+function RouteMap({ items, places }) {
+  const { ready } = useKakaoMaps()
+  const mapRef = useRef(null)
+
+  useEffect(() => {
+    if (!ready || !mapRef.current) return
+    const coords = items
+      .map(item => places.find(p => p.id === item.placeId))
+      .filter(p => p?.lat)
+    if (coords.length === 0) return
+
+    const bounds = new window.kakao.maps.LatLngBounds()
+    const map = new window.kakao.maps.Map(mapRef.current, {
+      center: new window.kakao.maps.LatLng(coords[0].lat, coords[0].lng),
+      level: 5,
+    })
+
+    coords.forEach((place, i) => {
+      const pos = new window.kakao.maps.LatLng(place.lat, place.lng)
+      bounds.extend(pos)
+      const content = `<div style="background:var(--primary,#5C6BC0);color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)">${i + 1}</div>`
+      new window.kakao.maps.CustomOverlay({ position: pos, content, yAnchor: 1, map })
+    })
+
+    if (coords.length > 1) {
+      const path = coords.map(p => new window.kakao.maps.LatLng(p.lat, p.lng))
+      new window.kakao.maps.Polyline({ path, strokeWeight: 3, strokeColor: '#5C6BC0', strokeOpacity: 0.8, strokeStyle: 'solid', map })
+    }
+
+    if (coords.length > 1) map.setBounds(bounds)
+  }, [ready, items, places])
+
+  const hasCoords = items.some(item => places.find(p => p.id === item.placeId)?.lat)
+  if (!hasCoords) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column', gap: 8, color: 'var(--text-sub)' }}>
+      <span style={{ fontSize: 36 }}>📍</span>
+      <p style={{ fontSize: 14 }}>장소에 위치 정보가 없어요</p>
+      <p style={{ fontSize: 12 }}>장소 등록 시 카카오맵 검색으로 추가하면 지도에 표시돼요</p>
+    </div>
+  )
+  return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+}
+
+function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave }) {
   const [items, setItems] = useState(
     [...(route.items || [])].sort((a, b) => a.dayNumber - b.dayNumber || a.sortOrder - b.sortOrder)
   )
   const [showPicker, setShowPicker] = useState(false)
   const [dirty, setDirty] = useState(false)
+  const [mapView, setMapView] = useState(false)
 
   const maxDay = items.length > 0 ? Math.max(...items.map(i => i.dayNumber)) : 1
 
@@ -329,18 +375,35 @@ function RouteDetail({ route, places, groups, onBack, onDelete, onSave }) {
           <p style={{ fontSize: 17, fontWeight: 700 }}>{route.name}</p>
           {groupName && <p style={{ fontSize: 11, color: 'var(--text-sub)' }}>{groupName}</p>}
         </div>
-        <button onClick={() => window.confirm('이 루트를 삭제할까요?') && onDelete()}
-          style={{ fontSize: 18, color: '#E05252', padding: '0 4px' }}>🗑️</button>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={() => setMapView(v => !v)}
+            style={{ fontSize: 13, fontWeight: 700, padding: '5px 12px', borderRadius: 20,
+              background: mapView ? 'var(--primary)' : 'var(--bg)',
+              color: mapView ? 'white' : 'var(--text-sub)',
+              border: '1px solid var(--border)' }}>
+            {mapView ? '📋 목록' : '🗺️ 지도'}
+          </button>
+          {isOwner && (
+            <button onClick={() => window.confirm('이 루트를 삭제할까요?') && onDelete()}
+              style={{ fontSize: 18, color: '#E05252', padding: '0 4px' }}>🗑️</button>
+          )}
+        </div>
       </div>
 
-      <div style={{ padding: '16px 16px 100px' }}>
-        {days.length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-icon">📍</span>
-            <p className="empty-text">장소를 추가해서 루트를 완성해보세요!</p>
-          </div>
-        ) : (
-          days.map(day => (
+      {mapView && (
+        <div style={{ position: 'absolute', top: 56, left: 0, right: 0, bottom: 64, overflow: 'hidden' }}>
+          <RouteMap items={items} places={places} />
+        </div>
+      )}
+
+      {!mapView && (
+        <div style={{ padding: '16px 16px 100px' }}>
+          {days.length === 0 ? (
+            <div className="empty-state">
+              <span className="empty-icon">📍</span>
+              <p className="empty-text">장소를 추가해서 루트를 완성해보세요!</p>
+            </div>
+          ) : days.map(day => (
             <div key={day} style={{ marginBottom: 28 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <div style={{
@@ -396,9 +459,9 @@ function RouteDetail({ route, places, groups, onBack, onDelete, onSave }) {
                 })}
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* 하단 버튼 */}
       <div style={{
