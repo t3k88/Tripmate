@@ -23,6 +23,9 @@ export default function RoutePage() {
     setActiveRoute(updatedRoute)
   }
 
+  const myRoutes = routes.filter(r => r.author === username)
+  const groupRoutes = routes.filter(r => r.author !== username)
+
   if (view === 'detail' && activeRoute) {
     return (
       <RouteDetail
@@ -51,38 +54,34 @@ export default function RoutePage() {
             <span className="empty-icon">🗺️</span>
             <p className="empty-text">아직 루트가 없어요.<br />여행 동선을 직접 짜보세요!</p>
           </div>
-        ) : (() => {
-          const myRoutes = routes.filter(r => r.author === username)
-          const groupRoutes = routes.filter(r => r.author !== username)
-          return (
-            <>
-              {myRoutes.length > 0 && (
-                <div style={{ marginBottom: 24 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, letterSpacing: '0.3px' }}>✏️ 내가 짠 루트</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {myRoutes.map(route => (
-                      <RouteCard key={route.id} route={route} places={places}
-                        groupName={groups.find(g => g.id === route.groupId)?.name}
-                        onClick={() => openRoute(route)} />
-                    ))}
-                  </div>
+        ) : (
+          <>
+            {myRoutes.length > 0 && (
+              <div style={{ marginBottom: 24 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, letterSpacing: '0.3px' }}>✏️ 내가 짠 루트</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {myRoutes.map(route => (
+                    <RouteCard key={route.id} route={route} places={places}
+                      groupName={groups.find(g => g.id === route.groupId)?.name}
+                      onClick={() => openRoute(route)} />
+                  ))}
                 </div>
-              )}
-              {groupRoutes.length > 0 && (
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, letterSpacing: '0.3px' }}>👥 그룹 추천 루트</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {groupRoutes.map(route => (
-                      <RouteCard key={route.id} route={route} places={places}
-                        groupName={groups.find(g => g.id === route.groupId)?.name}
-                        onClick={() => openRoute(route)} />
-                    ))}
-                  </div>
+              </div>
+            )}
+            {groupRoutes.length > 0 && (
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, letterSpacing: '0.3px' }}>👥 그룹 추천 루트</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {groupRoutes.map(route => (
+                    <RouteCard key={route.id} route={route} places={places}
+                      groupName={groups.find(g => g.id === route.groupId)?.name}
+                      onClick={() => openRoute(route)} />
+                  ))}
                 </div>
-              )}
-            </>
-          )
-        })()}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <button className="fab" onClick={() => setShowPicker(true)}>+</button>
