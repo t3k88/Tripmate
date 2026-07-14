@@ -321,7 +321,7 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
   const maxDay = items.length > 0 ? Math.max(...items.map(i => i.dayNumber)) : 1
 
   const addPlaces = (placeIds) => {
-    const newItems = placeIds.map(pid => ({ placeId: pid, dayNumber: maxDay, sortOrder: items.length, visitTime: '' }))
+    const newItems = placeIds.map(pid => ({ placeId: pid, dayNumber: maxDay, sortOrder: items.length, visitTime: '', memo: '' }))
     setItems(prev => [...prev, ...newItems])
     setDirty(true)
   }
@@ -449,7 +449,7 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
 
               <div style={{ position: 'relative', paddingLeft: 20 }}>
                 <div style={{ position: 'absolute', left: 17, top: 0, bottom: 0, width: 2, background: 'var(--border)' }} />
-                {grouped[day].map(({ _idx, placeId, dayNumber, visitTime }) => {
+                {grouped[day].map(({ _idx, placeId, dayNumber, visitTime, memo }) => {
                   const place = places.find(p => p.id === placeId)
                   if (!place) return null
                   const info = getCategoryInfo(place.category)
@@ -475,11 +475,10 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
                             style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
                             <p style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600 }}>{info.label}</p>
                             <p style={{ fontSize: 14, fontWeight: 700 }}>{place.name}</p>
-                            <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
-                              {visitTime
-                                ? <span style={{ fontSize: 11, color: 'var(--text-sub)' }}>🕐 {visitTime}</span>
-                                : <span style={{ fontSize: 11, color: 'var(--border)' }}>시간 추가 +</span>
-                              }
+                            <div style={{ display: 'flex', gap: 8, marginTop: 2, flexWrap: 'wrap' }}>
+                              {visitTime && <span style={{ fontSize: 11, color: 'var(--text-sub)' }}>🕐 {visitTime}</span>}
+                              {memo && <span style={{ fontSize: 11, color: 'var(--text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>📝 {memo}</span>}
+                              {!visitTime && !memo && <span style={{ fontSize: 11, color: 'var(--border)' }}>탭해서 편집 +</span>}
                             </div>
                           </button>
                           <div style={{ display: 'flex', gap: 2, flexShrink: 0, marginLeft: 8 }}>
@@ -499,6 +498,17 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
                                 onChange={e => changeField(_idx, 'visitTime', e.target.value)}
                                 style={{ width: '100%', padding: '6px 8px', borderRadius: 8, border: '1px solid var(--border)',
                                   fontSize: 13, background: 'var(--bg)', color: 'var(--text)' }} />
+                            </div>
+                            <div style={{ marginBottom: 8 }}>
+                              <p style={{ fontSize: 11, color: 'var(--text-sub)', fontWeight: 600, marginBottom: 4 }}>📝 메모 (이동수단, 예약번호 등)</p>
+                              <textarea
+                                value={memo || ''}
+                                onChange={e => changeField(_idx, 'memo', e.target.value)}
+                                placeholder="예) 버스 100번 → 시청역 하차, 예약 필요"
+                                rows={2}
+                                style={{ width: '100%', padding: '6px 8px', borderRadius: 8, border: '1px solid var(--border)',
+                                  fontSize: 13, background: 'var(--bg)', color: 'var(--text)', resize: 'none',
+                                  fontFamily: 'inherit', lineHeight: 1.5 }} />
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <span style={{ fontSize: 11, color: 'var(--text-sub)', fontWeight: 600 }}>Day</span>
