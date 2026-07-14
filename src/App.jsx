@@ -164,6 +164,7 @@ export default function App() {
         date: r.created_at?.split('T')[0],
         items: rp.filter(p => p.route_id === r.id).map(p => ({
           id: p.id, placeId: p.place_id, dayNumber: p.day_number, sortOrder: p.sort_order,
+          visitTime: p.visit_time || '', stayDuration: p.stay_duration || '',
         })),
       })))
     }
@@ -313,11 +314,16 @@ export default function App() {
     setRoutes(rs => rs.filter(r => r.id !== id))
   }
 
+  const renameRoute = async (id, name) => {
+    await supabase.from('routes').update({ name }).eq('id', id)
+    setRoutes(rs => rs.map(r => r.id === id ? { ...r, name } : r))
+  }
+
   const saveRouteItems = async (routeId, items) => {
     await supabase.from('route_places').delete().eq('route_id', routeId)
     if (items.length > 0) {
       await supabase.from('route_places').insert(
-        items.map((item, i) => ({ route_id: routeId, place_id: item.placeId, day_number: item.dayNumber, sort_order: i }))
+        items.map((item, i) => ({ route_id: routeId, place_id: item.placeId, day_number: item.dayNumber, sort_order: i, visit_time: item.visitTime || null }))
       )
     }
     setRoutes(rs => rs.map(r => r.id === routeId ? { ...r, items } : r))
@@ -351,7 +357,7 @@ export default function App() {
     myGroupIds,
     places, setPlaces, addPlace, updatePlace, deletePlace, toggleLike, toggleDislike, addComment, deleteComment,
     journals, setJournals, addJournal, updateJournal, deleteJournal,
-    routes, addRoute, deleteRoute, saveRouteItems,
+    routes, addRoute, deleteRoute, renameRoute, saveRouteItems,
     loading,
     showPlaceModal, setShowPlaceModal,
     showGroupModal, setShowGroupModal,

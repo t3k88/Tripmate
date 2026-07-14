@@ -7,7 +7,7 @@ import ManualRouteCreate from '../components/ManualRouteCreate'
 import { useKakaoMaps } from '../hooks/useKakaoMaps'
 
 export default function RoutePage() {
-  const { routes, places, groups, addRoute, deleteRoute, saveRouteItems, username } = useApp()
+  const { routes, places, groups, addRoute, deleteRoute, renameRoute, saveRouteItems, username } = useApp()
   const [view, setView] = useState('list')       // 'list' | 'detail'
   const [activeRoute, setActiveRoute] = useState(null)
   const [showPicker, setShowPicker] = useState(false)   // 자동/수동 선택
@@ -33,6 +33,7 @@ export default function RoutePage() {
         onBack={() => setView('list')}
         onDelete={async () => { await deleteRoute(activeRoute.id); setView('list') }}
         onSave={async (items) => { await saveRouteItems(activeRoute.id, items); handleRouteUpdated({ ...activeRoute, items }) }}
+        onRename={async (name) => { await renameRoute(activeRoute.id, name); handleRouteUpdated({ ...activeRoute, name }) }}
       />
     )
   }
@@ -306,24 +307,28 @@ function RouteMap({ items, places }) {
   return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 }
 
-function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave }) {
+function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave, onRename }) {
   const [items, setItems] = useState(
     [...(route.items || [])].sort((a, b) => a.dayNumber - b.dayNumber || a.sortOrder - b.sortOrder)
   )
   const [showPicker, setShowPicker] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [mapView, setMapView] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState(route.name)
+  const [expandedIdx, setExpandedIdx] = useState(null)
 
   const maxDay = items.length > 0 ? Math.max(...items.map(i => i.dayNumber)) : 1
 
   const addPlaces = (placeIds) => {
-    const newItems = placeIds.map(pid => ({ placeId: pid, dayNumber: maxDay, sortOrder: items.length }))
+    const newItems = placeIds.map(pid => ({ placeId: pid, dayNumber: maxDay, sortOrder: items.length, visitTime: '' }))
     setItems(prev => [...prev, ...newItems])
     setDirty(true)
   }
 
   const removeItem = (idx) => {
     setItems(prev => prev.filter((_, i) => i !== idx))
+    if (expandedIdx === idx) setExpandedIdx(null)
     setDirty(true)
   }
 
@@ -352,9 +357,20 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave 
     setDirty(true)
   }
 
+  const changeField = (idx, field, value) => {
+    setItems(prev => prev.map((item, i) => i === idx ? { ...item, [field]: value } : item))
+    setDirty(true)
+  }
+
   const handleSave = async () => {
     await onSave(items)
     setDirty(false)
+  }
+
+  const handleRename = async () => {
+    const trimmed = nameInput.trim()
+    if (trimmed && trimmed !== route.name) await onRename(trimmed)
+    setEditingName(false)
   }
 
   const grouped = items.reduce((acc, item, idx) => {
@@ -372,7 +388,25 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave 
       <div className="header">
         <button onClick={onBack} style={{ fontSize: 20, color: 'var(--text)', padding: '0 4px' }}>←</button>
         <div style={{ flex: 1, paddingLeft: 8 }}>
-          <p style={{ fontSize: 17, fontWeight: 700 }}>{route.name}</p>
+          {editingName ? (
+            <input
+              autoFocus
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              onBlur={handleRename}
+              onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setEditingName(false) }}
+              style={{ fontSize: 16, fontWeight: 700, border: 'none', borderBottom: '2px solid var(--primary)',
+                outline: 'none', background: 'transparent', width: '100%', padding: '2px 0' }}
+            />
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <p style={{ fontSize: 17, fontWeight: 700 }}>{route.name}</p>
+              {isOwner && (
+                <button onClick={() => { setNameInput(route.name); setEditingName(true) }}
+                  style={{ fontSize: 13, color: 'var(--text-sub)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px' }}>✏️</button>
+              )}
+            </div>
+          )}
           {groupName && <p style={{ fontSize: 11, color: 'var(--text-sub)' }}>{groupName}</p>}
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
@@ -415,44 +449,67 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave 
 
               <div style={{ position: 'relative', paddingLeft: 20 }}>
                 <div style={{ position: 'absolute', left: 17, top: 0, bottom: 0, width: 2, background: 'var(--border)' }} />
-                {grouped[day].map(({ _idx, placeId, dayNumber }) => {
+                {grouped[day].map(({ _idx, placeId, dayNumber, visitTime }) => {
                   const place = places.find(p => p.id === placeId)
                   if (!place) return null
                   const info = getCategoryInfo(place.category)
+                  const isExpanded = expandedIdx === _idx
                   return (
                     <div key={_idx} style={{ display: 'flex', gap: 10, marginBottom: 10, position: 'relative' }}>
-                      <div style={{
-                        width: 32, height: 32, borderRadius: '50%', background: 'white',
-                        border: '2px solid var(--primary)', display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: 14, flexShrink: 0, zIndex: 1,
-                      }}>{info.icon}</div>
+                      {/* 타임라인 노드 */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                        <div style={{
+                          width: 32, height: 32, borderRadius: '50%', background: 'white',
+                          border: '2px solid var(--primary)', display: 'flex', alignItems: 'center',
+                          justifyContent: 'center', fontSize: 14, zIndex: 1,
+                        }}>{info.icon}</div>
+                        {visitTime && (
+                          <span style={{ fontSize: 10, color: 'var(--primary)', fontWeight: 700, marginTop: 2, whiteSpace: 'nowrap' }}>{visitTime}</span>
+                        )}
+                      </div>
 
                       <div className="card" style={{ flex: 1, padding: '10px 12px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                          <div style={{ minWidth: 0 }}>
+                        {/* 카드 헤더 */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <button onClick={() => setExpandedIdx(isExpanded ? null : _idx)}
+                            style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
                             <p style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600 }}>{info.label}</p>
                             <p style={{ fontSize: 14, fontWeight: 700 }}>{place.name}</p>
-                            <p style={{ fontSize: 11, color: 'var(--text-sub)', marginTop: 1,
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>
-                              {place.address}
-                            </p>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-end', flexShrink: 0 }}>
-                            <div style={{ display: 'flex', gap: 2 }}>
-                              <button onClick={() => moveUp(_idx)} style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--bg)', fontSize: 12 }}>↑</button>
-                              <button onClick={() => moveDown(_idx)} style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--bg)', fontSize: 12 }}>↓</button>
-                              <button onClick={() => removeItem(_idx)} style={{ width: 24, height: 24, borderRadius: 6, background: '#fff0f0', fontSize: 12, color: '#E05252' }}>✕</button>
+                            <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+                              {visitTime
+                                ? <span style={{ fontSize: 11, color: 'var(--text-sub)' }}>🕐 {visitTime}</span>
+                                : <span style={{ fontSize: 11, color: 'var(--border)' }}>시간 추가 +</span>
+                              }
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <span style={{ fontSize: 10, color: 'var(--text-sub)' }}>Day</span>
-                              <button onClick={() => changeDay(_idx, Math.max(1, dayNumber - 1))}
-                                style={{ width: 18, height: 18, borderRadius: 4, background: 'var(--bg)', fontSize: 11, lineHeight: 1 }}>-</button>
-                              <span style={{ fontSize: 12, fontWeight: 700, minWidth: 14, textAlign: 'center' }}>{dayNumber}</span>
-                              <button onClick={() => changeDay(_idx, dayNumber + 1)}
-                                style={{ width: 18, height: 18, borderRadius: 4, background: 'var(--bg)', fontSize: 11, lineHeight: 1 }}>+</button>
-                            </div>
+                          </button>
+                          <div style={{ display: 'flex', gap: 2, flexShrink: 0, marginLeft: 8 }}>
+                            <button onClick={() => moveUp(_idx)} style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--bg)', fontSize: 12 }}>↑</button>
+                            <button onClick={() => moveDown(_idx)} style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--bg)', fontSize: 12 }}>↓</button>
+                            <button onClick={() => removeItem(_idx)} style={{ width: 24, height: 24, borderRadius: 6, background: '#fff0f0', fontSize: 12, color: '#E05252' }}>✕</button>
                           </div>
                         </div>
+
+                        {/* 확장 영역: 시간 설정 */}
+                        {isExpanded && (
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+                            <div style={{ marginBottom: 8 }}>
+                              <p style={{ fontSize: 11, color: 'var(--text-sub)', fontWeight: 600, marginBottom: 4 }}>🕐 방문 시각</p>
+                              <input type="time"
+                                value={visitTime || ''}
+                                onChange={e => changeField(_idx, 'visitTime', e.target.value)}
+                                style={{ width: '100%', padding: '6px 8px', borderRadius: 8, border: '1px solid var(--border)',
+                                  fontSize: 13, background: 'var(--bg)', color: 'var(--text)' }} />
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: 11, color: 'var(--text-sub)', fontWeight: 600 }}>Day</span>
+                              <button onClick={() => changeDay(_idx, Math.max(1, dayNumber - 1))}
+                                style={{ width: 22, height: 22, borderRadius: 6, background: 'var(--bg)', fontSize: 13 }}>-</button>
+                              <span style={{ fontSize: 13, fontWeight: 700, minWidth: 16, textAlign: 'center' }}>{dayNumber}</span>
+                              <button onClick={() => changeDay(_idx, dayNumber + 1)}
+                                style={{ width: 22, height: 22, borderRadius: 6, background: 'var(--bg)', fontSize: 13 }}>+</button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )
