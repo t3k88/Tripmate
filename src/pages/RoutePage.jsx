@@ -13,11 +13,8 @@ export default function RoutePage() {
   const [showPicker, setShowPicker] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showManual, setShowManual] = useState(false)
-  const [extraPlaces, setExtraPlaces] = useState([])
-
-  const openRoute = (route, newPlaces = []) => {
+  const openRoute = (route) => {
     setActiveRoute(route)
-    setExtraPlaces(newPlaces)
     setView('detail')
   }
 
@@ -32,7 +29,7 @@ export default function RoutePage() {
     return (
       <RouteDetail
         route={activeRoute}
-        places={[...places, ...extraPlaces.filter(ep => !places.find(p => p.id === ep.id))]}
+        places={places}
         groups={groups}
         isOwner={activeRoute.author === username}
         onBack={() => setView('list')}
@@ -162,33 +159,23 @@ export default function RoutePage() {
               const newRoute = await addRoute({ name: data.name, groupId: data.groupIds?.[0] ?? null })
               if (!newRoute) return
 
-              let finalItems = data.items || []
-              const freshPlaces = []
-
-              if (data.aiPlaces?.length > 0) {
-                const savedItems = []
-                for (const item of finalItems) {
-                  if (item._aiPlace) {
-                    const p = item._aiPlace
-                    const saved = await addPlace({
-                      name: p.name,
-                      category: p.category || 'attraction',
-                      address: p.address || '',
-                      lat: 0, lng: 0,
-                      memo: p.description || '',
-                      groupIds: data.groupIds || [],
-                    })
-                    if (saved) freshPlaces.push(saved)
-                    savedItems.push({ ...item, placeId: saved?.id ?? null, _aiPlace: undefined })
-                  } else {
-                    savedItems.push(item)
+              let finalItems = (data.items || []).map(item => {
+                if (item._aiPlace) {
+                  const p = item._aiPlace
+                  return {
+                    ...item,
+                    placeId: null,
+                    placeName: p.name,
+                    placeAddress: p.address || '',
+                    placeCategory: p.category || 'attraction',
+                    _aiPlace: undefined,
                   }
                 }
-                finalItems = savedItems.filter(i => i.placeId)
-              }
+                return item
+              })
 
               if (finalItems.length > 0) await saveRouteItems(newRoute.id, finalItems)
-              openRoute({ ...newRoute, items: finalItems }, freshPlaces)
+              openRoute({ ...newRoute, items: finalItems })
             }}
           />
         </AppPortal>
@@ -223,8 +210,10 @@ function RouteCard({ route, places, groupName, onClick }) {
         <div style={{ display: 'flex', gap: 6, flexWrap: 'nowrap', overflow: 'hidden' }}>
           {route.items.slice(0, 4).map(item => {
             const place = places.find(p => p.id === item.placeId)
-            if (!place) return null
-            const info = getCategoryInfo(place.category)
+            const name = place?.name || item.placeName
+            const category = place?.category || item.placeCategory || 'attraction'
+            if (!name) return null
+            const info = getCategoryInfo(category)
             return (
               <div key={item.id} style={{
                 padding: '4px 10px', borderRadius: 14, fontSize: 12, fontWeight: 600,
@@ -232,7 +221,7 @@ function RouteCard({ route, places, groupName, onClick }) {
                 display: 'flex', alignItems: 'center', gap: 4,
               }}>
                 <span>{info.icon}</span>
-                <span style={{ maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{place.name}</span>
+                <span style={{ maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
               </div>
             )
           })}
@@ -518,10 +507,13 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
 
               <div style={{ position: 'relative', paddingLeft: 20 }}>
                 <div style={{ position: 'absolute', left: 17, top: 0, bottom: 0, width: 2, background: 'var(--border)' }} />
-                {grouped[day].map(({ _idx, placeId, dayNumber, visitTime, memo }) => {
+                {grouped[day].map(({ _idx, placeId, placeName, placeAddress, placeCategory, dayNumber, visitTime, memo }) => {
                   const place = places.find(p => p.id === placeId)
-                  if (!place) return null
-                  const info = getCategoryInfo(place.category)
+                  const displayName = place?.name || placeName
+                  const displayAddress = place?.address || placeAddress
+                  const displayCategory = place?.category || placeCategory || 'attraction'
+                  if (!displayName) return null
+                  const info = getCategoryInfo(displayCategory)
                   const isExpanded = expandedIdx === _idx
                   return (
                     <div key={_idx} style={{ display: 'flex', gap: 10, marginBottom: 10, position: 'relative' }}>
@@ -543,7 +535,7 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
                           <button onClick={() => setExpandedIdx(isExpanded ? null : _idx)}
                             style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
                             <p style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600 }}>{info.label}</p>
-                            <p style={{ fontSize: 14, fontWeight: 700 }}>{place.name}</p>
+                            <p style={{ fontSize: 14, fontWeight: 700 }}>{displayName}</p>
                             <div style={{ display: 'flex', gap: 8, marginTop: 2, flexWrap: 'wrap' }}>
                               {visitTime && <span style={{ fontSize: 11, color: 'var(--text-sub)' }}>🕐 {visitTime}</span>}
                               {memo && <span style={{ fontSize: 11, color: 'var(--text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>📝 {memo}</span>}

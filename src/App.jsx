@@ -165,6 +165,7 @@ export default function App() {
         items: rp.filter(p => p.route_id === r.id).map(p => ({
           id: p.id, placeId: p.place_id, dayNumber: p.day_number, sortOrder: p.sort_order,
           visitTime: p.visit_time || '', memo: p.memo || '',
+          placeName: p.place_name || null, placeAddress: p.place_address || null, placeCategory: p.place_category || null,
         })),
       })))
     }
@@ -331,7 +332,17 @@ export default function App() {
     await supabase.from('route_places').delete().eq('route_id', routeId)
     if (items.length > 0) {
       await supabase.from('route_places').insert(
-        items.map((item, i) => ({ route_id: routeId, place_id: item.placeId, day_number: item.dayNumber, sort_order: i, visit_time: item.visitTime || null, memo: item.memo || null }))
+        items.map((item, i) => ({
+          route_id: routeId,
+          place_id: item.placeId || null,
+          day_number: item.dayNumber,
+          sort_order: i,
+          visit_time: item.visitTime || null,
+          memo: item.memo || null,
+          place_name: item.placeName || null,
+          place_address: item.placeAddress || null,
+          place_category: item.placeCategory || null,
+        }))
       )
     }
     setRoutes(rs => rs.map(r => r.id === routeId ? { ...r, items } : r))
