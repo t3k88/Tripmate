@@ -176,7 +176,11 @@ export default function App() {
     const uname = localStorage.getItem('tripmate_username') || '나'
     const uid = localStorage.getItem('tripmate_user_id') || userId
     const { data } = await supabase.from('places').insert([{ ...placeToDb({ ...placeData, author: uname }), user_id: uid }]).select().single()
-    if (data) setPlaces(ps => [placeFromDb(data), ...ps])
+    if (data) {
+      const place = placeFromDb(data)
+      setPlaces(ps => [place, ...ps])
+      return place
+    }
   }
 
   const updatePlace = async (id, updates) => {
