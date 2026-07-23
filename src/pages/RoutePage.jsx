@@ -7,7 +7,7 @@ import ManualRouteCreate from '../components/ManualRouteCreate'
 import { useKakaoMaps } from '../hooks/useKakaoMaps'
 
 export default function RoutePage() {
-  const { routes, places, groups, addRoute, deleteRoute, renameRoute, saveRouteItems, username } = useApp()
+  const { routes, places, groups, addRoute, deleteRoute, renameRoute, saveRouteItems, addPlace, username } = useApp()
   const [view, setView] = useState('list')       // 'list' | 'detail'
   const [activeRoute, setActiveRoute] = useState(null)
   const [showPicker, setShowPicker] = useState(false)   // 자동/수동 선택
@@ -154,12 +154,35 @@ export default function RoutePage() {
             groups={groups}
             onClose={() => setShowOnboarding(false)}
             onComplete={async (data) => {
-              const newRoute = await addRoute({ name: data.name, groupId: data.groupIds?.[0] ?? null })
               setShowOnboarding(false)
-              if (newRoute) {
-                await saveRouteItems(newRoute.id, data.items)
-                openRoute({ ...newRoute, region: data.region, items: data.items })
+              const newRoute = await addRoute({ name: data.name, groupId: data.groupIds?.[0] ?? null })
+              if (!newRoute) return
+
+              let finalItems = data.items || []
+
+              // AI 추천 장소 → 내 장소로 저장 후 placeId 연결
+              if (data.aiPlaces?.length > 0) {
+                const savedItems = []
+                for (const item of finalItems) {
+                  if (item._aiPlace) {
+                    const p = item._aiPlace
+                    const saved = await addPlace({
+                      name: p.name,
+                      category: p.category || 'attraction',
+                      address: p.address || '',
+                      memo: p.description || '',
+                      groupIds: data.groupIds || [],
+                    })
+                    savedItems.push({ ...item, placeId: saved?.id ?? null, _aiPlace: undefined })
+                  } else {
+                    savedItems.push(item)
+                  }
+                }
+                finalItems = savedItems.filter(i => i.placeId)
               }
+
+              if (finalItems.length > 0) await saveRouteItems(newRoute.id, finalItems)
+              openRoute({ ...newRoute, items: finalItems })
             }}
           />
         </AppPortal>

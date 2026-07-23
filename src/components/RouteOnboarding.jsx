@@ -16,12 +16,12 @@ const COMPANIONS = [
 ]
 
 const STYLES = [
-  { id: 'food', icon: '🍜', label: '맛집탐방', categories: ['restaurant'] },
-  { id: 'cafe', icon: '☕', label: '카페투어', categories: ['cafe'] },
-  { id: 'nature', icon: '🌿', label: '자연/힐링', categories: ['attraction'] },
-  { id: 'activity', icon: '🎯', label: '액티비티', categories: ['attraction'] },
-  { id: 'shopping', icon: '🛍️', label: '쇼핑', categories: ['shopping'] },
-  { id: 'drink', icon: '🍺', label: '술/바', categories: ['bar'] },
+  { id: 'food', icon: '🍜', label: '맛집탐방' },
+  { id: 'cafe', icon: '☕', label: '카페투어' },
+  { id: 'nature', icon: '🌿', label: '자연/힐링' },
+  { id: 'activity', icon: '🎯', label: '액티비티' },
+  { id: 'shopping', icon: '🛍️', label: '쇼핑' },
+  { id: 'drink', icon: '🍺', label: '술/바' },
 ]
 
 export default function RouteOnboarding({ places, groups, onClose, onComplete }) {
@@ -32,8 +32,10 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
   const [duration, setDuration] = useState(null)
   const [routeName, setRouteName] = useState('')
   const [groupIds, setGroupIds] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [aiResult, setAiResult] = useState(null)
+  const [error, setError] = useState('')
 
-  // sido → [gu, ...] 구조
   const regionOptions = useMemo(() => {
     const map = {}
     places.forEach(p => {
@@ -61,80 +63,44 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
     return false
   }
 
-  const buildRoute = () => {
-    const selectedCategories = styles.flatMap(s => STYLES.find(st => st.id === s)?.categories || [])
-
-    // 1. 지역 필터 (gu 단위)
-    const regionFiltered = places.filter(p => regions.includes(getAddressLevels(p.address)[1]))
-    if (regionFiltered.length === 0) return []
-
-    // 2. 스타일 점수: 선택 스타일 카테고리면 +2, 포인트 태그 일치하면 +1씩
-    const styleKeywords = styles.map(s => STYLES.find(st => st.id === s)?.label || '')
-    const scored = regionFiltered.map(p => {
-      let score = 0
-      if (selectedCategories.includes(p.category)) score += 2
-      ;(p.points || []).forEach(pt => {
-        if (styleKeywords.some(kw => pt.includes(kw))) score += 1
+  const handleAiRequest = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/ai-route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ regions, duration, companion, styles }),
       })
-      return { ...p, _score: score }
-    })
-
-    // 3. 구/군 단위로 그룹핑 (비슷한 동선끼리 묶기)
-    const byGu = scored.reduce((acc, p) => {
-      const gu = getAddressLevels(p.address)[1] || '기타'
-      if (!acc[gu]) acc[gu] = []
-      acc[gu].push(p)
-      return acc
-    }, {})
-
-    // 4. 각 구/군 내에서 스코어 높은 순 정렬
-    Object.keys(byGu).forEach(gu => {
-      byGu[gu].sort((a, b) => b._score - a._score)
-    })
-
-    // 5. 구/군별로 Day에 균등 배분 (같은 구/군은 같은 날 몰기)
-    const guGroups = Object.values(byGu)
-    const days = duration.days
-    const items = []
-    let currentDay = 1
-
-    guGroups.forEach(group => {
-      // 이 구/군의 장소들은 같은 날(들)에 배치
-      group.forEach((p, i) => {
-        items.push({
-          placeId: p.id,
-          dayNumber: Math.min(currentDay, days),
-          sortOrder: items.length,
-        })
-        // 하루에 너무 많이 몰리면 다음 날로
-        const dayCount = items.filter(it => it.dayNumber === currentDay).length
-        if (dayCount >= Math.ceil(scored.length / days) && currentDay < days) {
-          currentDay++
-        }
-      })
-      // 구/군 바뀌면 다음 날 고려
-      if (currentDay < days) currentDay++
-    })
-
-    // day 범위 초과 방지
-    return items.map(it => ({ ...it, dayNumber: Math.min(it.dayNumber, days) }))
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '오류 발생')
+      setAiResult(data)
+      setRouteName(data.routeName || '')
+      setStep(5)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleComplete = () => {
-    const items = buildRoute()
-    const name = routeName.trim() || `${regions.join('·')} ${duration.label}`
-    onComplete({
-      name,
-      groupIds,
-      regions,
-      companion,
-      styles,
-      duration,
-      items,
-    })
+    if (!aiResult) return
+    const items = aiResult.places.map((p, i) => ({
+      placeId: null,
+      _aiPlace: p,
+      dayNumber: p.dayNumber || 1,
+      sortOrder: i,
+      visitTime: p.visitTime || '',
+      memo: p.memo || '',
+    }))
+    const name = routeName.trim() || aiResult.routeName || `${regions.join('·')} ${duration.label}`
+    onComplete({ name, groupIds, regions, companion, styles, duration, items, aiPlaces: aiResult.places })
   }
 
   const totalSteps = 4
+
+  const DAY_COLORS = ['#5C6BC0', '#42A5F5', '#66BB6A', '#FFA726']
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -144,19 +110,23 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
         {/* 헤더 */}
         <div style={{ padding: '8px 20px 0', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <button onClick={step > 1 ? () => setStep(s => s - 1) : onClose}
+            <button
+              onClick={step > 1 ? () => { setStep(s => s - 1); setError('') } : onClose}
               style={{ fontSize: 20, color: 'var(--text-sub)', padding: '4px' }}>
               {step > 1 ? '←' : '✕'}
             </button>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {Array.from({ length: totalSteps }).map((_, i) => (
-                <div key={i} style={{
-                  height: 4, borderRadius: 2, transition: 'all 0.3s',
-                  width: i < step ? 24 : 8,
-                  background: i < step ? 'var(--primary)' : 'var(--border)',
-                }} />
-              ))}
-            </div>
+            {step <= totalSteps && (
+              <div style={{ display: 'flex', gap: 6 }}>
+                {Array.from({ length: totalSteps }).map((_, i) => (
+                  <div key={i} style={{
+                    height: 4, borderRadius: 2, transition: 'all 0.3s',
+                    width: i < step ? 24 : 8,
+                    background: i < step ? 'var(--primary)' : 'var(--border)',
+                  }} />
+                ))}
+              </div>
+            )}
+            {step === 5 && <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>🤖 AI 추천 결과</span>}
             <div style={{ width: 28 }} />
           </div>
         </div>
@@ -170,7 +140,17 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
               <p style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>어디로 떠나요? 🗺️</p>
               <p style={{ fontSize: 14, color: 'var(--text-sub)', marginBottom: 24 }}>복수 선택 가능해요</p>
               {regionOptions.length === 0 ? (
-                <p style={{ color: 'var(--text-sub)', fontSize: 14 }}>등록된 장소가 없어요. 먼저 장소를 추가해주세요!</p>
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-sub)' }}>
+                  <p style={{ fontSize: 32, marginBottom: 12 }}>📍</p>
+                  <p style={{ fontSize: 14, marginBottom: 6 }}>등록된 장소가 없어도 괜찮아요!</p>
+                  <p style={{ fontSize: 13 }}>지역 이름을 직접 입력해보세요</p>
+                  <input
+                    className="form-input"
+                    placeholder="예: 단양, 제주, 부산 해운대"
+                    style={{ marginTop: 16 }}
+                    onKeyDown={e => { if (e.key === 'Enter' && e.target.value.trim()) toggleRegion(e.target.value.trim()) }}
+                  />
+                </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {regionOptions.map(({ sido, gus }) => (
@@ -189,6 +169,32 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
                       </div>
                     </div>
                   ))}
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10 }}>직접 입력</p>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input
+                        className="form-input"
+                        placeholder="예: 속초, 강릉 주문진"
+                        style={{ flex: 1 }}
+                        id="region-input"
+                      />
+                      <button
+                        onClick={() => {
+                          const el = document.getElementById('region-input')
+                          if (el?.value.trim()) { toggleRegion(el.value.trim()); el.value = '' }
+                        }}
+                        style={{ padding: '10px 16px', borderRadius: 12, background: 'var(--primary)', color: 'white', fontWeight: 700, border: 'none', fontSize: 13, flexShrink: 0 }}>
+                        추가
+                      </button>
+                    </div>
+                    {regions.filter(r => !regionOptions.flatMap(o => o.gus).includes(r)).map(r => (
+                      <span key={r} onClick={() => toggleRegion(r)} style={{
+                        display: 'inline-block', margin: '8px 8px 0 0',
+                        padding: '6px 12px', borderRadius: 20, fontSize: 13, fontWeight: 600,
+                        background: 'var(--primary)', color: 'white', cursor: 'pointer',
+                      }}>{r} ✕</span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -260,15 +266,6 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
                 })}
               </div>
 
-              <div className="form-group">
-                <label className="form-label">루트 이름 (선택)</label>
-                <input
-                  className="form-input"
-                  placeholder={`예: ${regions.join('·')} ${duration?.label || '여행'}`}
-                  value={routeName}
-                  onChange={e => setRouteName(e.target.value)}
-                />
-              </div>
               {groups.length > 0 && (
                 <div className="form-group">
                   <div style={{ position: 'relative' }}>
@@ -305,6 +302,84 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
                   </div>
                 </div>
               )}
+
+              {error && (
+                <div style={{ padding: '12px 14px', borderRadius: 10, background: '#fff0f0', color: '#E05252', fontSize: 13, marginTop: 12 }}>
+                  ⚠️ {error}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 5: AI 결과 */}
+          {step === 5 && aiResult && (
+            <div>
+              <div style={{ marginBottom: 20 }}>
+                <p style={{ fontSize: 13, color: 'var(--text-sub)', marginBottom: 6 }}>루트 이름</p>
+                <input
+                  className="form-input"
+                  value={routeName}
+                  onChange={e => setRouteName(e.target.value)}
+                  style={{ fontWeight: 700, fontSize: 16 }}
+                />
+              </div>
+
+              {Array.from({ length: duration?.days || 1 }, (_, i) => i + 1).map(day => {
+                const dayPlaces = aiResult.places.filter(p => p.dayNumber === day)
+                if (dayPlaces.length === 0) return null
+                return (
+                  <div key={day} style={{ marginBottom: 24 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: '50%',
+                        background: DAY_COLORS[(day - 1) % DAY_COLORS.length],
+                        color: 'white', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0,
+                      }}>Day {day}</div>
+                      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {dayPlaces.map((place, i) => {
+                        const info = getCategoryInfo(place.category)
+                        return (
+                          <div key={i} style={{ display: 'flex', gap: 10 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                              <div style={{
+                                width: 30, height: 30, borderRadius: '50%',
+                                background: 'white', border: `2px solid ${DAY_COLORS[(day - 1) % DAY_COLORS.length]}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13,
+                              }}>{info.icon}</div>
+                              {place.visitTime && (
+                                <span style={{ fontSize: 10, color: DAY_COLORS[(day - 1) % DAY_COLORS.length], fontWeight: 700, marginTop: 2 }}>
+                                  {place.visitTime}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ flex: 1, background: 'var(--surface)', borderRadius: 12, padding: '10px 12px', border: '1px solid var(--border)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <div style={{ minWidth: 0 }}>
+                                  <p style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600 }}>{info.label}</p>
+                                  <p style={{ fontSize: 14, fontWeight: 700 }}>{place.name}</p>
+                                  <p style={{ fontSize: 11, color: 'var(--text-sub)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{place.address}</p>
+                                </div>
+                              </div>
+                              {place.description && (
+                                <p style={{ fontSize: 12, color: 'var(--text-sub)', marginTop: 6, lineHeight: 1.5 }}>{place.description}</p>
+                              )}
+                              {place.memo && (
+                                <div style={{ marginTop: 6, padding: '5px 8px', background: '#FFF8E7', borderRadius: 6, borderLeft: '3px solid #FFB300' }}>
+                                  <p style={{ fontSize: 11, color: '#7a5800' }}>📝 {place.memo}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
@@ -312,24 +387,37 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
         {/* 하단 버튼 */}
         <div style={{ padding: '12px 20px 20px', flexShrink: 0, borderTop: '1px solid var(--border)' }}>
           {step < totalSteps ? (
-            <button
-              className="btn-primary"
-              disabled={!canNext()}
-              onClick={() => setStep(s => s + 1)}
-            >
+            <button className="btn-primary" disabled={!canNext()} onClick={() => setStep(s => s + 1)}>
               다음 →
             </button>
-          ) : (
+          ) : step === totalSteps ? (
             <button
               className="btn-primary"
-              disabled={!canNext()}
-              onClick={handleComplete}
+              disabled={!canNext() || loading}
+              onClick={handleAiRequest}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             >
-              루트 추천받기 🎯
+              {loading ? (
+                <>
+                  <span style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                  AI가 루트를 짜고 있어요...
+                </>
+              ) : '🤖 AI 루트 추천받기'}
             </button>
+          ) : (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => { setStep(4); setAiResult(null) }}
+                style={{ flex: 1, padding: 13, borderRadius: 12, fontSize: 14, fontWeight: 700, border: '1.5px solid var(--border)', color: 'var(--text-sub)', background: 'transparent' }}>
+                다시 추천
+              </button>
+              <button className="btn-primary" style={{ flex: 2, borderRadius: 12 }} onClick={handleComplete}>
+                이 루트로 시작하기 →
+              </button>
+            </div>
           )}
         </div>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }
