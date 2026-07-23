@@ -38,7 +38,7 @@ const STYLES = [
   { id: 'drink', icon: '🍺', label: '술/바' },
 ]
 
-export default function RouteOnboarding({ places, groups, onClose, onComplete }) {
+export default function RouteOnboarding({ places, groups, onClose, onComplete, addPlace }) {
   const [step, setStep] = useState(1)
   const [regions, setRegions] = useState([])
   const [companion, setCompanion] = useState('')
@@ -49,6 +49,7 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
   const [loading, setLoading] = useState(false)
   const [aiResult, setAiResult] = useState(null)
   const [selectedPlaceIdxs, setSelectedPlaceIdxs] = useState([])
+  const [savedPlaceNames, setSavedPlaceNames] = useState(new Set())
   const [error, setError] = useState('')
   const regionInputRef = useRef(null)
 
@@ -379,6 +380,33 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
                               {place.memo && (
                                 <div style={{ marginTop: 6, padding: '5px 8px', background: '#FFF8E7', borderRadius: 6, borderLeft: '3px solid #FFB300' }}>
                                   <p style={{ fontSize: 11, color: '#7a5800' }}>📝 {place.memo}</p>
+                                </div>
+                              )}
+                              {addPlace && (
+                                <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+                                  {savedPlaceNames.has(place.name) ? (
+                                    <span style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600 }}>✓ 저장됨</span>
+                                  ) : (
+                                    <button
+                                      onClick={async e => {
+                                        e.stopPropagation()
+                                        const saved = await addPlace({
+                                          name: place.name,
+                                          category: place.category || 'attraction',
+                                          address: place.address || '',
+                                          memo: place.description || '',
+                                          lat: 0, lng: 0,
+                                          groupIds: [],
+                                        })
+                                        if (saved) setSavedPlaceNames(prev => new Set([...prev, place.name]))
+                                      }}
+                                      style={{
+                                        fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20,
+                                        border: '1.5px solid var(--primary)', color: 'var(--primary)',
+                                        background: 'transparent', cursor: 'pointer',
+                                      }}
+                                    >📌 내 장소에 저장</button>
+                                  )}
                                 </div>
                               )}
                             </div>

@@ -153,6 +153,7 @@ export default function RoutePage() {
           <RouteOnboarding
             places={places}
             groups={groups}
+            addPlace={addPlace}
             onClose={() => setShowOnboarding(false)}
             onComplete={async (data) => {
               setShowOnboarding(false)
