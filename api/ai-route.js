@@ -34,38 +34,39 @@ export default async function handler(req, res) {
   const companionStr = COMPANION_LABELS[companion] || companion
   const days = duration.days
 
-  const prompt = `당신은 한국 여행 전문가입니다. 아래 조건으로 실제 여행 루트를 추천해주세요.
+  const prompt = `당신은 한국 여행 전문가입니다.
 
-조건:
-- 지역: ${regionStr}
+[절대 규칙] 반드시 "${regionStr}" 지역에 실제로 존재하는 장소만 추천하세요. 다른 지역 장소는 절대 포함하면 안 됩니다.
+
+여행 조건:
+- 여행 지역: ${regionStr} (이 지역 장소만 포함할 것)
 - 기간: ${duration.label} (${days}일)
 - 동행: ${companionStr}
 - 스타일: ${styleStr}
 
-다음 JSON 형식으로만 응답하세요. 다른 텍스트는 절대 포함하지 마세요:
+아래 JSON 형식으로만 응답하세요. JSON 외 다른 텍스트는 절대 쓰지 마세요:
 
 {
-  "routeName": "루트 이름 (예: 단양 당일치기 맛집투어)",
+  "routeName": "${regionStr} ${duration.label} ${styleStr} 여행",
   "places": [
     {
       "name": "장소명",
-      "category": "카테고리 (restaurant/cafe/attraction/shopping/bar 중 하나)",
-      "address": "실제 도로명 주소 (정확하게)",
-      "description": "이 장소를 추천하는 이유 (1-2문장)",
-      "visitTime": "HH:MM 형식 방문 시각",
+      "category": "restaurant 또는 cafe 또는 attraction 또는 shopping 또는 bar 중 하나",
+      "address": "${regionStr} 내 실제 도로명 주소",
+      "description": "추천 이유 1-2문장",
+      "visitTime": "09:00",
       "dayNumber": 1,
-      "memo": "이동 방법이나 팁 (선택)"
+      "memo": "대중교통 이용법 또는 팁"
     }
   ]
 }
 
 규칙:
-- 하루에 4~6개 장소 배치
-- 동선이 효율적이도록 같은 날은 가까운 장소끼리 묶기
-- visitTime은 09:00부터 시작해서 합리적으로 배분
-- 실제로 존재하는 유명한 장소 위주로 추천
-- 뚜벅이도 갈 수 있는 장소 포함, memo에 대중교통 정보 적기
-- 스타일에 맞게 카테고리 비율 조정`
+- 모든 장소는 반드시 ${regionStr} 내에 위치해야 함
+- 하루 4~6개 장소
+- visitTime은 09:00부터 시작, 합리적으로 배분
+- 동선이 효율적이도록 가까운 장소끼리 같은 날 배치
+- 스타일(${styleStr})에 맞는 장소 위주로 선택`
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
