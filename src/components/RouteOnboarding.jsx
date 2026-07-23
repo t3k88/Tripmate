@@ -268,43 +268,6 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
                 })}
               </div>
 
-              {groups.length > 0 && (
-                <div className="form-group">
-                  <div style={{ position: 'relative' }}>
-                    <label className="form-label">그룹 공유 (선택)</label>
-                    <label style={{ position: 'absolute', top: 0, right: 0, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--text-sub)', cursor: 'pointer' }}>
-                      <input type="checkbox"
-                        checked={groupIds.length === groups.length}
-                        onChange={() => setGroupIds(groupIds.length === groups.length ? [] : groups.map(g => g.id))}
-                        style={{ accentColor: 'var(--primary)', width: 14, height: 14 }}
-                      />
-                      전체 선택
-                    </label>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {groups.map(g => (
-                      <button key={g.id}
-                        onClick={() => setGroupIds(prev => prev.includes(g.id) ? prev.filter(id => id !== g.id) : [...prev, g.id])}
-                        style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          padding: '12px 14px', borderRadius: 12, textAlign: 'left',
-                          border: `1.5px solid ${groupIds.includes(g.id) ? 'var(--primary)' : 'var(--border)'}`,
-                          background: groupIds.includes(g.id) ? 'var(--primary-bg)' : 'var(--surface)',
-                        }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{ fontSize: 22 }}>{g.cover}</span>
-                          <span>
-                            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{g.name}</p>
-                            <p style={{ fontSize: 12, color: 'var(--text-sub)' }}>멤버 {g.members.length}명</p>
-                          </span>
-                        </span>
-                        {groupIds.includes(g.id) && <span style={{ color: 'var(--primary)', fontSize: 16 }}>✓</span>}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {error && (
                 <div style={{ padding: '12px 14px', borderRadius: 10, background: '#fff0f0', color: '#E05252', fontSize: 13, marginTop: 12 }}>
                   ⚠️ {error}
@@ -325,6 +288,34 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
                   style={{ fontWeight: 700, fontSize: 16 }}
                 />
               </div>
+
+              {groups.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <p style={{ fontSize: 13, color: 'var(--text-sub)', marginBottom: 8 }}>그룹 공유 (선택)</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {groups.map(g => (
+                      <button key={g.id}
+                        onClick={() => setGroupIds(prev => prev.includes(g.id) ? prev.filter(id => id !== g.id) : [...prev, g.id])}
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '12px 14px', borderRadius: 12, textAlign: 'left',
+                          border: `1.5px solid ${groupIds.includes(g.id) ? 'var(--primary)' : 'var(--border)'}`,
+                          background: groupIds.includes(g.id) ? 'var(--primary-bg)' : 'var(--surface)',
+                          cursor: 'pointer',
+                        }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: 22 }}>{g.cover}</span>
+                          <span>
+                            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{g.name}</p>
+                            <p style={{ fontSize: 12, color: 'var(--text-sub)' }}>멤버 {g.members.length}명</p>
+                          </span>
+                        </span>
+                        {groupIds.includes(g.id) && <span style={{ color: 'var(--primary)', fontSize: 16 }}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {Array.from({ length: duration?.days || 1 }, (_, i) => i + 1).map(day => {
                 const dayPlaces = aiResult.places.filter(p => p.dayNumber === day)
