@@ -37,6 +37,7 @@ export default function RoutePage() {
         onDelete={async () => { await deleteRoute(activeRoute.id); setView('list') }}
         onSave={async (items) => { await saveRouteItems(activeRoute.id, items); handleRouteUpdated({ ...activeRoute, items }) }}
         onRename={async (name) => { await renameRoute(activeRoute.id, name); handleRouteUpdated({ ...activeRoute, name }) }}
+        addPlace={addPlace}
       />
     )
   }
@@ -347,7 +348,7 @@ function RouteMap({ items, places }) {
   return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 }
 
-function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave, onRename }) {
+function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave, onRename, addPlace }) {
   const [items, setItems] = useState(
     [...(route.items || [])].sort((a, b) => a.dayNumber - b.dayNumber || a.sortOrder - b.sortOrder)
   )
@@ -373,6 +374,20 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
     const newItems = placeIds.map(pid => ({ placeId: pid, dayNumber: maxDay, sortOrder: items.length, visitTime: '', memo: '' }))
     setItems(prev => [...prev, ...newItems])
     setDirty(true)
+  }
+
+  const addSearchedPlace = async (placeData) => {
+    const saved = await addPlace({
+      name: placeData.name,
+      category: placeData.category || 'attraction',
+      address: placeData.address || '',
+      lat: placeData.lat,
+      lng: placeData.lng,
+      placeUrl: placeData.placeUrl || '',
+      memo: '',
+      groupIds: route.groupId ? [route.groupId] : [],
+    })
+    if (saved?.id) addPlaces([saved.id])
   }
 
   const removeItem = (idx) => {
@@ -609,6 +624,7 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
             region={route.region}
             onClose={() => setShowPicker(false)}
             onAdd={(ids) => { addPlaces(ids); setShowPicker(false) }}
+            onAddNew={async (placeData) => { await addSearchedPlace(placeData); setShowPicker(false) }}
           />
         </AppPortal>
       )}
@@ -616,9 +632,15 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
   )
 }
 
-function PlacePicker({ places, existingIds, region, onClose, onAdd }) {
+function PlacePicker({ places, existingIds, region, onClose, onAdd, onAddNew }) {
+  const [tab, setTab] = useState('saved') // 'saved' | 'search'
   const [selected, setSelected] = useState([])
   const [filterRegion, setFilterRegion] = useState(region || '')
+  const [query, setQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searching, setSearching] = useState(false)
+  const [searchError, setSearchError] = useState('')
+  const [adding, setAdding] = useState(false)
 
   const toggle = (id) => setSelected(prev =>
     prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
@@ -640,64 +662,166 @@ function PlacePicker({ places, existingIds, region, onClose, onAdd }) {
     return Array.from(set).sort()
   }, [places])
 
+  const handleSearch = async () => {
+    if (!query.trim()) return
+    setSearching(true)
+    setSearchResults([])
+    setSearchError('')
+    try {
+      const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}`)
+      if (!res.ok) throw new Error('검색 실패')
+      const data = await res.json()
+      if (data.items?.length > 0) setSearchResults(data.items)
+      else setSearchError('검색 결과가 없어요.')
+    } catch {
+      setSearchError('검색 중 오류가 발생했어요.')
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  const handleSelectSearchResult = async (r) => {
+    setAdding(true)
+    const lat = parseFloat(r.mapy) / 1e7
+    const lng = parseFloat(r.mapx) / 1e7
+    const name = r.title.replace(/<[^>]*>/g, '')
+    await onAddNew({
+      name,
+      address: r.roadAddress || r.address || '',
+      lat,
+      lng,
+      placeUrl: `https://map.kakao.com/link/map/${encodeURIComponent(name)},${lat},${lng}`,
+      category: 'attraction',
+    })
+    setAdding(false)
+  }
+
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-sheet" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div className="modal-handle" />
         <div className="modal-header" style={{ flexShrink: 0 }}>
-          <span className="modal-title">장소 선택</span>
+          <span className="modal-title">장소 추가</span>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
-        {regionOptions.length > 1 && (
-          <div style={{ padding: '0 16px 12px', flexShrink: 0, display: 'flex', gap: 8, overflowX: 'auto' }}>
-            <FilterChip label="전체" active={!filterRegion} onClick={() => setFilterRegion('')} />
-            {regionOptions.map(r => (
-              <FilterChip key={r} label={r} active={filterRegion === r} onClick={() => setFilterRegion(r)} />
-            ))}
-          </div>
-        )}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px' }}>
-          {available.length === 0 && (
-            <p style={{ textAlign: 'center', color: 'var(--text-sub)', padding: '40px 0', fontSize: 14 }}>
-              추가할 장소가 없어요
-            </p>
-          )}
-          {available.map(place => {
-            const info = getCategoryInfo(place.category)
-            const isSelected = selected.includes(place.id)
-            return (
-              <div key={place.id} onClick={() => toggle(place.id)} style={{
-                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
-                borderBottom: '1px solid var(--border)', cursor: 'pointer',
-              }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: isSelected ? 'var(--primary)' : 'var(--bg)',
-                  border: `2px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 16, flexShrink: 0, transition: 'all 0.15s',
-                }}>
-                  {isSelected ? '✓' : info.icon}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontSize: 14, fontWeight: 600 }}>{place.name}</p>
-                  <p style={{ fontSize: 11, color: 'var(--text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {info.label} · {place.address}
-                  </p>
-                </div>
+
+        {/* 탭 */}
+        <div style={{ display: 'flex', padding: '0 16px 12px', gap: 8, flexShrink: 0 }}>
+          <button onClick={() => setTab('saved')} style={{
+            flex: 1, padding: '8px 0', borderRadius: 10, fontSize: 14, fontWeight: 700,
+            background: tab === 'saved' ? 'var(--primary)' : 'var(--bg)',
+            color: tab === 'saved' ? 'white' : 'var(--text-sub)',
+            border: 'none', cursor: 'pointer',
+          }}>내 저장 장소</button>
+          <button onClick={() => setTab('search')} style={{
+            flex: 1, padding: '8px 0', borderRadius: 10, fontSize: 14, fontWeight: 700,
+            background: tab === 'search' ? 'var(--primary)' : 'var(--bg)',
+            color: tab === 'search' ? 'white' : 'var(--text-sub)',
+            border: 'none', cursor: 'pointer',
+          }}>장소 검색</button>
+        </div>
+
+        {tab === 'saved' ? (
+          <>
+            {regionOptions.length > 1 && (
+              <div style={{ padding: '0 16px 12px', flexShrink: 0, display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
+                <FilterChip label="전체" active={!filterRegion} onClick={() => setFilterRegion('')} />
+                {regionOptions.map(r => (
+                  <FilterChip key={r} label={r} active={filterRegion === r} onClick={() => setFilterRegion(r)} />
+                ))}
               </div>
-            )
-          })}
-        </div>
-        <div style={{ padding: '12px 16px 16px', flexShrink: 0, borderTop: '1px solid var(--border)' }}>
-          <button
-            className="btn-primary"
-            disabled={selected.length === 0}
-            onClick={() => onAdd(selected)}
-          >
-            {selected.length > 0 ? `${selected.length}개 추가` : '장소를 선택하세요'}
-          </button>
-        </div>
+            )}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px' }}>
+              {available.length === 0 && (
+                <p style={{ textAlign: 'center', color: 'var(--text-sub)', padding: '40px 0', fontSize: 14 }}>
+                  추가할 장소가 없어요
+                </p>
+              )}
+              {available.map(place => {
+                const info = getCategoryInfo(place.category)
+                const isSelected = selected.includes(place.id)
+                return (
+                  <div key={place.id} onClick={() => toggle(place.id)} style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
+                    borderBottom: '1px solid var(--border)', cursor: 'pointer',
+                  }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      background: isSelected ? 'var(--primary)' : 'var(--bg)',
+                      border: `2px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 16, flexShrink: 0, transition: 'all 0.15s',
+                    }}>
+                      {isSelected ? '✓' : info.icon}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 600 }}>{place.name}</p>
+                      <p style={{ fontSize: 11, color: 'var(--text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {info.label} · {place.address}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ padding: '12px 16px 16px', flexShrink: 0, borderTop: '1px solid var(--border)' }}>
+              <button className="btn-primary" disabled={selected.length === 0} onClick={() => onAdd(selected)}>
+                {selected.length > 0 ? `${selected.length}개 추가` : '장소를 선택하세요'}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ padding: '0 16px 12px', flexShrink: 0, display: 'flex', gap: 8 }}>
+              <input
+                className="form-input"
+                style={{ flex: 1 }}
+                placeholder="장소 이름으로 검색 (예: 성산일출봉)"
+                value={query}
+                onChange={e => { setQuery(e.target.value); setSearchResults([]) }}
+                onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                autoFocus
+              />
+              <button
+                onClick={handleSearch}
+                disabled={searching}
+                style={{
+                  padding: '0 16px', background: 'var(--primary)', color: 'white',
+                  borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 700,
+                  flexShrink: 0, border: 'none', cursor: 'pointer',
+                }}
+              >{searching ? '···' : '검색'}</button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px' }}>
+              {searchError && (
+                <p style={{ fontSize: 13, color: '#E05252', textAlign: 'center', padding: '20px 0' }}>{searchError}</p>
+              )}
+              {!searchError && searchResults.length === 0 && !searching && (
+                <p style={{ fontSize: 13, color: 'var(--text-sub)', textAlign: 'center', padding: '40px 0' }}>
+                  장소 이름을 검색해보세요
+                </p>
+              )}
+              {searchResults.map((r, i) => {
+                const name = r.title.replace(/<[^>]*>/g, '')
+                return (
+                  <button key={i} onClick={() => !adding && handleSelectSearchResult(r)} style={{
+                    width: '100%', padding: '12px 0', textAlign: 'left', background: 'none', border: 'none',
+                    borderBottom: '1px solid var(--border)', cursor: adding ? 'wait' : 'pointer',
+                    display: 'flex', flexDirection: 'column', gap: 2,
+                  }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{name}</p>
+                    <p style={{ fontSize: 11, color: 'var(--text-sub)' }}>{r.roadAddress || r.address}</p>
+                    {r.category && <p style={{ fontSize: 11, color: 'var(--primary)' }}>{r.category}</p>}
+                  </button>
+                )
+              })}
+              {adding && (
+                <p style={{ fontSize: 13, color: 'var(--primary)', textAlign: 'center', padding: '12px 0' }}>추가 중...</p>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
