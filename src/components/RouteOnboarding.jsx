@@ -48,6 +48,7 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
   const [groupIds, setGroupIds] = useState([])
   const [loading, setLoading] = useState(false)
   const [aiResult, setAiResult] = useState(null)
+  const [selectedPlaceIdxs, setSelectedPlaceIdxs] = useState([])
   const [error, setError] = useState('')
   const regionInputRef = useRef(null)
 
@@ -78,6 +79,7 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
       if (!res.ok) throw new Error(data.error || '오류 발생')
       setAiResult(data)
       setRouteName(data.routeName || '')
+      setSelectedPlaceIdxs(data.places.map((_, i) => i))
       setStep(5)
     } catch (e) {
       setError(e.message)
@@ -88,7 +90,8 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
 
   const handleComplete = () => {
     if (!aiResult) return
-    const items = aiResult.places.map((p, i) => ({
+    const selected = aiResult.places.filter((_, i) => selectedPlaceIdxs.includes(i))
+    const items = selected.map((p, i) => ({
       placeId: null,
       _aiPlace: p,
       dayNumber: p.dayNumber || 1,
@@ -97,7 +100,7 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
       memo: p.memo || '',
     }))
     const name = routeName.trim() || aiResult.routeName || `${regions.join('·')} ${duration.label}`
-    onComplete({ name, groupIds, regions, companion, styles, duration, items, aiPlaces: aiResult.places })
+    onComplete({ name, groupIds, regions, companion, styles, duration, items, aiPlaces: selected })
   }
 
   const totalSteps = 4
@@ -333,10 +336,12 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {dayPlaces.map((place, i) => {
+                      {dayPlaces.map((place) => {
+                        const globalIdx = aiResult.places.indexOf(place)
+                        const isSelected = selectedPlaceIdxs.includes(globalIdx)
                         const info = getCategoryInfo(place.category)
                         return (
-                          <div key={i} style={{ display: 'flex', gap: 10 }}>
+                          <div key={globalIdx} style={{ display: 'flex', gap: 10, opacity: isSelected ? 1 : 0.4, transition: 'opacity 0.15s' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                               <div style={{
                                 width: 30, height: 30, borderRadius: '50%',
@@ -349,13 +354,24 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
                                 </span>
                               )}
                             </div>
-                            <div style={{ flex: 1, background: 'var(--surface)', borderRadius: 12, padding: '10px 12px', border: '1px solid var(--border)' }}>
+                            <div
+                              onClick={() => setSelectedPlaceIdxs(prev =>
+                                prev.includes(globalIdx) ? prev.filter(x => x !== globalIdx) : [...prev, globalIdx]
+                              )}
+                              style={{ flex: 1, background: 'var(--surface)', borderRadius: 12, padding: '10px 12px', border: `1.5px solid ${isSelected ? DAY_COLORS[(day - 1) % DAY_COLORS.length] : 'var(--border)'}`, cursor: 'pointer' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <div style={{ minWidth: 0 }}>
+                                <div style={{ minWidth: 0, flex: 1 }}>
                                   <p style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600 }}>{info.label}</p>
                                   <p style={{ fontSize: 14, fontWeight: 700 }}>{place.name}</p>
                                   <p style={{ fontSize: 11, color: 'var(--text-sub)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{place.address}</p>
                                 </div>
+                                <span style={{
+                                  width: 22, height: 22, borderRadius: '50%', flexShrink: 0, marginLeft: 8,
+                                  background: isSelected ? DAY_COLORS[(day - 1) % DAY_COLORS.length] : 'var(--bg)',
+                                  border: `2px solid ${isSelected ? DAY_COLORS[(day - 1) % DAY_COLORS.length] : 'var(--border)'}`,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: 11, color: 'white', fontWeight: 700,
+                                }}>{isSelected ? '✓' : ''}</span>
                               </div>
                               {place.description && (
                                 <p style={{ fontSize: 12, color: 'var(--text-sub)', marginTop: 6, lineHeight: 1.5 }}>{place.description}</p>
@@ -403,8 +419,8 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
                 style={{ flex: 1, padding: 13, borderRadius: 12, fontSize: 14, fontWeight: 700, border: '1.5px solid var(--border)', color: 'var(--text-sub)', background: 'transparent' }}>
                 다시 추천
               </button>
-              <button className="btn-primary" style={{ flex: 2, borderRadius: 12 }} onClick={handleComplete}>
-                이 루트로 시작하기 →
+              <button className="btn-primary" style={{ flex: 2, borderRadius: 12 }} onClick={handleComplete} disabled={selectedPlaceIdxs.length === 0}>
+                {selectedPlaceIdxs.length}곳으로 루트 시작 →
               </button>
             </div>
           )}
