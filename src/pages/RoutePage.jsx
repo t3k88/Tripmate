@@ -10,12 +10,14 @@ export default function RoutePage() {
   const { routes, places, groups, addRoute, deleteRoute, renameRoute, saveRouteItems, addPlace, username } = useApp()
   const [view, setView] = useState('list')       // 'list' | 'detail'
   const [activeRoute, setActiveRoute] = useState(null)
-  const [showPicker, setShowPicker] = useState(false)   // 자동/수동 선택
+  const [showPicker, setShowPicker] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const [showManual, setShowManual] = useState(false)    // 수동 루트 이름 입력
+  const [showManual, setShowManual] = useState(false)
+  const [extraPlaces, setExtraPlaces] = useState([])
 
-  const openRoute = (route) => {
+  const openRoute = (route, newPlaces = []) => {
     setActiveRoute(route)
+    setExtraPlaces(newPlaces)
     setView('detail')
   }
 
@@ -30,7 +32,7 @@ export default function RoutePage() {
     return (
       <RouteDetail
         route={activeRoute}
-        places={places}
+        places={[...places, ...extraPlaces.filter(ep => !places.find(p => p.id === ep.id))]}
         groups={groups}
         isOwner={activeRoute.author === username}
         onBack={() => setView('list')}
@@ -161,8 +163,8 @@ export default function RoutePage() {
               if (!newRoute) return
 
               let finalItems = data.items || []
+              const freshPlaces = []
 
-              // AI 추천 장소 → 내 장소로 저장 후 placeId 연결
               if (data.aiPlaces?.length > 0) {
                 const savedItems = []
                 for (const item of finalItems) {
@@ -172,9 +174,11 @@ export default function RoutePage() {
                       name: p.name,
                       category: p.category || 'attraction',
                       address: p.address || '',
+                      lat: 0, lng: 0,
                       memo: p.description || '',
                       groupIds: data.groupIds || [],
                     })
+                    if (saved) freshPlaces.push(saved)
                     savedItems.push({ ...item, placeId: saved?.id ?? null, _aiPlace: undefined })
                   } else {
                     savedItems.push(item)
@@ -184,7 +188,7 @@ export default function RoutePage() {
               }
 
               if (finalItems.length > 0) await saveRouteItems(newRoute.id, finalItems)
-              openRoute({ ...newRoute, items: finalItems })
+              openRoute({ ...newRoute, items: finalItems }, freshPlaces)
             }}
           />
         </AppPortal>
