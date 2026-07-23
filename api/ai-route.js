@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: '필수 입력값이 없어요' })
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'API 키가 설정되지 않았어요' })
 
   const regionStr = regions.join(', ')
@@ -68,27 +68,25 @@ export default async function handler(req, res) {
 - 스타일에 맞게 카테고리 비율 조정`
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 3000,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    })
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 3000 },
+        }),
+      }
+    )
 
     if (!response.ok) {
       const err = await response.json()
-      throw new Error(err.error?.message || `Anthropic API error ${response.status}`)
+      throw new Error(err.error?.message || `Gemini API error ${response.status}`)
     }
 
     const data = await response.json()
-    const text = data.content[0].text.trim()
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('JSON 파싱 실패')
 
