@@ -77,8 +77,14 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
+        messages: [
+          {
+            role: 'system',
+            content: `You are a Korean travel expert. You MUST only recommend places located in the specific region the user requests. NEVER suggest places from other regions. Always respond in Korean. Always respond with valid JSON only, no other text.`,
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.3,
         max_tokens: 3000,
       }),
     })
