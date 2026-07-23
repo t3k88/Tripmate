@@ -175,7 +175,11 @@ export default function App() {
   const addPlace = async (placeData) => {
     const uname = localStorage.getItem('tripmate_username') || '나'
     const uid = localStorage.getItem('tripmate_user_id') || userId
-    const { data } = await supabase.from('places').insert([{ ...placeToDb({ ...placeData, author: uname }), user_id: uid }]).select().single()
+    const dbData = placeToDb({ ...placeData, author: uname })
+    if (dbData.lat == null) dbData.lat = 0
+    if (dbData.lng == null) dbData.lng = 0
+    const { data, error } = await supabase.from('places').insert([{ ...dbData, user_id: uid }]).select().single()
+    if (error) console.error('addPlace error:', error)
     if (data) {
       const place = placeFromDb(data)
       setPlaces(ps => [place, ...ps])
