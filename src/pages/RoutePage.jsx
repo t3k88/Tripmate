@@ -334,6 +334,15 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
   const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput] = useState(route.name)
   const [expandedIdx, setExpandedIdx] = useState(null)
+  const expandedRef = useRef(null)
+
+  useEffect(() => {
+    if (expandedIdx !== null && expandedRef.current) {
+      setTimeout(() => {
+        expandedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }, 100)
+    }
+  }, [expandedIdx])
 
   const maxDay = items.length > 0 ? Math.max(...items.map(i => i.dayNumber)) : 1
 
@@ -448,7 +457,7 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
       )}
 
       {!mapView && (
-        <div style={{ padding: '16px 16px 100px' }}>
+        <div style={{ padding: '16px 16px 160px' }}>
           {days.length === 0 ? (
             <div className="empty-state">
               <span className="empty-icon">📍</span>
@@ -507,7 +516,7 @@ function RouteDetail({ route, places, groups, isOwner, onBack, onDelete, onSave,
 
                         {/* 확장 영역: 시간 설정 */}
                         {isExpanded && (
-                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+                          <div ref={expandedRef} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
                             <div style={{ marginBottom: 8 }}>
                               <p style={{ fontSize: 11, color: 'var(--text-sub)', fontWeight: 600, marginBottom: 4 }}>🕐 방문 시각</p>
                               <input type="time"
