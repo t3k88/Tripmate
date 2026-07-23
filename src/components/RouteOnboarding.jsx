@@ -1,5 +1,19 @@
-import { useState, useMemo } from 'react'
-import { getCategoryInfo, getAddressLevels } from '../utils/helpers'
+import { useState, useRef } from 'react'
+import { getCategoryInfo } from '../utils/helpers'
+
+const POPULAR_REGIONS = [
+  { sido: '서울', gus: ['종로구', '마포구', '성동구', '강남구'] },
+  { sido: '경기', gus: ['가평군', '양평군', '수원시'] },
+  { sido: '강원', gus: ['강릉시', '속초시', '평창군', '춘천시'] },
+  { sido: '충북', gus: ['단양군', '제천시', '청주시'] },
+  { sido: '충남', gus: ['태안군', '공주시', '부여군'] },
+  { sido: '전북', gus: ['전주시', '남원시', '군산시'] },
+  { sido: '전남', gus: ['여수시', '순천시', '담양군'] },
+  { sido: '경북', gus: ['경주시', '안동시', '포항시'] },
+  { sido: '경남', gus: ['통영시', '남해군', '거제시'] },
+  { sido: '부산', gus: ['해운대구', '남구', '기장군'] },
+  { sido: '제주', gus: ['제주시', '서귀포시'] },
+]
 
 const DURATIONS = [
   { id: 1, label: '당일치기', days: 1 },
@@ -35,19 +49,7 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
   const [loading, setLoading] = useState(false)
   const [aiResult, setAiResult] = useState(null)
   const [error, setError] = useState('')
-
-  const regionOptions = useMemo(() => {
-    const map = {}
-    places.forEach(p => {
-      const [sido, gu] = getAddressLevels(p.address)
-      if (!sido) return
-      if (!map[sido]) map[sido] = new Set()
-      if (gu) map[sido].add(gu)
-    })
-    return Object.entries(map)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([sido, gus]) => ({ sido, gus: Array.from(gus).sort() }))
-  }, [places])
+  const regionInputRef = useRef(null)
 
   const toggleStyle = (id) =>
     setStyles(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])
@@ -138,65 +140,65 @@ export default function RouteOnboarding({ places, groups, onClose, onComplete })
           {step === 1 && (
             <div>
               <p style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>어디로 떠나요? 🗺️</p>
-              <p style={{ fontSize: 14, color: 'var(--text-sub)', marginBottom: 24 }}>복수 선택 가능해요</p>
-              {regionOptions.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-sub)' }}>
-                  <p style={{ fontSize: 32, marginBottom: 12 }}>📍</p>
-                  <p style={{ fontSize: 14, marginBottom: 6 }}>등록된 장소가 없어도 괜찮아요!</p>
-                  <p style={{ fontSize: 13 }}>지역 이름을 직접 입력해보세요</p>
-                  <input
-                    className="form-input"
-                    placeholder="예: 단양, 제주, 부산 해운대"
-                    style={{ marginTop: 16 }}
-                    onKeyDown={e => { if (e.key === 'Enter' && e.target.value.trim()) toggleRegion(e.target.value.trim()) }}
-                  />
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                  {regionOptions.map(({ sido, gus }) => (
-                    <div key={sido}>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10 }}>{sido}</p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        {gus.map(gu => (
-                          <button key={gu} onClick={() => toggleRegion(gu)} style={{
-                            padding: '10px 16px', borderRadius: 14, fontSize: 14, fontWeight: 600,
-                            border: `2px solid ${regions.includes(gu) ? 'var(--primary)' : 'var(--border)'}`,
-                            background: regions.includes(gu) ? 'var(--primary)' : 'var(--surface)',
-                            color: regions.includes(gu) ? 'white' : 'var(--text)',
-                            transition: 'all 0.15s',
-                          }}>{gu}</button>
-                        ))}
-                      </div>
-                    </div>
+              <p style={{ fontSize: 14, color: 'var(--text-sub)', marginBottom: 20 }}>복수 선택 가능해요</p>
+
+              {/* 직접 입력 */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+                <input
+                  ref={regionInputRef}
+                  className="form-input"
+                  placeholder="예: 단양군, 강릉시, 제주 서귀포"
+                  style={{ flex: 1 }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && e.target.value.trim()) {
+                      toggleRegion(e.target.value.trim())
+                      e.target.value = ''
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    const val = regionInputRef.current?.value.trim()
+                    if (val) { toggleRegion(val); regionInputRef.current.value = '' }
+                  }}
+                  style={{ padding: '10px 16px', borderRadius: 12, background: 'var(--primary)', color: 'white', fontWeight: 700, border: 'none', fontSize: 13, flexShrink: 0, cursor: 'pointer' }}>
+                  추가
+                </button>
+              </div>
+
+              {/* 선택된 지역 태그 */}
+              {regions.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                  {regions.map(r => (
+                    <span key={r} onClick={() => toggleRegion(r)} style={{
+                      padding: '8px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700,
+                      background: 'var(--primary)', color: 'white', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                    }}>{r} <span style={{ fontSize: 11 }}>✕</span></span>
                   ))}
-                  <div>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10 }}>직접 입력</p>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <input
-                        className="form-input"
-                        placeholder="예: 속초, 강릉 주문진"
-                        style={{ flex: 1 }}
-                        id="region-input"
-                      />
-                      <button
-                        onClick={() => {
-                          const el = document.getElementById('region-input')
-                          if (el?.value.trim()) { toggleRegion(el.value.trim()); el.value = '' }
-                        }}
-                        style={{ padding: '10px 16px', borderRadius: 12, background: 'var(--primary)', color: 'white', fontWeight: 700, border: 'none', fontSize: 13, flexShrink: 0 }}>
-                        추가
-                      </button>
-                    </div>
-                    {regions.filter(r => !regionOptions.flatMap(o => o.gus).includes(r)).map(r => (
-                      <span key={r} onClick={() => toggleRegion(r)} style={{
-                        display: 'inline-block', margin: '8px 8px 0 0',
-                        padding: '6px 12px', borderRadius: 20, fontSize: 13, fontWeight: 600,
-                        background: 'var(--primary)', color: 'white', cursor: 'pointer',
-                      }}>{r} ✕</span>
-                    ))}
-                  </div>
                 </div>
               )}
+
+              {/* 인기 지역 */}
+              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 12 }}>인기 여행지</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {POPULAR_REGIONS.map(({ sido, gus }) => (
+                  <div key={sido}>
+                    <p style={{ fontSize: 11, color: 'var(--text-sub)', marginBottom: 8, fontWeight: 600 }}>{sido}</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                      {gus.map(gu => (
+                        <button key={gu} onClick={() => toggleRegion(gu)} style={{
+                          padding: '8px 14px', borderRadius: 14, fontSize: 13, fontWeight: 600,
+                          border: `2px solid ${regions.includes(gu) ? 'var(--primary)' : 'var(--border)'}`,
+                          background: regions.includes(gu) ? 'var(--primary)' : 'var(--surface)',
+                          color: regions.includes(gu) ? 'white' : 'var(--text)',
+                          transition: 'all 0.15s', cursor: 'pointer',
+                        }}>{gu}</button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
