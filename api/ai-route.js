@@ -1,7 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 const STYLE_LABELS = {
   food: '맛집탐방',
   cafe: '카페투어',
@@ -18,15 +14,6 @@ const COMPANION_LABELS = {
   family: '가족',
 }
 
-const CATEGORY_MAP = {
-  food: 'restaurant',
-  cafe: 'cafe',
-  nature: 'attraction',
-  activity: 'attraction',
-  shopping: 'shopping',
-  drink: 'bar',
-}
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -38,6 +25,9 @@ export default async function handler(req, res) {
   if (!regions?.length || !duration || !styles?.length) {
     return res.status(400).json({ error: '필수 입력값이 없어요' })
   }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) return res.status(500).json({ error: 'API 키가 설정되지 않았어요' })
 
   const regionStr = regions.join(', ')
   const styleStr = styles.map(s => STYLE_LABELS[s] || s).join(', ')
@@ -75,32 +65,37 @@ export default async function handler(req, res) {
 - visitTime은 09:00부터 시작해서 합리적으로 배분
 - 실제로 존재하는 유명한 장소 위주로 추천
 - 뚜벅이도 갈 수 있는 장소 포함, memo에 대중교통 정보 적기
-- 스타일에 맞게 카테고리 비율 조정 (맛집탐방이면 restaurant 비중 높게 등)`
+- 스타일에 맞게 카테고리 비율 조정`
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 3000,
-      messages: [{ role: 'user', content: prompt }],
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 3000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
     })
 
-    const text = message.content[0].text.trim()
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.error?.message || `Anthropic API error ${response.status}`)
+    }
+
+    const data = await response.json()
+    const text = data.content[0].text.trim()
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('JSON 파싱 실패')
 
     const result = JSON.parse(jsonMatch[0])
-
-    // category 정규화
-    result.places = result.places.map(p => ({
-      ...p,
-      category: CATEGORY_MAP[styles[0]] && !['restaurant','cafe','attraction','shopping','bar'].includes(p.category)
-        ? CATEGORY_MAP[styles[0]]
-        : p.category,
-    }))
-
     return res.status(200).json(result)
   } catch (err) {
-    console.error('AI route error:', err)
-    return res.status(500).json({ error: 'AI 추천 중 오류가 발생했어요. 다시 시도해주세요.' })
+    console.error('AI route error:', err.message)
+    return res.status(500).json({ error: err.message || 'AI 추천 중 오류가 발생했어요.' })
   }
 }
