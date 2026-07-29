@@ -397,6 +397,13 @@ export default function App() {
     })
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    localStorage.removeItem('tripmate_username')
+    localStorage.removeItem('tripmate_user_id')
+    window.location.reload()
+  }
+
   const handleSetUsername = async (name) => {
     const uid = localStorage.getItem('tripmate_user_id') || userId
     localStorage.setItem('tripmate_username', name)
@@ -434,6 +441,7 @@ export default function App() {
     username, userId,
     handleRestore,
     handleGoogleLogin,
+    handleLogout,
   }
 
   return (
