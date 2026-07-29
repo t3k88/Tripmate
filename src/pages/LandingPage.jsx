@@ -8,36 +8,63 @@ const getSeason = () => {
 
 function SpringIllust() {
   return (
-    <svg viewBox="0 0 420 320" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
+    <svg viewBox="0 0 460 380" xmlns="http://www.w3.org/2000/svg"
+      style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="springSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFE8F5"/>
+          <stop offset="60%" stopColor="#FFC8E8"/>
+          <stop offset="100%" stopColor="#FFD0EC"/>
+        </linearGradient>
+        <linearGradient id="springGround" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#C8E8A0"/>
+          <stop offset="100%" stopColor="#A8D878"/>
+        </linearGradient>
+      </defs>
+
       {/* 하늘 */}
-      <rect width="420" height="320" fill="#FFF0F8" />
+      <rect width="460" height="380" fill="url(#springSky)"/>
+
       {/* 땅 */}
-      <ellipse cx="210" cy="310" rx="220" ry="40" fill="#F9D0E8" />
-      {/* 나무 줄기 */}
-      <rect x="195" y="180" width="30" height="120" rx="8" fill="#C4956A" />
-      {/* 나뭇가지 */}
-      <line x1="210" y1="220" x2="150" y2="170" stroke="#C4956A" strokeWidth="10" strokeLinecap="round"/>
-      <line x1="210" y1="200" x2="270" y2="155" stroke="#C4956A" strokeWidth="10" strokeLinecap="round"/>
-      {/* 벚꽃 뭉치 */}
-      {[
-        [210,130,70],[155,145,55],[265,135,55],
-        [185,100,45],[240,105,45],[210,80,38],
-      ].map(([cx,cy,r],i) => (
-        <circle key={i} cx={cx} cy={cy} r={r} fill="#F9B8D4" opacity="0.9"/>
+      <path d="M0,310 Q115,295 230,305 Q345,315 460,298 L460,380 L0,380Z" fill="url(#springGround)"/>
+      <path d="M0,328 Q115,315 230,322 Q345,330 460,315 L460,380 L0,380Z" fill="#90C860" opacity="0.6"/>
+
+      {/* 왼쪽 벚나무 */}
+      <path d="M85,340 C84,300 82,255 90,210" stroke="#8B5E3C" strokeWidth="12" strokeLinecap="round" fill="none"/>
+      <path d="M90,210 C70,185 40,178 20,165" stroke="#8B5E3C" strokeWidth="8" strokeLinecap="round" fill="none"/>
+      <path d="M90,210 C108,182 138,174 160,162" stroke="#8B5E3C" strokeWidth="8" strokeLinecap="round" fill="none"/>
+      <path d="M90,210 C82,185 78,160 74,138" stroke="#A07040" strokeWidth="6" strokeLinecap="round" fill="none"/>
+      <path d="M90,240 C68,228 42,228 20,224" stroke="#A07040" strokeWidth="5" strokeLinecap="round" fill="none"/>
+      <path d="M90,240 C115,228 142,230 165,226" stroke="#A07040" strokeWidth="5" strokeLinecap="round" fill="none"/>
+      {/* 왼쪽 꽃 뭉치 */}
+      {[[88,155,45],[48,168,36],[132,162,34],[68,130,30],[112,125,28],[88,108,26],[40,192,22],[148,188,20]].map(([cx,cy,r],i)=>(
+        <circle key={i} cx={cx} cy={cy} r={r} fill={i%2===0?"#FFB8D8":"#FFC8E0"} opacity="0.92"/>
       ))}
-      {/* 흩날리는 꽃잎 */}
-      {[
-        [60,80],[100,50],[340,90],[370,60],[290,40],[80,150],[350,140],[40,200],
-      ].map(([x,y],i) => (
-        <ellipse key={i} cx={x} cy={y} rx="6" ry="4" fill="#F9B8D4" opacity="0.7"
-          transform={`rotate(${i*35} ${x} ${y})`}/>
+
+      {/* 오른쪽 벚나무 */}
+      <path d="M375,360 C374,318 372,268 380,218" stroke="#8B5E3C" strokeWidth="11" strokeLinecap="round" fill="none"/>
+      <path d="M380,218 C360,192 330,185 310,172" stroke="#8B5E3C" strokeWidth="7" strokeLinecap="round" fill="none"/>
+      <path d="M380,218 C400,190 428,182 448,170" stroke="#8B5E3C" strokeWidth="7" strokeLinecap="round" fill="none"/>
+      <path d="M380,218 C372,192 368,165 364,142" stroke="#A07040" strokeWidth="5" strokeLinecap="round" fill="none"/>
+      {/* 오른쪽 꽃 뭉치 */}
+      {[[378,162,42],[336,175,32],[420,170,30],[358,138,26],[402,132,24],[378,118,22],[320,195,18],[438,190,18]].map(([cx,cy,r],i)=>(
+        <circle key={i} cx={cx} cy={cy} r={r} fill={i%2===0?"#FFAACF":"#FFC0DC"} opacity="0.90"/>
       ))}
-      {/* 작은 꽃잎들 */}
+
+      {/* 강 */}
+      <path d="M140,320 Q200,308 260,318 Q310,325 360,314" fill="none" stroke="#A8D4F0" strokeWidth="14" strokeLinecap="round" opacity="0.7"/>
+      <path d="M145,320 Q200,310 258,319" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.5"/>
+
+      {/* 흩날리는 꽃잎들 */}
       {[
-        [120,200],[320,180],[60,260],[380,240],[160,280],[300,260],
-      ].map(([x,y],i) => (
-        <ellipse key={i} cx={x} cy={y} rx="5" ry="3" fill="#FCB8D0" opacity="0.5"
-          transform={`rotate(${i*40} ${x} ${y})`}/>
+        [55,60,8],[130,40,6],[210,30,7],[310,50,5],[400,38,7],[30,130,5],[180,110,6],[360,95,5],
+        [70,200,4],[250,180,6],[420,160,5],[100,260,4],[340,240,5],[490,220,4],
+        [160,300,5],[290,285,4],
+      ].map(([x,y,r],i)=>(
+        <ellipse key={i} className="petal" cx={x} cy={y} rx={r} ry={r*0.6}
+          fill={i%3===0?"#FFB8D8":i%3===1?"#FFCCE6":"#FF98C8"} opacity="0.8"
+          transform={`rotate(${i*37} ${x} ${y})`}
+          style={{ animationDelay: `${i*0.28}s` }}/>
       ))}
     </svg>
   )
@@ -164,35 +191,79 @@ function SummerIllust() {
 
 function FallIllust() {
   return (
-    <svg viewBox="0 0 420 320" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
+    <svg viewBox="0 0 460 380" xmlns="http://www.w3.org/2000/svg"
+      style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="fallSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFD4A0"/>
+          <stop offset="45%" stopColor="#FFB870"/>
+          <stop offset="100%" stopColor="#E8956A"/>
+        </linearGradient>
+        <linearGradient id="fallGround" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#C87830"/>
+          <stop offset="100%" stopColor="#A05820"/>
+        </linearGradient>
+      </defs>
+
       {/* 하늘 */}
-      <rect width="420" height="320" fill="#FFF5EC" />
+      <rect width="460" height="380" fill="url(#fallSky)"/>
+
+      {/* 석양 */}
+      <circle cx="370" cy="80" r="55" fill="#FFE070" opacity="0.7"/>
+      <circle cx="370" cy="80" r="38" fill="#FFD040" opacity="0.9"/>
+
+      {/* 산 실루엣 */}
+      <path d="M0,230 L80,140 L160,200 L230,110 L310,185 L390,120 L460,175 L460,300 L0,300Z" fill="#C86030" opacity="0.35"/>
+      <path d="M0,260 L60,190 L130,240 L200,155 L280,220 L360,160 L430,210 L460,190 L460,320 L0,320Z" fill="#B05020" opacity="0.25"/>
+
       {/* 땅 */}
-      <ellipse cx="210" cy="310" rx="230" ry="42" fill="#D4A060" opacity="0.5"/>
-      {/* 나무 줄기 왼쪽 */}
-      <rect x="90" y="170" width="22" height="130" rx="7" fill="#8B5E3C"/>
-      {/* 나무 줄기 오른쪽 */}
-      <rect x="308" y="185" width="20" height="115" rx="6" fill="#8B5E3C"/>
-      {/* 가지 */}
-      <line x1="101" y1="210" x2="50" y2="170" stroke="#8B5E3C" strokeWidth="8" strokeLinecap="round"/>
-      <line x1="101" y1="195" x2="155" y2="160" stroke="#8B5E3C" strokeWidth="8" strokeLinecap="round"/>
-      <line x1="318" y1="210" x2="370" y2="168" stroke="#8B5E3C" strokeWidth="7" strokeLinecap="round"/>
-      <line x1="318" y1="200" x2="265" y2="165" stroke="#8B5E3C" strokeWidth="7" strokeLinecap="round"/>
-      {/* 단풍 뭉치 왼쪽 */}
-      {[[100,130,55],[55,150,42],[155,140,42],[80,105,36],[125,98,32]].map(([cx,cy,r],i)=>(
-        <circle key={i} cx={cx} cy={cy} r={r} fill={['#E8734A','#D4611A','#E8956A','#C84A10','#F0A060'][i]} opacity="0.9"/>
+      <path d="M0,315 Q115,300 230,310 Q345,320 460,304 L460,380 L0,380Z" fill="url(#fallGround)"/>
+      <path d="M0,332 Q115,318 230,326 Q345,335 460,320 L460,380 L0,380Z" fill="#904818" opacity="0.5"/>
+
+      {/* 낙엽 바닥 */}
+      {[[30,345,18],[90,350,14],[160,342,16],[240,348,15],[320,344,17],[400,350,13],[450,346,12]].map(([x,y,r],i)=>(
+        <ellipse key={i} cx={x} cy={y} rx={r} ry={r*0.5}
+          fill={['#E8734A','#D4611A','#F0A060','#C84A10','#E89040'][i%5]} opacity="0.7"/>
       ))}
-      {/* 단풍 뭉치 오른쪽 */}
-      {[[318,170,50],[270,158,38],[368,155,38],[300,135,32],[340,128,30]].map(([cx,cy,r],i)=>(
-        <circle key={i} cx={cx} cy={cy} r={r} fill={['#D4611A','#E8734A','#C84A10','#E8956A','#D48040'][i]} opacity="0.9"/>
+
+      {/* 왼쪽 단풍나무 */}
+      <path d="M88,355 C86,310 84,258 92,208" stroke="#6B3C1A" strokeWidth="13" strokeLinecap="round" fill="none"/>
+      <path d="M92,208 C72,182 42,175 18,162" stroke="#6B3C1A" strokeWidth="8" strokeLinecap="round" fill="none"/>
+      <path d="M92,208 C112,180 145,172 168,160" stroke="#6B3C1A" strokeWidth="8" strokeLinecap="round" fill="none"/>
+      <path d="M92,208 C84,180 80,152 76,128" stroke="#7A4A22" strokeWidth="6" strokeLinecap="round" fill="none"/>
+      <path d="M92,245 C68,232 40,232 15,228" stroke="#7A4A22" strokeWidth="5" strokeLinecap="round" fill="none"/>
+      <path d="M92,245 C118,234 148,236 172,232" stroke="#7A4A22" strokeWidth="5" strokeLinecap="round" fill="none"/>
+      {/* 왼쪽 단풍 뭉치 */}
+      {[[90,148,48],[44,162,36],[138,158,34],[68,122,30],[116,116,28],[90,96,25],[35,185,20],[155,180,18]].map(([cx,cy,r],i)=>(
+        <circle key={i} cx={cx} cy={cy} r={r}
+          fill={['#E8734A','#D4611A','#C84A10','#E89040','#F0A060','#D05820','#E86030','#F0B070'][i]}
+          opacity="0.92"/>
       ))}
+
+      {/* 오른쪽 단풍나무 */}
+      <path d="M378,368 C376,322 374,270 382,218" stroke="#6B3C1A" strokeWidth="11" strokeLinecap="round" fill="none"/>
+      <path d="M382,218 C362,192 330,185 308,172" stroke="#6B3C1A" strokeWidth="7" strokeLinecap="round" fill="none"/>
+      <path d="M382,218 C402,190 432,182 452,170" stroke="#6B3C1A" strokeWidth="7" strokeLinecap="round" fill="none"/>
+      <path d="M382,218 C374,190 370,162 366,138" stroke="#7A4A22" strokeWidth="5" strokeLinecap="round" fill="none"/>
+      {/* 오른쪽 단풍 뭉치 */}
+      {[[380,160,44],[336,172,34],[424,168,32],[358,134,28],[404,128,25],[380,112,22]].map(([cx,cy,r],i)=>(
+        <circle key={i} cx={cx} cy={cy} r={r}
+          fill={['#D4611A','#E8734A','#C84A10','#E89040','#F0A060','#D05820'][i]}
+          opacity="0.90"/>
+      ))}
+
       {/* 떨어지는 잎 */}
       {[
-        [190,80,20],[230,60,15],[160,130,18],[260,110,16],[200,170,14],[310,90,17],[140,200,13],[350,200,15],
+        [55,55,10],[140,38,8],[215,25,9],[300,45,7],[415,35,9],
+        [30,135,7],[188,105,8],[355,92,7],[440,115,6],
+        [75,195,6],[250,175,7],[400,160,6],
+        [120,258,5],[310,242,6],[430,250,5],
       ].map(([x,y,s],i)=>(
-        <ellipse key={i} cx={x} cy={y} rx={s*0.7} ry={s*0.4}
-          fill={['#E8734A','#D4611A','#F0A060','#C84A10'][i%4]} opacity="0.75"
-          transform={`rotate(${i*37} ${x} ${y})`}/>
+        <g key={i} className="fall-leaf" style={{ animationDelay: `${i*0.3}s` }}>
+          <ellipse cx={x} cy={y} rx={s} ry={s*0.55}
+            fill={['#E8734A','#D4611A','#F0A060','#C84A10','#E86030'][i%5]}
+            opacity="0.82" transform={`rotate(${i*41} ${x} ${y})`}/>
+        </g>
       ))}
     </svg>
   )
@@ -200,50 +271,111 @@ function FallIllust() {
 
 function WinterIllust() {
   return (
-    <svg viewBox="0 0 420 320" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
-      {/* 하늘 */}
-      <rect width="420" height="320" fill="#EEF4FF" />
-      {/* 눈 쌓인 땅 */}
-      <ellipse cx="210" cy="315" rx="230" ry="38" fill="white"/>
-      <rect x="0" y="290" width="420" height="30" fill="white"/>
-      {/* 전나무 왼쪽 */}
-      <polygon points="90,280 60,220 90,235 65,180 90,195 70,145 90,155 75,110 90,120 90,280" fill="#2E5E3E" opacity="0.85"/>
-      <polygon points="90,280 120,220 90,235 115,180 90,195 110,145 90,155 105,110 90,120 90,280" fill="#2E5E3E" opacity="0.85"/>
-      {/* 전나무 오른쪽 */}
-      <polygon points="330,280 305,225 330,238 308,188 330,200 312,155 330,165 315,122 330,132 330,280" fill="#2E5E3E" opacity="0.85"/>
-      <polygon points="330,280 355,225 330,238 352,188 330,200 348,155 330,165 345,122 330,132 330,280" fill="#2E5E3E" opacity="0.85"/>
-      {/* 눈 얹힘 */}
-      <ellipse cx="90" cy="120" rx="18" ry="6" fill="white" opacity="0.9"/>
-      <ellipse cx="90" cy="155" rx="24" ry="7" fill="white" opacity="0.85"/>
-      <ellipse cx="330" cy="132" rx="18" ry="6" fill="white" opacity="0.9"/>
-      <ellipse cx="330" cy="165" rx="22" ry="7" fill="white" opacity="0.85"/>
-      {/* 눈송이 */}
-      {[
-        [50,40],[130,25],[200,50],[280,30],[370,45],[80,100],[160,80],[340,90],[410,70],
-        [30,160],[100,140],[230,120],[360,150],[420,130],[60,220],[200,200],[310,210],[400,190],
-      ].map(([x,y],i)=>(
-        <g key={i} transform={`translate(${x},${y})`}>
-          <circle r="3" fill="white" opacity="0.8"/>
-          {[0,60,120].map(a=>(
-            <line key={a} x1={0} y1={0}
-              x2={6*Math.cos(a*Math.PI/180)} y2={6*Math.sin(a*Math.PI/180)}
-              stroke="white" strokeWidth="1.5" opacity="0.7"/>
-          ))}
-          {[0,60,120].map(a=>(
-            <line key={a+3} x1={0} y1={0}
-              x2={-6*Math.cos(a*Math.PI/180)} y2={-6*Math.sin(a*Math.PI/180)}
-              stroke="white" strokeWidth="1.5" opacity="0.7"/>
-          ))}
-        </g>
+    <svg viewBox="0 0 460 380" xmlns="http://www.w3.org/2000/svg"
+      style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="winterSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#1A2A4A"/>
+          <stop offset="55%" stopColor="#2E4A7A"/>
+          <stop offset="100%" stopColor="#4A6FA8"/>
+        </linearGradient>
+        <linearGradient id="winterGround" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#E8EFF8"/>
+          <stop offset="100%" stopColor="#C8D8EE"/>
+        </linearGradient>
+        <radialGradient id="hotspring" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#6EC8E0"/>
+          <stop offset="100%" stopColor="#4AA8C8"/>
+        </radialGradient>
+        <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FFFDE0" stopOpacity="0.3"/>
+          <stop offset="100%" stopColor="#FFFDE0" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+
+      {/* 밤하늘 */}
+      <rect width="460" height="380" fill="url(#winterSky)"/>
+
+      {/* 달 */}
+      <circle cx="360" cy="72" r="50" fill="url(#moonGlow)"/>
+      <circle cx="360" cy="72" r="32" fill="#FFFDE0" opacity="0.95"/>
+      <circle cx="372" cy="64" r="28" fill="#2E4A7A"/>
+
+      {/* 별들 */}
+      {[[30,35],[80,20],[145,45],[220,18],[290,38],[410,25],[50,90],[175,75],[340,55],[430,80],
+        [20,140],[110,125],[260,110],[400,130],[440,155]].map(([x,y],i)=>(
+        <circle key={i} cx={x} cy={y} r={i%3===0?2.2:1.5}
+          fill="white" opacity={0.5+Math.sin(i)*0.3}
+          className="star-twinkle" style={{ animationDelay: `${i*0.4}s` }}/>
       ))}
-      {/* 눈사람 */}
-      <circle cx="210" cy="265" r="28" fill="white" stroke="#C8D8EE" strokeWidth="1.5"/>
-      <circle cx="210" cy="228" r="20" fill="white" stroke="#C8D8EE" strokeWidth="1.5"/>
-      <circle cx="205" cy="224" r="2.5" fill="#4A6FBF"/>
-      <circle cx="215" cy="224" r="2.5" fill="#4A6FBF"/>
-      <path d="M205,232 Q210,237 215,232" stroke="#4A6FBF" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-      <line x1="192" y1="250" x2="175" y2="240" stroke="#C4956A" strokeWidth="3" strokeLinecap="round"/>
-      <line x1="228" y1="250" x2="245" y2="240" stroke="#C4956A" strokeWidth="3" strokeLinecap="round"/>
+
+      {/* 산 실루엣 */}
+      <path d="M0,240 L70,150 L140,210 L210,120 L280,195 L360,130 L430,185 L460,165 L460,290 L0,290Z"
+        fill="#1A3060" opacity="0.6"/>
+      {/* 산 위 눈 */}
+      <path d="M190,120 L210,105 L230,120 L220,128 L200,128Z" fill="white" opacity="0.8"/>
+      <path d="M340,130 L360,115 L380,132 L368,140 L352,140Z" fill="white" opacity="0.7"/>
+
+      {/* 눈 쌓인 땅 */}
+      <path d="M0,308 Q115,295 230,302 Q345,310 460,296 L460,380 L0,380Z" fill="url(#winterGround)"/>
+      <path d="M0,322 Q115,310 230,316 Q345,322 460,310 L460,380 L0,380Z" fill="white" opacity="0.5"/>
+
+      {/* 전나무 왼쪽 */}
+      <g>
+        <rect x="83" y="295" width="10" height="30" rx="3" fill="#5C3A1E"/>
+        {[[88,195,50],[88,225,62],[88,258,72],[88,288,56]].map(([cx,cy,w],i)=>(
+          <polygon key={i} points={`${cx},${cy} ${cx-w/2},${cy+38} ${cx+w/2},${cy+38}`}
+            fill="#2A5A38" opacity="0.9"/>
+        ))}
+        {/* 눈 얹힘 */}
+        {[[88,205,22],[88,238,28],[88,270,34]].map(([cx,cy,w],i)=>(
+          <ellipse key={i} cx={cx} cy={cy} rx={w} ry={5} fill="white" opacity="0.85"/>
+        ))}
+      </g>
+
+      {/* 전나무 오른쪽 */}
+      <g>
+        <rect x="373" y="300" width="9" height="28" rx="3" fill="#5C3A1E"/>
+        {[[377,205,46],[377,232,58],[377,262,68],[377,292,52]].map(([cx,cy,w],i)=>(
+          <polygon key={i} points={`${cx},${cy} ${cx-w/2},${cy+36} ${cx+w/2},${cy+36}`}
+            fill="#2A5A38" opacity="0.9"/>
+        ))}
+        {[[377,214,20],[377,245,26],[377,275,32]].map(([cx,cy,w],i)=>(
+          <ellipse key={i} cx={cx} cy={cy} rx={w} ry={5} fill="white" opacity="0.85"/>
+        ))}
+      </g>
+
+      {/* 온천 */}
+      <ellipse cx="230" cy="330" rx="78" ry="30" fill="url(#hotspring)" opacity="0.88"/>
+      <ellipse cx="230" cy="325" rx="72" ry="18" fill="#7DD8EC" opacity="0.5"/>
+      {/* 온천 테두리 (돌) */}
+      {[[155,332,12,6],[168,344,10,5],[190,350,14,6],[220,354,16,5],[255,352,14,6],[282,346,12,5],[300,336,10,5],[308,325,9,5]].map(([x,y,rx,ry],i)=>(
+        <ellipse key={i} cx={x} cy={y} rx={rx} ry={ry} fill="#8A9AB8" opacity="0.75"/>
+      ))}
+      {/* 수증기 */}
+      {[[205,300],[225,295],[245,298],[265,294]].map(([x,y],i)=>(
+        <path key={i} className="steam"
+          d={`M${x},${y} C${x-5},${y-12} ${x+5},${y-22} ${x},${y-35}`}
+          fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.5"
+          style={{ animationDelay: `${i*0.5}s` }}/>
+      ))}
+      {/* 온천 속 사람 실루엣 */}
+      <circle cx="210" cy="320" r="10" fill="#2E4A7A" opacity="0.7"/>
+      <circle cx="250" cy="318" r="10" fill="#2E4A7A" opacity="0.7"/>
+      <path d="M195,328 Q210,340 225,328" stroke="#2E4A7A" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.5"/>
+      <path d="M237,326 Q250,338 263,326" stroke="#2E4A7A" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.5"/>
+
+      {/* 눈 내리기 */}
+      {[
+        [40,30],[95,15],[160,42],[235,22],[305,38],[405,20],[455,50],
+        [25,100],[110,88],[200,75],[330,92],[448,108],
+        [55,165],[175,148],[300,155],[420,170],
+        [30,228],[145,215],[275,222],[395,235],[450,210],
+      ].map(([x,y],i)=>(
+        <circle key={i} cx={x} cy={y} r={i%4===0?2.5:1.8}
+          fill="white" opacity="0.75" className="snowfall"
+          style={{ animationDelay: `${i*0.22}s` }}/>
+      ))}
     </svg>
   )
 }
@@ -311,9 +443,36 @@ export default function LandingPage({ onNavigate }) {
       .sun-glow { animation: sunPulse 4s ease-in-out infinite; }
       .sun-ray { animation: sunRay 3s ease-in-out infinite; }
       .sparkle-line { animation: sparkle 2s ease-in-out infinite; }
+      @keyframes petalDrift {
+        0% { transform: translate(0,0) rotate(0deg); opacity: 0.8; }
+        50% { transform: translate(18px, 40px) rotate(180deg); opacity: 0.6; }
+        100% { transform: translate(-10px, 85px) rotate(340deg); opacity: 0; }
+      }
+      @keyframes leafDrift {
+        0% { transform: translate(0,0) rotate(0deg); opacity: 0.82; }
+        50% { transform: translate(22px, 45px) rotate(160deg); opacity: 0.6; }
+        100% { transform: translate(-8px, 90px) rotate(310deg); opacity: 0; }
+      }
+      @keyframes snowFall {
+        0% { transform: translateY(0px) translateX(0px); opacity: 0.75; }
+        100% { transform: translateY(400px) translateX(15px); opacity: 0; }
+      }
+      @keyframes steamRise {
+        0% { transform: translateY(0px); opacity: 0.5; }
+        100% { transform: translateY(-28px); opacity: 0; }
+      }
+      @keyframes starTwinkle {
+        0%,100% { opacity: 0.8; transform: scale(1); }
+        50% { opacity: 0.2; transform: scale(0.6); }
+      }
       .bird-group { animation: birdFly 18s linear infinite; }
       .palm-left { animation: palmSway 6s ease-in-out infinite; }
       .palm-right { animation: palmSway 8s ease-in-out infinite reverse; }
+      .petal { animation: petalDrift 6s ease-in infinite; }
+      .fall-leaf { animation: leafDrift 5s ease-in infinite; }
+      .snowfall { animation: snowFall 7s linear infinite; }
+      .steam { animation: steamRise 3s ease-out infinite; }
+      .star-twinkle { animation: starTwinkle 3s ease-in-out infinite; }
       .landing-panel { animation: fadeUp 0.8s cubic-bezier(.22,1,.36,1) both; }
       .landing-logo { animation: fadeIn 0.6s ease both; }
     `}</style>
@@ -326,11 +485,20 @@ export default function LandingPage({ onNavigate }) {
       </div>
 
       {/* 상단 로고 */}
-      <div className="landing-logo" style={{ position: 'absolute', top: 32, left: 40, zIndex: 10 }}>
-        <p style={{ fontSize: 22, fontWeight: 800, color: 'white', fontFamily: "'Jua', sans-serif",
-          textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
-          ✈️ <span style={{ color: 'white' }}>Trip</span>Mate
-        </p>
+      <div className="landing-logo" style={{ position: 'absolute', top: 28, left: 36, zIndex: 10 }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(10px)',
+          borderRadius: 18, padding: '10px 20px',
+          border: '1px solid rgba(255,255,255,0.4)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+        }}>
+          <span style={{ fontSize: 26 }}>✈️</span>
+          <p style={{ fontSize: 26, fontWeight: 800, color: 'white', fontFamily: "'Jua', sans-serif",
+            textShadow: '0 2px 6px rgba(0,0,0,0.2)', letterSpacing: '0.5px' }}>
+            TripMate
+          </p>
+        </div>
       </div>
 
       {/* 하단 콘텐츠 패널 */}
