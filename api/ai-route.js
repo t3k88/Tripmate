@@ -78,7 +78,8 @@ export default async function handler(req, res) {
   // 네이버 블로그 컨텍스트 수집 (병렬)
   const blogContext = await fetchNaverBlogContext(regionStr, styles)
 
-  const prompt = `당신은 한국 여행 전문가입니다.
+  const seed = Math.floor(Math.random() * 10000)
+  const prompt = `당신은 한국 여행 전문가입니다. (추천 세션 #${seed})
 
 [절대 규칙] 반드시 "${regionStr}" 지역에 실제로 존재하는 장소만 추천하세요. 다른 지역 장소는 절대 포함하면 안 됩니다.
 
@@ -129,7 +130,7 @@ ${blogContext}
           },
           { role: 'user', content: prompt },
         ],
-        temperature: 0.3,
+        temperature: 0.8,
         max_tokens: 3000,
       }),
     })
