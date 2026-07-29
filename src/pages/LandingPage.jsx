@@ -45,7 +45,9 @@ function SpringIllust() {
 
 function SummerIllust() {
   return (
-    <svg viewBox="0 0 460 380" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
+    <svg viewBox="0 0 460 380" xmlns="http://www.w3.org/2000/svg"
+      style={{ width: '100%', height: '100%' }}
+      preserveAspectRatio="xMidYMid slice">
       <defs>
         <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#87CEEB"/>
@@ -66,11 +68,11 @@ function SummerIllust() {
       <rect width="460" height="380" fill="url(#skyGrad)"/>
 
       {/* 태양 글로우 */}
-      <circle cx="360" cy="88" r="65" fill="#FFE566" opacity="0.15"/>
-      <circle cx="360" cy="88" r="48" fill="url(#sunGrad)" opacity="0.95"/>
+      <circle className="sun-glow" cx="360" cy="88" r="65" fill="#FFE566" opacity="0.15"/>
+      <circle className="sun-ray" cx="360" cy="88" r="48" fill="url(#sunGrad)" opacity="0.95"/>
 
       {/* 구름 1 (크고 포실포실) */}
-      <g opacity="0.95">
+      <g className="cloud1" opacity="0.95">
         <ellipse cx="95" cy="75" rx="48" ry="22" fill="white"/>
         <ellipse cx="68" cy="82" rx="28" ry="18" fill="white"/>
         <ellipse cx="122" cy="80" rx="32" ry="18" fill="white"/>
@@ -78,21 +80,30 @@ function SummerIllust() {
       </g>
 
       {/* 구름 2 (작은) */}
-      <g opacity="0.85">
+      <g className="cloud2" opacity="0.85">
         <ellipse cx="255" cy="55" rx="32" ry="15" fill="white"/>
         <ellipse cx="236" cy="62" rx="18" ry="12" fill="white"/>
         <ellipse cx="272" cy="60" rx="20" ry="12" fill="white"/>
+      </g>
+
+      {/* 날아가는 새 */}
+      <g className="bird-group" opacity="0.7">
+        <path d="M20,100 Q27,95 34,100" fill="none" stroke="#444" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M40,88 Q47,83 54,88" fill="none" stroke="#444" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M60,104 Q66,100 72,104" fill="none" stroke="#555" strokeWidth="1.5" strokeLinecap="round"/>
       </g>
 
       {/* 바다 */}
       <rect x="0" y="235" width="460" height="145" fill="url(#seaGrad)"/>
 
       {/* 파도 레이어 1 */}
-      <path d="M0,242 C38,232 76,252 115,242 C153,232 191,252 230,242 C268,232 306,252 345,242 C383,232 421,252 460,242 L460,260 L0,260Z"
+      <path className="wave1-path"
+        d="M0,242 C38,232 76,252 115,242 C153,232 191,252 230,242 C268,232 306,252 345,242 C383,232 421,252 460,242 L460,260 L0,260Z"
         fill="#38BDF8" opacity="0.7"/>
 
       {/* 파도 레이어 2 */}
-      <path d="M0,262 C46,252 92,272 138,262 C184,252 230,272 276,262 C322,252 368,272 414,262 L460,262 L460,278 L0,278Z"
+      <path className="wave2-path"
+        d="M0,262 C46,252 92,272 138,262 C184,252 230,272 276,262 C322,252 368,272 414,262 L460,262 L460,278 L0,278Z"
         fill="#7DD3FC" opacity="0.45"/>
 
       {/* 파도 하이라이트 */}
@@ -138,7 +149,9 @@ function SummerIllust() {
 
       {/* 물 반짝임 */}
       {[[55,258],[140,270],[300,255],[380,265],[220,275],[170,262]].map(([x,y],i)=>(
-        <line key={i} x1={x-7} y1={y} x2={x+7} y2={y} stroke="white" strokeWidth="2.5" opacity="0.55" strokeLinecap="round"/>
+        <line key={i} className="sparkle-line" x1={x-7} y1={y} x2={x+7} y2={y}
+          stroke="white" strokeWidth="2.5" opacity="0.55" strokeLinecap="round"
+          style={{ animationDelay: `${i * 0.35}s` }}/>
       ))}
 
       {/* 갈매기 */}
@@ -243,96 +256,154 @@ export default function LandingPage({ onNavigate }) {
 
   return (
     <div style={{
-      width: '100%', minHeight: '100vh',
-      background: 'var(--bg)',
-      display: 'flex', flexDirection: 'column',
+      width: '100%', height: '100vh',
       position: 'relative', overflow: 'hidden',
     }}>
-      <div style={{ padding: '32px 40px 0', zIndex: 1, position: 'relative' }}>
-        <p style={{ fontSize: 22, fontWeight: 800, color: '#1a1a1a', fontFamily: "'Jua', sans-serif" }}>
-          ✈️ <span style={{ color: 'var(--primary)' }}>Trip</span>Mate
+    <style>{`
+      @keyframes wave1 {
+        0%,100% { d: path("M0,242 C38,232 76,252 115,242 C153,232 191,252 230,242 C268,232 306,252 345,242 C383,232 421,252 460,242 L460,260 L0,260Z"); }
+        50% { d: path("M0,248 C38,238 76,258 115,248 C153,238 191,258 230,248 C268,238 306,258 345,248 C383,238 421,258 460,248 L460,266 L0,266Z"); }
+      }
+      @keyframes wave2 {
+        0%,100% { d: path("M0,262 C46,252 92,272 138,262 C184,252 230,272 276,262 C322,252 368,272 414,262 L460,262 L460,278 L0,278Z"); }
+        50% { d: path("M0,256 C46,246 92,266 138,256 C184,246 230,266 276,256 C322,246 368,266 414,256 L460,256 L460,272 L0,272Z"); }
+      }
+      @keyframes floatCloud1 {
+        0%,100% { transform: translateX(0px); }
+        50% { transform: translateX(18px); }
+      }
+      @keyframes floatCloud2 {
+        0%,100% { transform: translateX(0px); }
+        50% { transform: translateX(-12px); }
+      }
+      @keyframes sunPulse {
+        0%,100% { opacity: 0.15; r: 65; }
+        50% { opacity: 0.28; r: 75; }
+      }
+      @keyframes sunRay {
+        0%,100% { opacity: 0.9; }
+        50% { opacity: 0.7; }
+      }
+      @keyframes sparkle {
+        0%,100% { opacity: 0.55; }
+        50% { opacity: 0.15; }
+      }
+      @keyframes birdFly {
+        0% { transform: translateX(-80px); }
+        100% { transform: translateX(520px); }
+      }
+      @keyframes palmSway {
+        0%,100% { transform-origin: bottom center; transform: rotate(0deg); }
+        50% { transform-origin: bottom center; transform: rotate(1.5deg); }
+      }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(28px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .wave1-path { animation: wave1 4s ease-in-out infinite; }
+      .wave2-path { animation: wave2 5s ease-in-out infinite; }
+      .cloud1 { animation: floatCloud1 7s ease-in-out infinite; }
+      .cloud2 { animation: floatCloud2 9s ease-in-out infinite; }
+      .sun-glow { animation: sunPulse 4s ease-in-out infinite; }
+      .sun-ray { animation: sunRay 3s ease-in-out infinite; }
+      .sparkle-line { animation: sparkle 2s ease-in-out infinite; }
+      .bird-group { animation: birdFly 18s linear infinite; }
+      .palm-left { animation: palmSway 6s ease-in-out infinite; }
+      .palm-right { animation: palmSway 8s ease-in-out infinite reverse; }
+      .landing-panel { animation: fadeUp 0.8s cubic-bezier(.22,1,.36,1) both; }
+      .landing-logo { animation: fadeIn 0.6s ease both; }
+    `}</style>
+      {/* 배경 일러스트: 전체 화면 */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        zIndex: 0,
+      }}>
+        <Illust />
+      </div>
+
+      {/* 상단 로고 */}
+      <div className="landing-logo" style={{ position: 'absolute', top: 32, left: 40, zIndex: 10 }}>
+        <p style={{ fontSize: 22, fontWeight: 800, color: 'white', fontFamily: "'Jua', sans-serif",
+          textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
+          ✈️ <span style={{ color: 'white' }}>Trip</span>Mate
         </p>
       </div>
 
-      <div style={{
-        flex: 1, display: 'flex', alignItems: 'stretch',
-        flexDirection: 'row', position: 'relative', zIndex: 1,
-        flexWrap: 'wrap',
+      {/* 하단 콘텐츠 패널 */}
+      <div className="landing-panel" style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        zIndex: 10,
+        background: 'linear-gradient(to top, rgba(255,255,255,0.97) 70%, rgba(255,255,255,0) 100%)',
+        padding: 'clamp(60px, 10vh, 100px) clamp(28px, 6vw, 80px) clamp(36px, 5vh, 60px)',
+        display: 'flex', flexDirection: 'row', alignItems: 'flex-end',
+        justifyContent: 'space-between', flexWrap: 'wrap', gap: 24,
       }}>
-        {/* 텍스트 영역 */}
-        <div style={{
-          flex: '1 1 380px', display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          padding: 'clamp(32px, 6vw, 72px) 40px 60px',
-          minWidth: 300,
-        }}>
+        {/* 텍스트 */}
+        <div style={{ flex: '1 1 300px', maxWidth: 520 }}>
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
+            display: 'inline-flex', alignItems: 'center',
             background: 'var(--primary-bg)', borderRadius: 20, padding: '5px 14px',
-            marginBottom: 24, width: 'fit-content',
+            marginBottom: 16, width: 'fit-content',
           }}>
             <span style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 700, letterSpacing: '0.5px' }}>국내 여행 기록 앱</span>
           </div>
 
           <h1 style={{
-            fontSize: 'clamp(32px, 4.5vw, 58px)', fontWeight: 800,
+            fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 800,
             fontFamily: "'Jua', sans-serif",
-            color: '#1a1a1a', lineHeight: 1.25, marginBottom: 18, letterSpacing: '-0.5px',
+            color: '#1a1a1a', lineHeight: 1.25, marginBottom: 12,
           }}>
             나만의 여행을<br />
             <span style={{ color: 'var(--primary)' }}>함께</span> 기록해요
           </h1>
 
-          <p style={{ fontSize: 'clamp(13px, 1.6vw, 16px)', color: '#888', lineHeight: 1.8, marginBottom: 36, maxWidth: 400 }}>
-            다녀온 장소를 저장하고, 여행 루트를 계획하고,<br />
-            친구들과 일지를 나눠요
+          <p style={{ fontSize: 'clamp(13px, 1.4vw, 15px)', color: '#666', lineHeight: 1.8, marginBottom: 0 }}>
+            다녀온 장소를 저장하고, 루트를 계획하고, 친구들과 일지를 나눠요
           </p>
+        </div>
 
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 36 }}>
-            <button
-              onClick={() => onNavigate('home')}
-              style={{
-                padding: '15px 30px', borderRadius: 14,
-                background: 'var(--primary)', color: 'white',
-                fontSize: 15, fontWeight: 700, cursor: 'pointer',
-                boxShadow: '0 6px 20px color-mix(in srgb, var(--primary) 35%, transparent)',
-                letterSpacing: '-0.3px',
-              }}
-            >
-              시작하기 →
-            </button>
-            <button
-              onClick={() => onNavigate('map')}
-              style={{
-                padding: '15px 24px', borderRadius: 14,
-                background: 'white', color: '#555',
-                fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                border: '1.5px solid #E8E8E8',
-              }}
-            >
-              🗺️ 지도 둘러보기
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {/* 버튼 영역 */}
+        <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', marginBottom: 4 }}>
             {['📍 장소 저장','🗺️ 루트 계획','📔 여행 일지','👥 그룹 공유'].map(label => (
               <div key={label} style={{
                 background: 'var(--primary-bg)', borderRadius: 20, padding: '5px 12px',
-                fontSize: 12, color: 'var(--primary)', fontWeight: 600,
+                fontSize: 11, color: 'var(--primary)', fontWeight: 600,
               }}>
                 {label}
               </div>
             ))}
           </div>
-        </div>
-
-        {/* 일러스트 영역 */}
-        <div style={{
-          flex: '1 1 420px', minWidth: 300,
-          display: 'flex', alignItems: 'stretch',
-          overflow: 'hidden',
-          minHeight: 'clamp(320px, 55vh, 600px)',
-        }}>
-          <Illust />
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={() => onNavigate('map')}
+              style={{
+                padding: '13px 22px', borderRadius: 13,
+                background: 'white', color: '#555',
+                fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                border: '1.5px solid #E0E0E0',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              }}
+            >
+              🗺️ 지도 보기
+            </button>
+            <button
+              onClick={() => onNavigate('home')}
+              style={{
+                padding: '13px 28px', borderRadius: 13,
+                background: 'var(--primary)', color: 'white',
+                fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 6px 20px color-mix(in srgb, var(--primary) 40%, transparent)',
+                fontFamily: "'Jua', sans-serif", letterSpacing: '0.3px',
+              }}
+            >
+              시작하기 →
+            </button>
+          </div>
         </div>
       </div>
     </div>
