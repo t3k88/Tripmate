@@ -39,7 +39,10 @@ export default function DesktopShell() {
   const [page, setPage] = useState(() => username ? 'home' : null)
 
   useEffect(() => {
-    if (activeTab && activeTab !== page) {
+    if (activeTab === '__landing__') {
+      setPage(null)
+      setActiveTab('home')
+    } else if (activeTab && activeTab !== page) {
       setPage(activeTab)
     }
   }, [activeTab])
@@ -84,16 +87,7 @@ export default function DesktopShell() {
           background: `linear-gradient(90deg, ${SEASON_BG.accent}90, ${SEASON_BG.accent}20)`,
         }}/>
 
-        {/* 홈 버튼 */}
-        <button onClick={goHome} style={{
-          padding: '20px 20px 12px', textAlign: 'left',
-          background: 'none', border: 'none', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 6,
-          color: '#AAAAAA', fontSize: 12,
-        }}>
-          <span style={{ fontSize: 15 }}>✈️</span>
-          <span style={{ fontFamily: "'Jua', sans-serif", color: 'var(--primary)', fontSize: 13 }}>홈으로</span>
-        </button>
+        <div style={{ padding: '20px 0 8px' }} />
 
         {/* 유저 표시 */}
         {username && (

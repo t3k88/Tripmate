@@ -442,6 +442,7 @@ export default function App() {
     handleRestore,
     handleGoogleLogin,
     handleLogout,
+    goToLanding: () => setActiveTab('__landing__'),
   }
 
   return (

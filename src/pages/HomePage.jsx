@@ -5,7 +5,7 @@ import AppPortal from '../components/AppPortal'
 import PlaceDetailModal from '../components/PlaceDetailModal'
 
 export default function HomePage() {
-  const { places, journals, groups, username, myGroupIds, setShowPlaceModal, toggleLike, toggleDislike, addComment, deleteComment, setActiveTab, deletePlace, setEditingPlace } = useApp()
+  const { places, journals, groups, username, myGroupIds, setShowPlaceModal, toggleLike, toggleDislike, addComment, deleteComment, setActiveTab, deletePlace, setEditingPlace, goToLanding } = useApp()
   const [detailPlace, setDetailPlace] = useState(null)
   const [detailJournal, setDetailJournal] = useState(null)
 
@@ -52,7 +52,11 @@ export default function HomePage() {
   return (
     <>
       <div className="header">
-        <span className="header-logo">✈️ TripMate</span>
+        <button onClick={goToLanding} style={{
+          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+          fontFamily: "'Jua', sans-serif", fontSize: 22, color: 'var(--primary)',
+          letterSpacing: '0.3px',
+        }}>✈️ TripMate</button>
         <button className="header-action" onClick={() => setShowPlaceModal(true)}>+</button>
       </div>
 
