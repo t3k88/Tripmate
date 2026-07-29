@@ -11,16 +11,10 @@ export default function LandingPage({ onNavigate }) {
       <div style={{ position: 'absolute', width: 250, height: 250, borderRadius: '50%', background: 'rgba(232,115,74,0.05)', bottom: 60, left: -80, pointerEvents: 'none' }} />
 
       {/* 상단 로고 */}
-      <div style={{ padding: '32px 40px 0', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '32px 40px 0', zIndex: 1 }}>
         <p style={{ fontSize: 20, fontWeight: 800, color: '#1a1a1a', letterSpacing: '-0.5px' }}>
           ✈️ <span style={{ color: '#E8734A' }}>Trip</span>Mate
         </p>
-        <button
-          onClick={() => onNavigate('home')}
-          style={{ fontSize: 13, fontWeight: 600, color: '#E8734A', padding: '7px 16px', border: '1.5px solid #E8734A', borderRadius: 20, background: 'transparent', cursor: 'pointer' }}
-        >
-          로그인
-        </button>
       </div>
 
       {/* 히어로 */}
