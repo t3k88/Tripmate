@@ -92,39 +92,42 @@ export default function DesktopShell() {
 
         {/* 로고 */}
         <button onClick={goHome} style={{
-          padding: '32px 24px 20px', textAlign: 'left',
+          padding: '28px 20px 24px', textAlign: 'left',
           background: 'none', border: 'none', cursor: 'pointer', position: 'relative', zIndex: 1,
         }}>
           <div style={{
-            fontFamily: "'Jua', sans-serif", fontSize: 22, color: 'var(--primary)',
-            marginBottom: 4,
-          }}>✈️ TripMate</div>
-          <div style={{ fontSize: 12, color: '#999' }}>나만의 여행 기록장</div>
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(8px)',
+            borderRadius: 16, padding: '10px 18px',
+            border: `1.5px solid ${SEASON_BG.accent}70`,
+            boxShadow: `0 4px 16px ${SEASON_BG.accent}30`,
+          }}>
+            <span style={{ fontSize: 22 }}>✈️</span>
+            <span style={{
+              fontFamily: "'Jua', sans-serif", fontSize: 20, color: 'var(--primary)',
+              letterSpacing: '0.5px',
+            }}>TripMate</span>
+          </div>
         </button>
 
-        {/* 유저 카드 */}
+        {/* 유저 표시 — 작고 심플하게 */}
         {username && (
           <div style={{
-            margin: '0 16px 20px',
-            background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(8px)',
-            borderRadius: 14, padding: '12px 14px',
-            border: `1px solid ${SEASON_BG.accent}55`,
+            margin: '0 20px 18px',
+            display: 'flex', alignItems: 'center', gap: 8,
             position: 'relative', zIndex: 1,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: `linear-gradient(135deg, var(--primary), ${SEASON_BG.accent})`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 16, color: 'white', fontWeight: 700,
-              }}>
-                {username[0]}
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>{username}</div>
-                <div style={{ fontSize: 11, color: '#999' }}>여행자</div>
-              </div>
+            <div style={{
+              width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+              background: `linear-gradient(135deg, var(--primary), ${SEASON_BG.accent})`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, color: 'white', fontWeight: 700,
+            }}>
+              {username[0]}
             </div>
+            <span style={{ fontSize: 12, color: '#777', fontWeight: 500 }}>
+              {username}
+            </span>
           </div>
         )}
 
