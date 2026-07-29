@@ -110,24 +110,38 @@ export default function DesktopShell() {
           </div>
         </button>
 
-        {/* 유저 표시 — 작고 심플하게 */}
+        {/* 유저 표시 + 로그아웃 */}
         {username && (
-          <div style={{
-            margin: '0 20px 18px',
-            display: 'flex', alignItems: 'center', gap: 8,
-            position: 'relative', zIndex: 1,
-          }}>
+          <div style={{ margin: '0 16px 18px', position: 'relative', zIndex: 1 }}>
             <div style={{
-              width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
-              background: `linear-gradient(135deg, var(--primary), ${SEASON_BG.accent})`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, color: 'white', fontWeight: 700,
+              background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(8px)',
+              borderRadius: 12, border: `1px solid ${SEASON_BG.accent}40`,
+              overflow: 'hidden',
             }}>
-              {username[0]}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px' }}>
+                <div style={{
+                  width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+                  background: `linear-gradient(135deg, var(--primary), ${SEASON_BG.accent})`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 12, color: 'white', fontWeight: 700,
+                }}>
+                  {username[0]}
+                </div>
+                <span style={{ fontSize: 12, color: '#555', fontWeight: 600, flex: 1 }}>{username}</span>
+              </div>
+              <div style={{ height: 1, background: `${SEASON_BG.accent}30` }}/>
+              <button
+                onClick={handleLogout}
+                style={{
+                  width: '100%', padding: '9px 12px',
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  fontSize: 12, color: '#999', textAlign: 'left',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}
+              >
+                🚪 로그아웃
+              </button>
             </div>
-            <span style={{ fontSize: 12, color: '#777', fontWeight: 500 }}>
-              {username}
-            </span>
           </div>
         )}
 
@@ -160,19 +174,6 @@ export default function DesktopShell() {
         {/* 하단 — 로그아웃 + 버전 */}
         <div style={{ padding: '0 16px', position: 'relative', zIndex: 1 }}>
           <div style={{ height: 1, background: `${SEASON_BG.accent}40`, marginBottom: 16 }} />
-          {username && (
-            <button
-              onClick={handleLogout}
-              style={{
-                width: '100%', padding: '10px 0', borderRadius: 10,
-                background: 'rgba(255,255,255,0.6)', border: '1px solid #E0E0E0',
-                fontSize: 13, color: '#888', cursor: 'pointer',
-                marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              }}
-            >
-              🚪 로그아웃
-            </button>
-          )}
           <p style={{ fontSize: 11, color: '#C0C0C0', textAlign: 'center' }}>TripMate v1.0</p>
         </div>
       </aside>
