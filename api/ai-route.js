@@ -14,6 +14,47 @@ const COMPANION_LABELS = {
   family: '가족',
 }
 
+async function fetchNaverBlogContext(region, styles) {
+  const clientId = process.env.NAVER_CLIENT_ID
+  const clientSecret = process.env.NAVER_CLIENT_SECRET
+  if (!clientId || !clientSecret) return ''
+
+  const queries = [
+    `${region} 여행 코스 추천`,
+    `${region} 맛집`,
+    `${region} 가볼만한곳`,
+  ]
+  if (styles.includes('cafe')) queries.push(`${region} 카페`)
+  if (styles.includes('nature')) queries.push(`${region} 자연 관광지`)
+  if (styles.includes('activity')) queries.push(`${region} 액티비티`)
+
+  const results = await Promise.all(
+    queries.map(q =>
+      fetch(`https://openapi.naver.com/v1/search/blog.json?query=${encodeURIComponent(q)}&display=3&sort=sim`, {
+        headers: {
+          'X-Naver-Client-Id': clientId,
+          'X-Naver-Client-Secret': clientSecret,
+        },
+      })
+        .then(r => r.json())
+        .catch(() => ({ items: [] }))
+    )
+  )
+
+  const snippets = results
+    .flatMap(r => r.items || [])
+    .map(item => {
+      const title = item.title?.replace(/<[^>]*>/g, '').trim()
+      const desc = item.description?.replace(/<[^>]*>/g, '').trim()
+      return `• ${title}: ${desc}`
+    })
+    .filter(Boolean)
+    .slice(0, 12)
+
+  if (snippets.length === 0) return ''
+  return `\n\n[네이버 블로그 실제 여행 후기 참고 자료]\n${snippets.join('\n')}\n위 후기에 언급된 실제 장소명을 우선적으로 활용하세요.`
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -34,6 +75,9 @@ export default async function handler(req, res) {
   const companionStr = COMPANION_LABELS[companion] || companion
   const days = duration.days
 
+  // 네이버 블로그 컨텍스트 수집 (병렬)
+  const blogContext = await fetchNaverBlogContext(regionStr, styles)
+
   const prompt = `당신은 한국 여행 전문가입니다.
 
 [절대 규칙] 반드시 "${regionStr}" 지역에 실제로 존재하는 장소만 추천하세요. 다른 지역 장소는 절대 포함하면 안 됩니다.
@@ -43,6 +87,7 @@ export default async function handler(req, res) {
 - 기간: ${duration.label} (${days}일)
 - 동행: ${companionStr}
 - 스타일: ${styleStr}
+${blogContext}
 
 아래 JSON 형식으로만 응답하세요. JSON 외 다른 텍스트는 절대 쓰지 마세요:
 
@@ -80,7 +125,7 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content: `You are a Korean travel expert. You MUST only recommend places located in the specific region the user requests. NEVER suggest places from other regions. Always respond in Korean. Always respond with valid JSON only, no other text.`,
+            content: `You are a Korean travel expert with deep knowledge of local Korean travel destinations. You MUST only recommend places located in the specific region the user requests. Use the provided blog references to recommend real, well-known local places. NEVER suggest places from other regions. Always respond in Korean. Always respond with valid JSON only, no other text.`,
           },
           { role: 'user', content: prompt },
         ],
