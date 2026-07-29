@@ -507,7 +507,7 @@ function UsernameModal({ onSubmit, onRestore, onGoogle, initialCode = '' }) {
 
         {/* 탭 */}
         <div style={{ display: 'flex', background: '#F5F5F5', borderRadius: 10, padding: 3, marginBottom: 16 }}>
-          {[['new', '새로 시작'], ['restore', '복구코드로 복원']].map(([t, label]) => (
+          {[['new', '닉네임으로 시작'], ['restore', '기기 변경 / 복원']].map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)} style={{
               flex: 1, padding: '7px 0', borderRadius: 8, fontSize: 12, fontWeight: 600,
               background: tab === t ? 'white' : 'transparent',
