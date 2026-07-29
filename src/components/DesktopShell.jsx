@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import LandingPage from '../pages/LandingPage'
 import HomePage from '../pages/HomePage'
@@ -27,8 +27,15 @@ const pages = {
 }
 
 export default function DesktopShell() {
-  const { showPlaceModal, showGroupModal, setActiveTab } = useApp()
+  const { showPlaceModal, showGroupModal, activeTab, setActiveTab } = useApp()
   const [page, setPage] = useState(() => sessionStorage.getItem('tripmate_page') || null)
+
+  useEffect(() => {
+    if (activeTab && activeTab !== page) {
+      setPage(activeTab)
+      sessionStorage.setItem('tripmate_page', activeTab)
+    }
+  }, [activeTab])
 
   const navigate = (id) => {
     sessionStorage.setItem('tripmate_page', id)
