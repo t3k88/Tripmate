@@ -433,6 +433,7 @@ export default function App() {
     editingPlace, setEditingPlace,
     username, userId,
     handleRestore,
+    handleGoogleLogin,
   }
 
   return (
