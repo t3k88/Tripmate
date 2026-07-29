@@ -28,10 +28,10 @@ const pages = {
 
 const SEASON_BG = (() => {
   const m = new Date().getMonth() + 1
-  if (m >= 3 && m <= 5) return { from: '#FFF0F8', to: '#FFE0F0', accent: '#F9B8D4' }
-  if (m >= 6 && m <= 8) return { from: '#E8F8FF', to: '#C8EEFF', accent: '#7DD3FC' }
-  if (m >= 9 && m <= 11) return { from: '#FFF5EC', to: '#FFE8D0', accent: '#E8956A' }
-  return { from: '#EEF4FF', to: '#D8E8FF', accent: '#7090D8' }
+  if (m >= 3 && m <= 5) return { bg: '#FFF7FB', accent: '#F9B8D4' }
+  if (m >= 6 && m <= 8) return { bg: '#F2FBFF', accent: '#7DD3FC' }
+  if (m >= 9 && m <= 11) return { bg: '#FFF9F5', accent: '#E8956A' }
+  return { bg: '#F5F8FF', accent: '#7090D8' }
 })()
 
 export default function DesktopShell() {
@@ -62,7 +62,7 @@ export default function DesktopShell() {
     <div style={{ width: '100vw', height: '100vh', display: 'flex', background: '#FFFFFF' }}>
       {/* 콘텐츠 */}
       <main style={{
-        marginRight: 240, flex: 1, height: '100vh', overflow: 'auto',
+        marginRight: 220, flex: 1, height: '100vh', overflow: 'auto',
         display: 'flex', flexDirection: 'column',
       }}>
         {pages[page]}
@@ -70,111 +70,92 @@ export default function DesktopShell() {
 
       {/* 사이드바 — 오른쪽 */}
       <aside style={{
-        width: 240, flexShrink: 0,
+        width: 220, flexShrink: 0,
         height: '100vh', position: 'fixed', right: 0, top: 0, zIndex: 100,
-        background: `linear-gradient(160deg, ${SEASON_BG.from} 0%, ${SEASON_BG.to} 100%)`,
-        borderLeft: '1px solid var(--border)',
+        background: SEASON_BG.bg,
+        borderLeft: '1px solid #EBEBEB',
         display: 'flex', flexDirection: 'column',
-        padding: '0 0 28px',
-        boxShadow: '-4px 0 24px rgba(0,0,0,0.05)',
+        overflowY: 'auto',
+        boxShadow: '-2px 0 16px rgba(0,0,0,0.04)',
       }}>
-        {/* 계절 장식 */}
+        {/* 계절 포인트 — 아주 연하게 */}
         <div style={{
-          position: 'absolute', top: 0, left: 0, width: 120, height: 120,
-          background: `radial-gradient(circle at top left, ${SEASON_BG.accent}40, transparent 70%)`,
-          pointerEvents: 'none', borderRadius: '0 0 100% 0',
-        }}/>
-        <div style={{
-          position: 'absolute', bottom: 60, right: 0, width: 90, height: 90,
-          background: `radial-gradient(circle at bottom right, ${SEASON_BG.accent}30, transparent 70%)`,
-          pointerEvents: 'none',
+          position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+          background: `linear-gradient(90deg, ${SEASON_BG.accent}90, ${SEASON_BG.accent}20)`,
         }}/>
 
-        {/* 로고 */}
+        {/* 홈 버튼 */}
         <button onClick={goHome} style={{
-          padding: '28px 20px 24px', textAlign: 'left',
-          background: 'none', border: 'none', cursor: 'pointer', position: 'relative', zIndex: 1,
+          padding: '20px 20px 12px', textAlign: 'left',
+          background: 'none', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 6,
+          color: '#AAAAAA', fontSize: 12,
         }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(8px)',
-            borderRadius: 16, padding: '10px 18px',
-            border: `1.5px solid ${SEASON_BG.accent}70`,
-            boxShadow: `0 4px 16px ${SEASON_BG.accent}30`,
-          }}>
-            <span style={{ fontSize: 22 }}>✈️</span>
-            <span style={{
-              fontFamily: "'Jua', sans-serif", fontSize: 20, color: 'var(--primary)',
-              letterSpacing: '0.5px',
-            }}>TripMate</span>
-          </div>
+          <span style={{ fontSize: 15 }}>✈️</span>
+          <span style={{ fontFamily: "'Jua', sans-serif", color: 'var(--primary)', fontSize: 13 }}>홈으로</span>
         </button>
 
-        {/* 유저 표시 + 로그아웃 */}
+        {/* 유저 표시 */}
         {username && (
-          <div style={{ margin: '0 16px 18px', position: 'relative', zIndex: 1 }}>
+          <div style={{
+            margin: '0 16px 16px',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
             <div style={{
-              background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(8px)',
-              borderRadius: 12, border: `1px solid ${SEASON_BG.accent}40`,
-              overflow: 'hidden',
+              width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+              background: `var(--primary-bg)`,
+              border: `1.5px solid ${SEASON_BG.accent}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, color: 'var(--primary)', fontWeight: 700,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px' }}>
-                <div style={{
-                  width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
-                  background: `linear-gradient(135deg, var(--primary), ${SEASON_BG.accent})`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 12, color: 'white', fontWeight: 700,
-                }}>
-                  {username[0]}
-                </div>
-                <span style={{ fontSize: 12, color: '#555', fontWeight: 600, flex: 1 }}>{username}</span>
-              </div>
-              <div style={{ height: 1, background: `${SEASON_BG.accent}30` }}/>
-              <button
-                onClick={handleLogout}
-                style={{
-                  width: '100%', padding: '9px 12px',
-                  background: 'transparent', border: 'none', cursor: 'pointer',
-                  fontSize: 12, color: '#999', textAlign: 'left',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}
-              >
-                🚪 로그아웃
-              </button>
+              {username[0]}
             </div>
+            <span style={{ fontSize: 12, color: '#888' }}>{username}</span>
           </div>
         )}
 
+        {/* 구분선 */}
+        <div style={{ height: 1, background: '#F0F0F0', margin: '0 16px 12px' }}/>
+
         {/* 네비게이션 */}
-        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3, padding: '0 12px', position: 'relative', zIndex: 1 }}>
+        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '0 10px' }}>
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => navigate(tab.id)}
               style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '12px 16px', borderRadius: 14,
-                fontSize: 14, fontWeight: page === tab.id ? 700 : 500,
-                color: page === tab.id ? 'var(--primary)' : '#666',
-                background: page === tab.id
-                  ? 'rgba(255,255,255,0.85)'
-                  : 'transparent',
-                boxShadow: page === tab.id ? `0 2px 12px ${SEASON_BG.accent}40` : 'none',
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 14px', borderRadius: 12,
+                fontSize: 13.5, fontWeight: page === tab.id ? 700 : 400,
+                color: page === tab.id ? 'var(--primary)' : '#555',
+                background: page === tab.id ? 'var(--primary-bg)' : 'transparent',
                 textAlign: 'left', cursor: 'pointer',
-                border: page === tab.id ? `1px solid ${SEASON_BG.accent}60` : '1px solid transparent',
-                transition: 'all 0.18s',
+                border: 'none', transition: 'all 0.15s',
               }}
             >
-              <span style={{ fontSize: 18 }}>{tab.icon}</span>
+              <span style={{ fontSize: 16 }}>{tab.icon}</span>
               {tab.label}
             </button>
           ))}
         </nav>
 
-        {/* 하단 — 로그아웃 + 버전 */}
-        <div style={{ padding: '0 16px', position: 'relative', zIndex: 1 }}>
-          <div style={{ height: 1, background: `${SEASON_BG.accent}40`, marginBottom: 16 }} />
-          <p style={{ fontSize: 11, color: '#C0C0C0', textAlign: 'center' }}>TripMate v1.0</p>
+        {/* 하단 */}
+        <div style={{ padding: '16px 16px 24px' }}>
+          <div style={{ height: 1, background: '#F0F0F0', marginBottom: 14 }}/>
+          {username && (
+            <button
+              onClick={handleLogout}
+              style={{
+                width: '100%', padding: '8px 0',
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                fontSize: 12, color: '#BBBBBB', textAlign: 'center',
+                marginBottom: 8,
+              }}
+            >
+              로그아웃
+            </button>
+          )}
+          <p style={{ fontSize: 11, color: '#DDDDDD', textAlign: 'center' }}>TripMate v1.0</p>
         </div>
       </aside>
 

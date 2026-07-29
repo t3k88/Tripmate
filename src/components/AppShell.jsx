@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import BottomNav from './BottomNav'
 import DesktopShell from './DesktopShell'
@@ -13,8 +13,13 @@ import PlaceRegisterModal from './PlaceRegister/PlaceRegisterModal'
 import GroupModal from './Group/GroupModal'
 
 const useIsDesktop = () => {
-  if (typeof window === 'undefined') return false
-  return window.innerWidth >= 768
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768)
+  useEffect(() => {
+    const handler = () => setIsDesktop(window.innerWidth >= 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+  return isDesktop
 }
 
 export default function AppShell() {
