@@ -90,11 +90,53 @@ export default function App() {
 
   useEffect(() => {
     loadAll().then(() => handleJoinFromUrl())
-    // URL에 ?restore=UUID 파라미터가 있으면 복원 탭으로 자동 전환
     const params = new URLSearchParams(window.location.search)
     if (params.get('restore') && !localStorage.getItem('tripmate_username')) {
       setRestoreCodeFromUrl(params.get('restore'))
     }
+
+    // Google OAuth 로그인 후 처리
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const googleUser = session.user
+        const localUid = localStorage.getItem('tripmate_user_id') || userId
+
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('google_id', googleUser.id)
+          .maybeSingle()
+
+        if (profile) {
+          // 기존 사용자 — 저장된 로컬 UID로 복원
+          localStorage.setItem('tripmate_user_id', profile.local_uid)
+          localStorage.setItem('tripmate_username', profile.username || googleUser.user_metadata.full_name || '')
+          window.location.reload()
+        } else {
+          // 신규 Google 로그인 — 현재 로컬 UID에 연결
+          const name = localStorage.getItem('tripmate_username')
+            || googleUser.user_metadata.full_name
+            || googleUser.email?.split('@')[0]
+            || '여행자'
+          await supabase.from('user_profiles').insert([{
+            google_id: googleUser.id,
+            local_uid: localUid,
+            username: name,
+            email: googleUser.email,
+            avatar_url: googleUser.user_metadata.avatar_url,
+          }])
+          if (!localStorage.getItem('tripmate_username')) {
+            localStorage.setItem('tripmate_username', name)
+            setUsername(name)
+            await supabase.from('users').upsert([{ id: localUid, username: name }], { onConflict: 'id' })
+          }
+          setShowUsernameModal(false)
+          setShowRecoveryCode(false)
+          await loadAll()
+        }
+      }
+    })
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleJoinFromUrl = async () => {
@@ -348,6 +390,13 @@ export default function App() {
     setRoutes(rs => rs.map(r => r.id === routeId ? { ...r, items } : r))
   }
 
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+  }
+
   const handleSetUsername = async (name) => {
     const uid = localStorage.getItem('tripmate_user_id') || userId
     localStorage.setItem('tripmate_username', name)
@@ -388,14 +437,14 @@ export default function App() {
 
   return (
     <AppContext.Provider value={ctx}>
-      {showUsernameModal && <UsernameModal onSubmit={handleSetUsername} onRestore={handleRestore} initialCode={restoreCodeFromUrl} />}
+      {showUsernameModal && <UsernameModal onSubmit={handleSetUsername} onRestore={handleRestore} onGoogle={handleGoogleLogin} initialCode={restoreCodeFromUrl} />}
       {showRecoveryCode && <RecoveryCodeModal userId={userId} onClose={() => setShowRecoveryCode(false)} />}
       <AppShell />
     </AppContext.Provider>
   )
 }
 
-function UsernameModal({ onSubmit, onRestore, initialCode = '' }) {
+function UsernameModal({ onSubmit, onRestore, onGoogle, initialCode = '' }) {
   const [name, setName] = useState('')
   const [tab, setTab] = useState(initialCode ? 'restore' : 'new')
   const [code, setCode] = useState(initialCode)
@@ -412,21 +461,48 @@ function UsernameModal({ onSubmit, onRestore, initialCode = '' }) {
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 24,
     }}>
-      <div style={{ background: 'white', borderRadius: 20, padding: '32px 24px', width: '100%', maxWidth: 320, textAlign: 'center' }}>
-        <p style={{ fontSize: 40, marginBottom: 12 }}>✈️</p>
-        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>TripMate에 오신 걸 환영해요!</h2>
+      <div style={{ background: 'white', borderRadius: 24, padding: '36px 28px', width: '100%', maxWidth: 340, textAlign: 'center' }}>
+        <p style={{ fontSize: 44, marginBottom: 10 }}>✈️</p>
+        <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 6, letterSpacing: '-0.5px' }}>TripMate에 오신 걸 환영해요!</h2>
+        <p style={{ fontSize: 13, color: '#999', marginBottom: 24 }}>여행 기록을 시작해보세요</p>
+
+        {/* 구글 로그인 */}
+        <button
+          onClick={onGoogle}
+          style={{
+            width: '100%', padding: '13px 0', borderRadius: 12,
+            background: 'white', border: '1.5px solid #E0E0E0',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            fontSize: 15, fontWeight: 600, color: '#333', cursor: 'pointer',
+            marginBottom: 16,
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Google로 계속하기
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <div style={{ flex: 1, height: 1, background: '#EEE' }} />
+          <span style={{ fontSize: 12, color: '#BBB' }}>또는</span>
+          <div style={{ flex: 1, height: 1, background: '#EEE' }} />
+        </div>
 
         {/* 탭 */}
-        <div style={{ display: 'flex', background: '#F5F5F5', borderRadius: 10, padding: 3, marginBottom: 20 }}>
-          {[['new', '새로 시작'], ['restore', '기존 계정 복원']].map(([t, label]) => (
+        <div style={{ display: 'flex', background: '#F5F5F5', borderRadius: 10, padding: 3, marginBottom: 16 }}>
+          {[['new', '새로 시작'], ['restore', '복구코드로 복원']].map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)} style={{
-              flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 13, fontWeight: 600,
+              flex: 1, padding: '7px 0', borderRadius: 8, fontSize: 12, fontWeight: 600,
               background: tab === t ? 'white' : 'transparent',
-              color: tab === t ? '#E8734A' : '#888',
-              boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+              color: tab === t ? 'var(--primary)' : '#888',
+              boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
               border: 'none', cursor: 'pointer',
             }}>{label}</button>
           ))}
@@ -434,9 +510,8 @@ function UsernameModal({ onSubmit, onRestore, initialCode = '' }) {
 
         {tab === 'new' ? (
           <>
-            <p style={{ fontSize: 14, color: '#888', marginBottom: 16, lineHeight: 1.6 }}>친구들에게 보여질 닉네임을 입력해주세요</p>
             <input
-              style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #E8E4DE', fontSize: 15, marginBottom: 16, boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #E8E4DE', fontSize: 15, marginBottom: 12, boxSizing: 'border-box' }}
               placeholder="닉네임 입력 (예: 여행왕)"
               value={name}
               onChange={e => setName(e.target.value)}
@@ -446,12 +521,11 @@ function UsernameModal({ onSubmit, onRestore, initialCode = '' }) {
             <button
               onClick={() => name.trim() && onSubmit(name.trim())}
               disabled={!name.trim()}
-              style={{ width: '100%', padding: 13, background: '#E8734A', color: 'white', borderRadius: 10, fontSize: 15, fontWeight: 700, border: 'none', opacity: name.trim() ? 1 : 0.4, cursor: name.trim() ? 'pointer' : 'not-allowed' }}
-            >시작하기 🚀</button>
+              style={{ width: '100%', padding: 13, background: 'var(--primary)', color: 'white', borderRadius: 10, fontSize: 15, fontWeight: 700, border: 'none', opacity: name.trim() ? 1 : 0.4, cursor: name.trim() ? 'pointer' : 'not-allowed' }}
+            >닉네임으로 시작하기</button>
           </>
         ) : (
           <>
-            <p style={{ fontSize: 14, color: '#888', marginBottom: 16, lineHeight: 1.6 }}>이전에 저장한 복구코드를 입력해주세요</p>
             <input
               style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #E8E4DE', fontSize: 13, marginBottom: 8, boxSizing: 'border-box', fontFamily: 'monospace' }}
               placeholder="복구코드 입력"
@@ -464,7 +538,7 @@ function UsernameModal({ onSubmit, onRestore, initialCode = '' }) {
             <button
               onClick={handleRestore}
               disabled={!code.trim() || restoring}
-              style={{ width: '100%', padding: 13, background: '#E8734A', color: 'white', borderRadius: 10, fontSize: 15, fontWeight: 700, border: 'none', opacity: code.trim() ? 1 : 0.4, cursor: code.trim() ? 'pointer' : 'not-allowed' }}
+              style={{ width: '100%', padding: 13, background: 'var(--primary)', color: 'white', borderRadius: 10, fontSize: 15, fontWeight: 700, border: 'none', opacity: code.trim() ? 1 : 0.4, cursor: code.trim() ? 'pointer' : 'not-allowed' }}
             >{restoring ? '복원 중...' : '복원하기 🔑'}</button>
           </>
         )}
