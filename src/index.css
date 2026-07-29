@@ -28,7 +28,7 @@
 html, body {
   height: 100%;
   background: #D6D2CC;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+  font-family: 'Nanum Gothic', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
 }

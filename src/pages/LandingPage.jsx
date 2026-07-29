@@ -45,36 +45,106 @@ function SpringIllust() {
 
 function SummerIllust() {
   return (
-    <svg viewBox="0 0 420 320" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
+    <svg viewBox="0 0 460 380" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#87CEEB"/>
+          <stop offset="60%" stopColor="#B8E4F5"/>
+          <stop offset="100%" stopColor="#E0F4FF"/>
+        </linearGradient>
+        <linearGradient id="seaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0EA5C9"/>
+          <stop offset="100%" stopColor="#0369A1"/>
+        </linearGradient>
+        <linearGradient id="sunGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FFE566"/>
+          <stop offset="100%" stopColor="#FFB800"/>
+        </linearGradient>
+      </defs>
+
       {/* 하늘 */}
-      <rect width="420" height="200" fill="#CCEEFF" />
+      <rect width="460" height="380" fill="url(#skyGrad)"/>
+
+      {/* 태양 글로우 */}
+      <circle cx="360" cy="88" r="65" fill="#FFE566" opacity="0.15"/>
+      <circle cx="360" cy="88" r="48" fill="url(#sunGrad)" opacity="0.95"/>
+
+      {/* 구름 1 (크고 포실포실) */}
+      <g opacity="0.95">
+        <ellipse cx="95" cy="75" rx="48" ry="22" fill="white"/>
+        <ellipse cx="68" cy="82" rx="28" ry="18" fill="white"/>
+        <ellipse cx="122" cy="80" rx="32" ry="18" fill="white"/>
+        <ellipse cx="95" cy="88" rx="46" ry="14" fill="white"/>
+      </g>
+
+      {/* 구름 2 (작은) */}
+      <g opacity="0.85">
+        <ellipse cx="255" cy="55" rx="32" ry="15" fill="white"/>
+        <ellipse cx="236" cy="62" rx="18" ry="12" fill="white"/>
+        <ellipse cx="272" cy="60" rx="20" ry="12" fill="white"/>
+      </g>
+
       {/* 바다 */}
-      <rect x="0" y="200" width="420" height="120" fill="#1A9BD7" />
-      {/* 파도 */}
-      <path d="M0,210 Q52,195 105,210 Q157,225 210,210 Q262,195 315,210 Q367,225 420,210 L420,230 L0,230Z" fill="#38C4E0" opacity="0.6"/>
-      <path d="M0,230 Q52,218 105,230 Q157,242 210,230 Q262,218 315,230 Q367,242 420,230 L420,250 L0,250Z" fill="#0EA5C9" opacity="0.5"/>
-      {/* 태양 */}
-      <circle cx="340" cy="70" r="42" fill="#FFD97D" opacity="0.95"/>
-      {[0,45,90,135,180,225,270,315].map((a,i)=>(
-        <line key={i}
-          x1={340+55*Math.cos(a*Math.PI/180)} y1={70+55*Math.sin(a*Math.PI/180)}
-          x2={340+68*Math.cos(a*Math.PI/180)} y2={70+68*Math.sin(a*Math.PI/180)}
-          stroke="#FFD97D" strokeWidth="4" strokeLinecap="round"/>
-      ))}
-      {/* 구름 */}
-      {[[80,65],[85,55],[95,50],[108,52],[115,62],[105,70],[88,70]].map(([cx,cy],i)=>(
-        <circle key={i} cx={cx} cy={cy} r="18" fill="white" opacity="0.9"/>
-      ))}
-      {/* 모래사장 */}
-      <rect x="0" y="270" width="420" height="50" fill="#F5DFA0" />
+      <rect x="0" y="235" width="460" height="145" fill="url(#seaGrad)"/>
+
+      {/* 파도 레이어 1 */}
+      <path d="M0,242 C38,232 76,252 115,242 C153,232 191,252 230,242 C268,232 306,252 345,242 C383,232 421,252 460,242 L460,260 L0,260Z"
+        fill="#38BDF8" opacity="0.7"/>
+
+      {/* 파도 레이어 2 */}
+      <path d="M0,262 C46,252 92,272 138,262 C184,252 230,272 276,262 C322,252 368,272 414,262 L460,262 L460,278 L0,278Z"
+        fill="#7DD3FC" opacity="0.45"/>
+
+      {/* 파도 하이라이트 */}
+      <path d="M0,244 C30,240 60,248 90,244 C120,240 150,248 180,244 C210,240 240,248 270,244"
+        fill="none" stroke="white" strokeWidth="2.5" opacity="0.4" strokeLinecap="round"/>
+
+      {/* 모래 */}
+      <path d="M0,330 Q115,310 230,320 Q345,330 460,308 L460,380 L0,380Z" fill="#F5DFA0"/>
+      <path d="M0,345 Q115,325 230,335 Q345,345 460,323 L460,380 L0,380Z" fill="#EDD080"/>
+
+      {/* 야자수 왼쪽 */}
+      <path d="M72,340 C70,290 68,240 80,195" stroke="#5C3A1E" strokeWidth="10" strokeLinecap="round" fill="none"/>
+      {/* 야자수 잎 */}
+      <path d="M80,195 C60,168 20,160 5,148" stroke="#2D7A3A" strokeWidth="6" strokeLinecap="round" fill="none"/>
+      <path d="M80,195 C100,165 130,158 148,145" stroke="#2D7A3A" strokeWidth="6" strokeLinecap="round" fill="none"/>
+      <path d="M80,195 C75,165 68,140 62,122" stroke="#3A8C48" strokeWidth="5" strokeLinecap="round" fill="none"/>
+      <path d="M80,195 C58,178 30,175 12,170" stroke="#3A8C48" strokeWidth="4" strokeLinecap="round" fill="none"/>
+      <path d="M80,195 C108,178 138,178 158,172" stroke="#3A8C48" strokeWidth="4" strokeLinecap="round" fill="none"/>
+      {/* 야자나무 코코넛 */}
+      <circle cx="80" cy="200" r="8" fill="#8B5E3C"/>
+      <circle cx="70" cy="207" r="7" fill="#7A5030"/>
+
+      {/* 야자수 오른쪽 */}
+      <path d="M395,370 C392,320 388,268 398,220" stroke="#5C3A1E" strokeWidth="9" strokeLinecap="round" fill="none"/>
+      <path d="M398,220 C378,193 345,185 325,172" stroke="#2D7A3A" strokeWidth="6" strokeLinecap="round" fill="none"/>
+      <path d="M398,220 C418,190 448,182 462,170" stroke="#2D7A3A" strokeWidth="6" strokeLinecap="round" fill="none"/>
+      <path d="M398,220 C393,192 386,166 380,148" stroke="#3A8C48" strokeWidth="5" strokeLinecap="round" fill="none"/>
+      <path d="M398,220 C375,203 348,200 330,196" stroke="#3A8C48" strokeWidth="4" strokeLinecap="round" fill="none"/>
+      <path d="M398,220 C422,205 448,205 462,202" stroke="#3A8C48" strokeWidth="4" strokeLinecap="round" fill="none"/>
+
       {/* 파라솔 */}
-      <line x1="130" y1="265" x2="130" y2="310" stroke="#C4956A" strokeWidth="4"/>
-      <ellipse cx="130" cy="262" rx="38" ry="14" fill="#E8734A" opacity="0.9"/>
-      <ellipse cx="130" cy="260" rx="30" ry="10" fill="#FFB347" opacity="0.7"/>
-      {/* 물결 반짝임 */}
-      {[[60,240],[180,250],[270,238],[370,248],[120,260],[310,255]].map(([x,y],i)=>(
-        <line key={i} x1={x-8} y1={y} x2={x+8} y2={y} stroke="white" strokeWidth="2" opacity="0.5"/>
+      <line x1="215" y1="348" x2="215" y2="310" stroke="#8B5E3C" strokeWidth="4" strokeLinecap="round"/>
+      {/* 파라솔 줄무늬 */}
+      <path d="M180,312 Q215,290 250,312" fill="#0EA5C9" stroke="none"/>
+      <path d="M185,312 Q200,302 215,312" fill="#38BDF8" stroke="none" opacity="0.7"/>
+      <path d="M215,312 Q230,302 245,312" fill="#38BDF8" stroke="none" opacity="0.7"/>
+      <path d="M178,313 Q215,292 252,313" fill="none" stroke="#0EA5C9" strokeWidth="1.5" opacity="0.5"/>
+
+      {/* 선베드 */}
+      <rect x="188" y="342" width="55" height="12" rx="4" fill="#E8D5A3"/>
+      <rect x="186" y="342" width="8" height="18" rx="3" fill="#C4956A"/>
+      <rect x="241" y="342" width="8" height="18" rx="3" fill="#C4956A"/>
+
+      {/* 물 반짝임 */}
+      {[[55,258],[140,270],[300,255],[380,265],[220,275],[170,262]].map(([x,y],i)=>(
+        <line key={i} x1={x-7} y1={y} x2={x+7} y2={y} stroke="white" strokeWidth="2.5" opacity="0.55" strokeLinecap="round"/>
       ))}
+
+      {/* 갈매기 */}
+      <path d="M130,130 Q138,124 146,130" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M155,118 Q163,112 171,118" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M175,138 Q181,133 187,138" fill="none" stroke="#666" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   )
 }
@@ -179,7 +249,7 @@ export default function LandingPage({ onNavigate }) {
       position: 'relative', overflow: 'hidden',
     }}>
       <div style={{ padding: '32px 40px 0', zIndex: 1, position: 'relative' }}>
-        <p style={{ fontSize: 20, fontWeight: 800, color: '#1a1a1a', letterSpacing: '-0.5px' }}>
+        <p style={{ fontSize: 22, fontWeight: 800, color: '#1a1a1a', fontFamily: "'Jua', sans-serif" }}>
           ✈️ <span style={{ color: 'var(--primary)' }}>Trip</span>Mate
         </p>
       </div>
@@ -205,7 +275,8 @@ export default function LandingPage({ onNavigate }) {
 
           <h1 style={{
             fontSize: 'clamp(32px, 4.5vw, 58px)', fontWeight: 800,
-            color: '#1a1a1a', lineHeight: 1.15, marginBottom: 18, letterSpacing: '-1.5px',
+            fontFamily: "'Jua', sans-serif",
+            color: '#1a1a1a', lineHeight: 1.25, marginBottom: 18, letterSpacing: '-0.5px',
           }}>
             나만의 여행을<br />
             <span style={{ color: 'var(--primary)' }}>함께</span> 기록해요
@@ -256,10 +327,10 @@ export default function LandingPage({ onNavigate }) {
 
         {/* 일러스트 영역 */}
         <div style={{
-          flex: '1 1 320px', minWidth: 280,
-          display: 'flex', alignItems: 'flex-end',
-          padding: '0 0 0 0', overflow: 'hidden',
-          maxHeight: 400,
+          flex: '1 1 420px', minWidth: 300,
+          display: 'flex', alignItems: 'stretch',
+          overflow: 'hidden',
+          minHeight: 'clamp(320px, 55vh, 600px)',
         }}>
           <Illust />
         </div>
