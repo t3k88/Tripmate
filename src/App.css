@@ -36,8 +36,8 @@
   }
 
   .modal-sheet--large {
-    max-width: 960px;
-    max-height: 92vh;
+    max-width: 600px;
+    max-height: 88vh;
   }
 
   .modal-handle {
