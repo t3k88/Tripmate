@@ -52,8 +52,8 @@ export default function DesktopShell() {
       <aside style={{
         width: 220, flexShrink: 0,
         height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 100,
-        background: '#FFF4EF',
-        borderRight: '1px solid #F0DDD4',
+        background: 'var(--bg)',
+        borderRight: '1px solid var(--border)',
         display: 'flex', flexDirection: 'column',
         padding: '0 0 24px',
       }}>
@@ -67,7 +67,7 @@ export default function DesktopShell() {
             letterSpacing: '-0.5px',
           }}
         >
-          ✈️ <span style={{ color: '#E8734A' }}>Trip</span>Mate
+          ✈️ <span style={{ color: 'var(--primary)' }}>Trip</span>Mate
         </button>
 
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '0 12px' }}>
@@ -79,8 +79,8 @@ export default function DesktopShell() {
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '11px 14px', borderRadius: 12,
                 fontSize: 14, fontWeight: page === tab.id ? 700 : 400,
-                color: page === tab.id ? '#E8734A' : '#555',
-                background: page === tab.id ? '#FFF0E8' : 'transparent',
+                color: page === tab.id ? 'var(--primary)' : '#555',
+                background: page === tab.id ? 'var(--primary-bg)' : 'transparent',
                 textAlign: 'left', cursor: 'pointer',
                 border: 'none', transition: 'all 0.15s',
               }}
