@@ -26,9 +26,17 @@ const pages = {
   group: <GroupPage />,
 }
 
+const SEASON_BG = (() => {
+  const m = new Date().getMonth() + 1
+  if (m >= 3 && m <= 5) return { from: '#FFF0F8', to: '#FFE0F0', accent: '#F9B8D4' }
+  if (m >= 6 && m <= 8) return { from: '#E8F8FF', to: '#C8EEFF', accent: '#7DD3FC' }
+  if (m >= 9 && m <= 11) return { from: '#FFF5EC', to: '#FFE8D0', accent: '#E8956A' }
+  return { from: '#EEF4FF', to: '#D8E8FF', accent: '#7090D8' }
+})()
+
 export default function DesktopShell() {
-  const { showPlaceModal, showGroupModal, activeTab, setActiveTab } = useApp()
-  const [page, setPage] = useState(null)
+  const { showPlaceModal, showGroupModal, activeTab, setActiveTab, username } = useApp()
+  const [page, setPage] = useState(() => username ? 'home' : null)
 
   useEffect(() => {
     if (activeTab && activeTab !== page) {
@@ -56,22 +64,34 @@ export default function DesktopShell() {
       <aside style={{
         width: 220, flexShrink: 0,
         height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 100,
-        background: 'var(--bg)',
+        background: `linear-gradient(180deg, ${SEASON_BG.from} 0%, ${SEASON_BG.to} 100%)`,
         borderRight: '1px solid var(--border)',
         display: 'flex', flexDirection: 'column',
         padding: '0 0 24px',
       }}>
+        {/* 사이드바 상단 계절 장식 */}
+        <div style={{
+          position: 'absolute', top: 0, right: 0, width: 80, height: 80,
+          background: `radial-gradient(circle at top right, ${SEASON_BG.accent}55, transparent 70%)`,
+          pointerEvents: 'none',
+        }}/>
+
         <button
           onClick={goHome}
           style={{
-            padding: '28px 22px 22px',
-            fontSize: 18, fontWeight: 800,
-            color: '#1a1a1a', textAlign: 'left',
-            background: 'none', border: 'none', cursor: 'pointer',
-            letterSpacing: '-0.5px',
+            padding: '28px 22px 20px',
+            textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer',
           }}
         >
-          ✈️ <span style={{ color: 'var(--primary)' }}>Trip</span>Mate
+          <span style={{
+            fontFamily: "'Jua', sans-serif", fontSize: 20, fontWeight: 800,
+            color: 'var(--primary)', letterSpacing: '0.3px',
+          }}>✈️ TripMate</span>
+          {username && (
+            <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+              안녕하세요, <b style={{ color: 'var(--primary)' }}>{username}</b>님 👋
+            </p>
+          )}
         </button>
 
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '0 12px' }}>
@@ -96,7 +116,7 @@ export default function DesktopShell() {
         </nav>
 
         <div style={{ padding: '0 16px' }}>
-          <div style={{ height: 1, background: '#EBEBEB', marginBottom: 16 }} />
+          <div style={{ height: 1, background: `${SEASON_BG.accent}55`, marginBottom: 14 }} />
           <p style={{ fontSize: 11, color: '#BBB', textAlign: 'center' }}>TripMate v1.0</p>
         </div>
       </aside>
