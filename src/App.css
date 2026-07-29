@@ -35,6 +35,11 @@
     max-height: 85vh;
   }
 
+  .modal-sheet--large {
+    max-width: 960px;
+    max-height: 92vh;
+  }
+
   .modal-handle {
     display: none;
   }

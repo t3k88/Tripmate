@@ -45,7 +45,7 @@ export default function PlaceRegisterModal() {
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && handleClose()}>
-      <div className="modal-sheet">
+      <div className="modal-sheet modal-sheet--large">
         <div className="modal-handle" />
         <div className="modal-header">
           <button
