@@ -28,23 +28,20 @@ const pages = {
 
 export default function DesktopShell() {
   const { showPlaceModal, showGroupModal, activeTab, setActiveTab } = useApp()
-  const [page, setPage] = useState(() => sessionStorage.getItem('tripmate_page') || null)
+  const [page, setPage] = useState(null)
 
   useEffect(() => {
     if (activeTab && activeTab !== page) {
       setPage(activeTab)
-      sessionStorage.setItem('tripmate_page', activeTab)
     }
   }, [activeTab])
 
   const navigate = (id) => {
-    sessionStorage.setItem('tripmate_page', id)
     setPage(id)
     setActiveTab(id)
   }
 
   const goHome = () => {
-    sessionStorage.removeItem('tripmate_page')
     setPage(null)
     setActiveTab('home')
   }
