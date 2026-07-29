@@ -48,7 +48,7 @@ export default function RoutePage() {
         <button className="header-action" onClick={() => setShowPicker(true)}>+</button>
       </div>
 
-      <div style={{ padding: '16px 16px 80px' }}>
+      <div className="page-content" style={{ padding: '16px 16px 80px' }}>
         {routes.length === 0 ? (
           <div className="empty-state">
             <span className="empty-icon">🗺️</span>
@@ -59,7 +59,7 @@ export default function RoutePage() {
             {myRoutes.length > 0 && (
               <div style={{ marginBottom: 24 }}>
                 <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, letterSpacing: '0.3px' }}>✏️ 내가 짠 루트</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div className="route-grid" style={{ gap: 12 }}>
                   {myRoutes.map(route => (
                     <RouteCard key={route.id} route={route} places={places}
                       groupName={groups.find(g => g.id === route.groupId)?.name}
@@ -71,7 +71,7 @@ export default function RoutePage() {
             {groupRoutes.length > 0 && (
               <div>
                 <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-sub)', marginBottom: 10, letterSpacing: '0.3px' }}>👥 그룹 추천 루트</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div className="route-grid" style={{ gap: 12 }}>
                   {groupRoutes.map(route => (
                     <RouteCard key={route.id} route={route} places={places}
                       groupName={groups.find(g => g.id === route.groupId)?.name}

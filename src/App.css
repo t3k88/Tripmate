@@ -75,6 +75,36 @@
   .screen-map {
     max-width: 100%;
   }
+
+  /* 데스크탑 콘텐츠 여백 */
+  .page-content {
+    padding: 24px 28px 40px !important;
+  }
+
+  /* FAB: 데스크탑에서 사이드바 오른쪽 콘텐츠 기준 */
+  .fab {
+    bottom: 32px;
+    right: 32px;
+  }
+
+  /* 카드 그리드: 데스크탑 2열 */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  /* 루트 카드 그리드: 데스크탑 2열 */
+  .route-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  /* 헤더 높이 여유 */
+  .header {
+    padding: 18px 28px 14px;
+  }
 }
 
 .screen {
@@ -272,6 +302,19 @@
   justify-content: center;
   box-shadow: var(--shadow-md);
   z-index: 20;
+}
+
+/* 반응형 그리드 (모바일 기본 1열) */
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.route-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
 }
 
 /* Cards */

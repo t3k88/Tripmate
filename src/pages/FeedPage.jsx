@@ -157,7 +157,7 @@ export default function FeedPage() {
         )}
       </div>
 
-      <div style={{ padding: '16px 16px 80px' }}>
+      <div className="page-content" style={{ padding: '16px 16px 80px' }}>
 
         {visiblePlaces.length === 0 ? (
           <div className="empty-state">
@@ -174,21 +174,23 @@ export default function FeedPage() {
                 setSelectedIds(prev => allSelected ? prev.filter(id => !ids.includes(id)) : [...new Set([...prev, ...ids])])
               }}
             >
-              {regionPlaces.map(place => (
-                <PlaceCard
-                  key={place.id}
-                  place={place}
-                  groupNames={getGroupNames(place.groupIds)}
-                  isOwner={place.author === username}
-                  selectMode={selectMode}
-                  selected={selectedIds.includes(place.id)}
-                  username={username}
-                  onClick={() => selectMode ? toggleSelect(place.id) : setDetailPlace(place)}
-                  onEdit={() => handleEdit(place)}
-                  onDelete={() => handleDelete(place.id)}
-                  onLike={e => { e.stopPropagation(); toggleLike(place.id) }}
-                />
-              ))}
+              <div className="card-grid">
+                {regionPlaces.map(place => (
+                  <PlaceCard
+                    key={place.id}
+                    place={place}
+                    groupNames={getGroupNames(place.groupIds)}
+                    isOwner={place.author === username}
+                    selectMode={selectMode}
+                    selected={selectedIds.includes(place.id)}
+                    username={username}
+                    onClick={() => selectMode ? toggleSelect(place.id) : setDetailPlace(place)}
+                    onEdit={() => handleEdit(place)}
+                    onDelete={() => handleDelete(place.id)}
+                    onLike={e => { e.stopPropagation(); toggleLike(place.id) }}
+                  />
+                ))}
+              </div>
             </RegionSection>
           ))
         )}
