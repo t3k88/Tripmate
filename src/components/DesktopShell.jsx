@@ -52,8 +52,8 @@ export default function DesktopShell() {
       <aside style={{
         width: 220, flexShrink: 0,
         height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 100,
-        background: '#FAFAF8',
-        borderRight: '1px solid #EBEBEB',
+        background: '#FFF4EF',
+        borderRight: '1px solid #F0DDD4',
         display: 'flex', flexDirection: 'column',
         padding: '0 0 24px',
       }}>

@@ -2,13 +2,13 @@ export default function LandingPage({ onNavigate }) {
   return (
     <div style={{
       width: '100%', minHeight: '100vh',
-      background: '#FAFAF8',
+      background: 'linear-gradient(170deg, #FFF4EF 0%, #FFF8F4 40%, #FAFAF8 70%)',
       display: 'flex', flexDirection: 'column',
       position: 'relative', overflow: 'hidden',
     }}>
       {/* 배경 장식 원 */}
-      <div style={{ position: 'absolute', width: 600, height: 600, borderRadius: '50%', background: 'rgba(232,115,74,0.06)', top: -200, right: -180, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', width: 300, height: 300, borderRadius: '50%', background: 'rgba(232,115,74,0.04)', bottom: 80, left: -100, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'rgba(232,115,74,0.08)', top: -160, right: -140, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', width: 250, height: 250, borderRadius: '50%', background: 'rgba(232,115,74,0.05)', bottom: 60, left: -80, pointerEvents: 'none' }} />
 
       {/* 상단 로고 */}
       <div style={{ padding: '32px 40px 0', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -91,29 +91,6 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </div>
 
-      {/* 하단 장식 카드들 */}
-      <div style={{ padding: '48px 40px 40px', zIndex: 1 }}>
-        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {[
-            { name: '코코까페', region: '충북 단양', cat: '카페', icon: '☕', color: '#FFF0E8' },
-            { name: '만천하스카이워크', region: '충북 단양', cat: '관광지', icon: '🏔', color: '#EEF5FF' },
-            { name: '제주 협재해수욕장', region: '제주', cat: '관광지', icon: '🏖', color: '#F0FAF4' },
-            { name: '광장시장', region: '서울 종로', cat: '쇼핑', icon: '🛍', color: '#F5F0FF' },
-          ].map(c => (
-            <div key={c.name} style={{
-              flexShrink: 0, background: 'white',
-              borderRadius: 16, border: '1px solid #EBEBEB',
-              padding: '14px 16px', minWidth: 150,
-            }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginBottom: 10 }}>
-                {c.icon}
-              </div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a', marginBottom: 2 }}>{c.name}</p>
-              <p style={{ fontSize: 11, color: '#999' }}>{c.region}</p>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
