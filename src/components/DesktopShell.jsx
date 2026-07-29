@@ -41,8 +41,7 @@ export default function DesktopShell() {
   useEffect(() => {
     if (activeTab === '__landing__') {
       setPage(null)
-      setActiveTab('home')
-    } else if (activeTab && activeTab !== page) {
+    } else if (activeTab && activeTab !== page && page !== null) {
       setPage(activeTab)
     }
   }, [activeTab])
